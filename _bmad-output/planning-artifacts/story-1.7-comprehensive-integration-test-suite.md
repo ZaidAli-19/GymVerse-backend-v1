@@ -2,7 +2,7 @@
 id: "story-1.7"
 epic_id: "epic-1"
 title: "Comprehensive Integration Test Suite (Context Startup, Migrations & Isolation)"
-status: "ready-for-dev"
+status: "implemented"
 type: "architecture-persistence"
 created_at: "2026-10-13"
 dependencies:
@@ -208,11 +208,11 @@ class TenantIsolationIntegrationTest {
 
 ## Definition of Done (DoD)
 
-- [ ] `ApplicationTests.java` includes `@ActiveProfiles("test")` and passes.
-- [ ] `CentralPersistenceIntegrationTest.java` is implemented and passes.
-- [ ] `TenantPersistenceIntegrationTest.java` is implemented and passes.
-- [ ] `TenantIsolationIntegrationTest.java` is implemented and passes.
-- [ ] Complete isolation is demonstrated between `gym_db_test_001` and `gym_db_test_002`.
-- [ ] All test databases and Hikari connection pools are cleanly evicted and dropped in teardown.
-- [ ] Zero modifications to the 8 protected multitenancy classes.
-- [ ] All Phase 1 persistence integration tests pass with 0 errors and 0 failures.
+- [x] `ApplicationTests.java` includes `@ActiveProfiles("test")` and passes.
+- [x] `CentralPersistenceIntegrationTest.java` is implemented and passes.
+- [x] `TenantPersistenceIntegrationTest.java` is implemented and passes.
+- [x] `TenantIsolationIntegrationTest.java` is implemented and passes.
+- [x] Complete isolation is demonstrated between `gym_db_test_001` and `gym_db_test_002`.
+- [x] All test databases and Hikari connection pools are cleanly evicted and dropped in teardown.
+- [x] Zero modifications to the 8 protected multitenancy classes.
+- [x] All Phase 1 persistence integration tests pass with 0 errors and 0 failures.

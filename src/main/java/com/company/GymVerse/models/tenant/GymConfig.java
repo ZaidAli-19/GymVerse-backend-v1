@@ -31,10 +31,10 @@ public class GymConfig {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(precision = 10, scale = 8, nullable = false)
+    @Column(nullable = false)
     private Double latitude;
 
-    @Column(precision = 11, scale = 8, nullable = false)
+    @Column(nullable = false)
     private Double longitude;
 
     @Column(nullable = false)

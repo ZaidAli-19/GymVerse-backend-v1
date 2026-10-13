@@ -47,10 +47,10 @@ public class Member {
     @Column(nullable = false)
     private boolean independent = false;
 
-    @Column(precision = 5, scale = 2)
+    @Column
     private Double height;
 
-    @Column(precision = 5, scale = 2)
+    @Column
     private Double weight;
 
     private String goal;
