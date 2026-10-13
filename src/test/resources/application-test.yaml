@@ -1,0 +1,72 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/GymVerse?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none   # Flyway manages schema
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration/central
+    baseline-on-migrate: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    listener:
+      auto-startup: false   # Disable Kafka consumer auto-startup during tests
+
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    timeout: 60000
+    lettuce:
+      pool:
+        max-active: 4
+        max-idle: 2
+        min-idle: 1
+      shutdown-timeout: 100ms
+    key:
+      signup:
+        prefix: "signup:otp:"
+      verify:
+        prefix: "signup:verified:"
+
+  mail:
+    host: localhost
+    port: 2525
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+jwt:
+  secret: ${JWT_SECRET:dGhpcy1pcy1hLXZlcnktc2VjdXJlLWFuZC1sb25nLXNlY3JldC1rZXktZm9yLWhzMjU2LWFsZ29yaXRobQ}
+  access-token-expiration: ${JWT_ACCESS_EXPIRATION:900000}
+  refresh-token-expiration: ${JWT_REFRESH_EXPIRATION:2592000000}
+
+gymverse:
+  central:
+    db-name: ${CENTRAL_DB_NAME:GymVerse}
+  datasource:
+    host: ${TENANT_DB_HOST:localhost}
+    port: ${TENANT_DB_PORT:3306}
+
+logging:
+  level:
+    com.company.GymVerse.multitanancy: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

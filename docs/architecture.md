@@ -1,9 +1,9 @@
 # GymVerse — Target Technical Architecture & Controlled Refactoring Specification
 
-> **Document Status:** Architectural Target Specification (Revision v2.1 — Unified Identity & Tenant Administration)  
+> **Document Status:** Architectural Target Specification (Revision v2.2 — Mobile Signup, Client Boundaries & Existing-Gym Onboarding)  
 > **Audience:** Engineering Leadership, System Architects, Backend Engineers  
 > **Author:** Winston, System Architect 🏗️  
-> **Version:** 2.1 (Target)  
+> **Version:** 2.2 (Target)  
 > **Project Repository:** `GymVerse-Backend-v2`  
 > **Date:** October 2026
 
@@ -17,11 +17,18 @@ GymVerse is a multi-tenant Gym Management SaaS platform built as a secure, scala
 1. **Modular Monolith:** Single deployable Spring Boot application with strictly packaged domain modules, avoiding microservice operational overhead while enforcing clean architectural boundaries.
 2. **Database-Per-Tenant Isolation:** Complete physical database separation for each gym tenant (`gym_db_<id>`), backed by a single central platform database (`GymVerse`).
 3. **Single Central Identity (`user_accounts`):** Exactly one central identity system for every human who uses GymVerse. The legacy separation between `accounts` and `user_accounts` is retired. All authentication credentials, OTPs, and profile baselines reside centrally.
-4. **No Owner Role:** The separate `OWNER` authorization role is eliminated. Business, legal, and operational governance derives from a tenant-level administrative relationship (`TENANT_ADMIN`).
-5. **Multi-Admin Hierarchy per Tenant:** Tenants support multiple active administrators. Authority is governed by an explicit attribute: **Primary Tenant Administrator** (exactly one active per tenant) versus **Delegated Tenant Administrators** (zero or more).
-6. **Zero-Trust Server-Side Tenant Resolution:** The application never trusts client-provided database names or arbitrary tenant headers. The physical database is resolved solely through verified central mappings and active subscription checks.
-7. **Two-Tier Authentication & Token Exchange:** Central authentication produces a central token (`CENTRAL_USER`). Accessing a gym requires exchanging the central token for a verified, cryptographically signed `TENANT` token.
-8. **Zero Credential Duplication:** Passwords exist solely in the central database. Tenant databases contain only profile data and stable linking identifiers (`central_user_id`).
+4. **Central Identity Only on Signup:** A successful registration (mobile or desktop) creates a central identity only in `user_accounts`. It must never automatically create, activate, or provision a gym tenant, assign the user as a tenant administrator, or grant access to an existing gym.
+5. **No Owner Role:** The separate `OWNER` authorization role is eliminated. Business, legal, and operational governance derives from a tenant-level administrative relationship (`TENANT_ADMIN`).
+6. **Multi-Admin Hierarchy per Tenant:** Tenants support multiple active administrators. Authority is governed by an explicit attribute: **Primary Tenant Administrator** (exactly one active per tenant) versus **Delegated Tenant Administrators** (zero or more).
+7. **Client Boundary & Operational Segmentation:**
+   - **Desktop `.exe`:** Exclusively handles gym registration, tenant activation, and physical tenant provisioning (along with primary administrative governance).
+   - **Mobile Application:** Provides user signup, login, existing-gym discovery/selection, invitations, join requests, and authorized gym functionality. The mobile application must not offer tenant activation or in-app purchases.
+   - **Unified Backend:** Both clients interact with the exact same central identity system and backend services.
+8. **Server-Side Client-Agnostic Permission Enforcement:** The backend enforces all permissions, role gates, and provisioning guards strictly on the server side, independently of the client interface or client platform headers.
+9. **Controlled Existing-Gym Onboarding:** A registered central user obtains access to an existing gym solely by accepting a valid gym invitation or submitting a join request subject to required authorization/approval. Access to protected gym APIs strictly requires acquiring a tenant-scoped token via the central-to-tenant token exchange flow.
+10. **Zero-Trust Server-Side Tenant Resolution:** The application never trusts client-provided database names or arbitrary tenant headers. The physical database is resolved solely through verified central mappings and active subscription checks.
+11. **Two-Tier Authentication & Token Exchange:** Central authentication produces a central token (`CENTRAL_USER`). Accessing a gym requires exchanging the central token for a verified, cryptographically signed `TENANT` token.
+12. **Zero Credential Duplication:** Passwords exist solely in the central database. Tenant databases contain only profile data and stable linking identifiers (`central_user_id`).
 
 ---
 
@@ -29,7 +36,10 @@ GymVerse is a multi-tenant Gym Management SaaS platform built as a secure, scala
 
 ```mermaid
 graph TD
-    Client["Web / Mobile Clients"]
+    subgraph Clients ["Client Applications"]
+        DesktopClient["Desktop Client (.exe)<br/>(Gym Registration, Activation & Tenant Provisioning)"]
+        MobileClient["Mobile Application<br/>(Signup, Login, Discovery, Invitations, Join Requests, Gym Ops)"]
+    end
 
     subgraph "Ingress & Security"
         SecurityFilter["SecurityFilterChain"]
@@ -70,7 +80,8 @@ graph TD
         TenantDBN[("Tenant MySQL DB: gym_db_n")]
     end
 
-    Client --> SecurityFilter
+    DesktopClient --> SecurityFilter
+    MobileClient --> SecurityFilter
     SecurityFilter --> JwtFilter
     JwtFilter --> TenantResolver
     TenantResolver --> TenantCtx
@@ -100,6 +111,12 @@ graph TD
     AdminGovMod --> EventBus
     UserAuthMod --> CacheKV
 ```
+
+### 2.1 Client Ingress & Operational Boundary Architecture
+- **Desktop Client (`.exe`):** The primary administrative vehicle for facility operators. Responsible for gym registration, tenant activation, SaaS subscription management, and physical database provisioning.
+- **Mobile Application:** Focused on end-user accessibility, workout tracking, staff floor assistance, and gym discovery. Incorporates both **Sign Up** and **Login**, gym discovery, invitation acceptance, join requests, and daily operational features.
+- **No Mobile Tenant Activation or In-App Purchases:** The mobile application strictly omits gym registration, tenant activation, and in-app purchases. This simplifies app store distribution and aligns tenant provisioning with desktop administrative tooling.
+- **Server-Side Enforcement Independent of Client Interface:** Both clients interface with the identical central monolith backend. The backend independently enforces role, scope, and route authorization; mobile requests cannot access tenant provisioning endpoints, and direct API calls cannot circumvent client boundaries.
 
 ---
 
@@ -174,15 +191,32 @@ classDiagram
 ### 3.1 Single Central Identity (`user_accounts`)
 - **Scope:** Every human using GymVerse.
 - **Capabilities:**
-  - Can register a gym and become its Primary Administrator.
+  - Can register a gym and become its Primary Administrator (via Desktop `.exe`).
   - Can be appointed as a Delegated Administrator of another gym.
-  - Can join one or more gyms as a Member.
+  - Can join one or more gyms as a Member (via join request or invitation).
   - Can be hired as a Trainer or Staff member in one or more gyms.
 - **Credentials:** A single email, password, and multi-factor/OTP verification lifecycle.
 
+#### 3.1.1 Mobile Signup & Central Identity Creation Flow
+The GymVerse mobile application provides both **Sign Up** and **Login** options.
+1. **Signup Initiation:** A new user initiates signup by submitting their email.
+2. **OTP Verification:** The backend verifies the email address through the established Redis-backed OTP flow.
+3. **Registration Completion:** The user submits their profile and password; exactly one central identity is created in `user_accounts`.
+4. **Token Issuance:** The backend issues central access and refresh tokens (`CENTRAL_USER`).
+5. **Subsequent Login & Access:** The user can subsequently log in with their credentials and access gyms for which they possess an authorized, active relationship in `user_tenant_roles`.
+
+> [!IMPORTANT]
+> **Identity-Only Creation Invariant:** A successful signup creates a central identity only. It must **not** automatically create, activate, or provision a gym tenant, assign the user as a tenant administrator, or grant access to any existing gym. Zero default tenant privileges are granted upon registration.
+
+#### 3.1.2 Existing-Gym Onboarding & Access Prerequisites
+- **Invitation Acceptance:** A newly registered user can accept a valid gym invitation issued by a tenant administrator.
+- **Join Request Submission:** A newly registered user can discover an existing gym (e.g. by `gymCode`) and submit a join request.
+- **Controlled Authorization Gate:** Gym access must be granted only after the required authorization or approval process (tenant admin reviews and approves the request or verifies the invitation).
+- **Mandatory Token Exchange:** To access any protected gym APIs, the user must obtain a tenant-scoped token through the central-to-tenant token exchange flow (`EXCHANGE_TOKEN_ENDPOINT`).
+
 ### 3.2 Tenant Administrative Hierarchy
 - **Primary Tenant Administrator (`TENANT_ADMIN` with `adminAuthority = PRIMARY`):**
-  - Assigned upon registering the gym tenant.
+  - Assigned upon registering the gym tenant (Desktop `.exe`).
   - Exactly **one active** Primary Administrator per gym tenant.
   - Has sovereign authority to:
     - Manage SaaS subscription, billing cycles, and payment methods.
@@ -201,6 +235,22 @@ Roles exist strictly within the context of a specific gym tenant:
 2. `MEMBER`: Workout facility access, check-ins, social streaks.
 3. `TRAINER`: Client assignment, workout logs, trainer dashboards.
 4. `STAFF`: Front-desk check-in overrides, membership plan sales.
+
+### 3.4 Client Functional Boundaries & Backend Governance Matrix
+
+| Operational Capability | Desktop Client (`.exe`) | Mobile Application | Backend Security & Enforcement Rule |
+| :--- | :---: | :---: | :--- |
+| **Central Sign Up & Login** | Supported | **Supported** | Shared unified auth endpoints (`user_accounts`). Issues central tokens. |
+| **Gym Registration & Tenant Provisioning** | **Supported** | **Prohibited** | Server requires verified central admin intent; mobile client omits flow entirely. |
+| **Tenant Activation & SaaS Billing** | **Supported** | **Prohibited** | Server restricts plan purchases/activations to desktop/web portal; zero in-app purchases on mobile. |
+| **Existing-Gym Discovery & Join Requests** | Supported | **Supported** | Authenticated central users can browse gyms by code and submit `join_requests`. |
+| **Gym Invitation Acceptance** | Supported | **Supported** | Validates invitation token against tenant DB and provisions `user_tenant_roles`. |
+| **Central-to-Tenant Token Exchange** | Supported | **Supported** | Server validates active relationship, gym status, and active SaaS subscription before issuing tenant token. |
+| **Tenant Operational APIs (Attendance, Coaching, Desk)** | Supported | **Supported** | Strictly guarded by server-side `JwtFilter` requiring valid `TENANT` access token. |
+
+- **Single Shared Backend:** Both clients consume the identical Spring Boot modular monolith backend.
+- **Server-Side Enforcement Independence:** The backend enforces all permissions, role checks, and tenant boundaries independently of the calling client interface. No client-supplied platform headers can bypass authorization.
+- **No In-App Purchases:** The mobile application contains no tenant activation, SaaS subscription billing, or in-app purchase modules.
 
 ---
 
@@ -488,10 +538,13 @@ erDiagram
 
 | Token Name | Token Scope | Issued By | `sub` Claim | Primary Claims | Intended Purpose |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Central Access Token** | Platform / Global | `USER_LOGIN_ENDPOINT` | `user:<id>` | `tokenType: CENTRAL_USER`, `type: ACCESS`, `isPlatformAdmin: boolean` | Query accessible gyms, register gyms, exchange for tenant-scoped token |
-| **Tenant Access Token** | Gym / Tenant | `EXCHANGE_TOKEN_ENDPOINT` | `user:<id>` | `tokenType: TENANT`, `tenantId: <id>`, `uid: <local_user_id>`, `role: <ROLE>`, `adminAuthority: PRIMARY/DELEGATED/NONE`, `type: ACCESS` | Access operational gym APIs (Member, Trainer, Staff, Tenant-Admin) |
+| **Central Access Token** | Platform / Global | `USER_LOGIN_ENDPOINT` | `user:<id>` | `tokenType: CENTRAL_USER`, `type: ACCESS`, `isPlatformAdmin: boolean` | Query accessible gyms, discover gyms by code, submit join requests, accept invitations, exchange for tenant-scoped token, register gyms (Desktop `.exe` only) |
+| **Tenant Access Token** | Gym / Tenant | `EXCHANGE_TOKEN_ENDPOINT` | `user:<id>` | `tokenType: TENANT`, `tenantId: <id>`, `uid: <local_user_id>`, `role: <ROLE>`, `adminAuthority: PRIMARY/DELEGATED/NONE`, `type: ACCESS` | Mandatory token for accessing protected operational gym APIs (Member, Trainer, Staff, Tenant-Admin) after verified authorization |
 | **Central Refresh Token** | Global Refresh | Central Login | `user:<id>` | `type: REFRESH`, `jti: <uuid>` | Rotate and renew Central Access Tokens |
 | **Tenant Refresh Token** | Tenant Refresh | Token Exchange | `user:<id>` | `type: REFRESH`, `tenantId: <id>`, `jti: <uuid>` | Rotate and renew Tenant Access Tokens |
+
+> [!NOTE]
+> **Token Scope Isolation:** A user who signs up or logs in holds only a `CENTRAL_USER` token. They cannot directly call tenant-operational endpoints. To access any protected gym API, the user must successfully complete the central-to-tenant token exchange (`EXCHANGE_TOKEN_ENDPOINT`) for a gym where they have an authorized, active relationship in `user_tenant_roles`.
 
 ### 5.2 Exact Tenant Access Token Claims Contract
 
@@ -548,16 +601,22 @@ sequenceDiagram
     Filter-->>Client: HTTP 200 OK
 ```
 
+### 5.4 Backend Independence & Client-Agnostic Authorization Guards
+1. **Server-Side Authority Verification:** The backend authenticates and authorizes each HTTP request strictly on the basis of cryptographic token claims, central database records, and active tenant subscriptions.
+2. **Platform Header Agnosticism:** The backend does not rely on client-supplied headers (e.g. `X-Client-Platform: mobile`) to enforce security invariants.
+3. **Desktop Endpoint Protection:** Tenant provisioning and gym creation endpoints (`REGISTER_GYM_ENDPOINT`, tenant database creation, Flyway migration triggers) strictly require central authentication and explicit desktop administrative flows. They cannot be executed by mobile clients or unauthorized identities.
+4. **Tenant Endpoint Protection:** Tenant operational routes are completely shielded by `JwtFilter`. Any request missing a valid `TENANT` token bearing a matching `tenantId` is rejected with `401 Unauthorized` or `403 Forbidden`, regardless of client type.
+
 ---
 
 ## 6. Detailed Workflows & Sequence Diagrams
 
-### 6.1 Central User Registration & OTP Flow
+### 6.1 Central User Registration & OTP Flow (Mobile & Universal)
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as Any Person
+    actor User as Mobile / Central User
     participant Auth as AuthController
     participant OtpSvc as SendOtpService
     participant Redis as Redis Cache
@@ -567,6 +626,7 @@ sequenceDiagram
     participant CompSvc as CompleteSignupService
     participant DB as Central Database (user_accounts)
 
+    Note over User,DB: Step 1: Initiate Signup
     User->>Auth: POST [USER_SIGNUP_INITIATE_ENDPOINT] {email}
     Auth->>OtpSvc: Execute signup initiation
     OtpSvc->>DB: Check if email exists
@@ -577,6 +637,7 @@ sequenceDiagram
     Kafka->>Worker: Consume SendOtpEvent
     Worker->>User: Deliver HTML Email with OTP
 
+    Note over User,DB: Step 2: Verify OTP
     User->>Auth: POST [USER_SIGNUP_VERIFY_ENDPOINT] {email, otp}
     Auth->>VerSvc: Verify OTP
     VerSvc->>Redis: GET signup:otp:<email>
@@ -588,22 +649,38 @@ sequenceDiagram
         VerSvc-->>User: {message: "OTP verified"}
     end
 
+    Note over User,DB: Step 3: Complete Registration
     User->>Auth: POST [USER_SIGNUP_COMPLETE_ENDPOINT] {email, password, firstName, lastName}
     Auth->>CompSvc: Complete signup
     CompSvc->>Redis: GET signup:verified:<email>
     CompSvc->>DB: INSERT INTO user_accounts (BCrypt password)
     CompSvc->>Redis: DEL signup:verified:<email>
-    CompSvc-->>User: Issue Central Access & Refresh Tokens
+
+    Note over CompSvc,User: Step 4: Token Issuance
+    CompSvc-->>User: Issue Central Access & Refresh Tokens (CENTRAL_USER)
 ```
+
+#### Mobile Signup Flow Invariants:
+1. **Initiation:** A new user initiates signup using their email.
+2. **OTP Verification:** The backend verifies the email through the existing OTP flow backed by Redis and asynchronous Kafka mail delivery.
+3. **Central Identity Establishment:** The user completes registration, and exactly **one central identity** is created in `user_accounts`.
+4. **Token Issuance:** The backend issues the appropriate central access and refresh tokens (`CENTRAL_USER` scope).
+5. **Subsequent Login & Access:** The user can subsequently log in using these central credentials and access gyms for which they possess an authorized, active relationship in `user_tenant_roles`.
+
+> [!IMPORTANT]
+> **Identity-Only Boundary:** A successful signup creates a central identity only. It must **not** automatically create, activate, or provision a gym tenant, assign the user as a tenant administrator, or grant access to an existing gym.
 
 ---
 
-### 6.2 Gym Registration & Primary Admin Establishment
+### 6.2 Gym Registration & Primary Admin Establishment (Desktop Client Exclusive)
+
+> [!NOTE]
+> **Desktop Boundary:** This workflow is initiated strictly from the **Desktop Client (`.exe`)** by an authenticated central user. The mobile application does not offer gym registration, tenant activation, or physical database provisioning.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as Authenticated Central User
+    actor User as Authenticated Central User (Desktop)
     participant Auth as AuthController
     participant RegSvc as RegisterGymService
     participant CentralDB as Central Database
@@ -678,7 +755,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as Client App
+    actor User as Client App (Mobile / Desktop)
     participant Auth as AuthController
     participant ExchangeSvc as TokenExchangeService
     participant CentralDB as Central Database
@@ -708,6 +785,70 @@ sequenceDiagram
 
 ---
 
+### 6.5 Existing-Gym Onboarding Flow (Mobile & Universal)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Central User (Mobile App)
+    actor Admin as Tenant Administrator
+    participant MobileApp as Mobile Application
+    participant CentralAPI as Central API
+    participant CentralDB as Central Database
+    participant TenantAPI as Tenant Operations API
+    participant TenantDB as Tenant Database
+    participant Jwt as JwtUtil
+
+    Note over User,TenantDB: ONBOARDING OPTION A: Join Request Flow (Gym Discovery)
+    User->>MobileApp: Search/Discover Gym via Gym Code (e.g. "FIT-101")
+    MobileApp->>CentralAPI: POST [SUBMIT_JOIN_REQUEST_ENDPOINT] {gymCode, notes}<br/>Bearer <central_user_token>
+    CentralAPI->>TenantDB: INSERT INTO join_requests (central_user_id, email, status='PENDING')
+    CentralAPI-->>MobileApp: 202 Accepted ("Join request submitted, pending gym approval")
+
+    Note over Admin,TenantDB: Approval Gate
+    Admin->>TenantAPI: GET [ADMIN_JOIN_REQUESTS_ENDPOINT]<br/>Bearer <tenant_admin_token>
+    Admin->>TenantAPI: POST [APPROVE_JOIN_REQUEST_ENDPOINT] {requestId}
+    TenantAPI->>TenantDB: UPDATE join_requests SET status='APPROVED', reviewed_at=NOW()
+    TenantAPI->>TenantDB: INSERT INTO users (central_user_id, email, role='MEMBER')
+    TenantAPI->>TenantDB: INSERT INTO members (user_id, join_date=TODAY)
+    TenantAPI->>CentralDB: INSERT INTO user_tenant_roles (user_id, gym_id, role='MEMBER', admin_authority='NONE', status='ACTIVE')
+    TenantAPI-->>Admin: 200 OK ("Member approved and relationship established")
+
+    Note over User,TenantDB: ONBOARDING OPTION B: Invitation Acceptance Flow
+    Admin->>TenantAPI: POST [ISSUE_INVITATION_ENDPOINT] {email, role='MEMBER'}<br/>Bearer <tenant_admin_token>
+    TenantAPI->>TenantDB: INSERT INTO gym_invitations (email, role, token, status='PENDING')
+    TenantAPI-->>User: Dispatches invitation notification/email
+    User->>MobileApp: Accept Invitation with token
+    MobileApp->>CentralAPI: POST [ACCEPT_INVITATION_ENDPOINT] {invitationToken}<br/>Bearer <central_user_token>
+    CentralAPI->>TenantDB: UPDATE gym_invitations SET status='ACCEPTED', accepted_at=NOW()
+    CentralAPI->>TenantDB: INSERT INTO users (central_user_id, email, role='MEMBER')
+    CentralAPI->>TenantDB: INSERT INTO members (user_id, join_date=TODAY)
+    CentralAPI->>CentralDB: INSERT INTO user_tenant_roles (user_id, gym_id, role='MEMBER', admin_authority='NONE', status='ACTIVE')
+    CentralAPI-->>MobileApp: 200 OK ("Invitation accepted and relationship established")
+
+    Note over User,TenantAPI: MANDATORY STEP: Central-to-Tenant Token Exchange
+    User->>MobileApp: Open Approved Gym
+    MobileApp->>CentralAPI: POST [EXCHANGE_TOKEN_ENDPOINT] {targetGymId}<br/>Bearer <central_user_token>
+    CentralAPI->>CentralDB: Verify user_tenant_roles is ACTIVE
+    CentralAPI->>Jwt: Issue Tenant Access Token (tokenType=TENANT, role=MEMBER, uid=localId)
+    CentralAPI-->>MobileApp: Return {tenantAccessToken}
+
+    Note over User,TenantAPI: Access Protected Gym APIs
+    MobileApp->>TenantAPI: POST [MEMBER_CHECKIN_ENDPOINT]<br/>Bearer <tenantAccessToken>
+    TenantAPI-->>MobileApp: 200 OK ("Check-in recorded")
+```
+
+#### Existing-Gym Onboarding Invariants:
+1. **Onboarding Pathways:** A newly registered user onboards into an existing gym strictly by:
+   - Accepting a valid gym invitation issued by a tenant administrator, OR
+   - Submitting a join request against an active gym code.
+2. **Mandatory Approval / Authorization Gate:** Membership access is granted only after the required authorization or approval process completes:
+   - For join requests: an active Tenant Administrator (Primary or Delegated) must explicitly approve the application.
+   - For invitations: the user must present a valid, non-expired invitation token.
+3. **Mandatory Central-to-Tenant Token Exchange:** Upon approval, central and tenant records are synchronized (`user_tenant_roles` and tenant `users`/`members`). However, the client **must** execute the token exchange flow to obtain a tenant-scoped token (`TENANT`) before accessing any protected gym APIs. Direct calls to gym APIs with central tokens are unconditionally rejected.
+
+---
+
 ## 7. Role & Permission Matrix
 
 | Role | Admin Authority | Permitted Operations | Restricted Operations |
@@ -718,6 +859,22 @@ sequenceDiagram
 | **TRAINER** | NONE | View trainer dashboard, view client streaks & attendance, record workout coaching notes | Manage plans, review join requests, access financial records |
 | **STAFF** | NONE | Front-desk check-in overrides, browse member list, assist plan renewals | Create/delete plans, record facility expenses, change geofencing |
 | **MEMBER** | NONE | GPS Check-in/out, browse catalog, submit plan request, search peers, friend requests, streaks | Any admin or staff endpoint, view other members' financial data |
+
+### 7.1 Client Capability & Platform Permission Boundaries
+
+| Feature / Action | Desktop Client (`.exe`) | Mobile Application | Server-Side Authorization Invariant |
+| :--- | :---: | :---: | :--- |
+| **User Sign Up (OTP)** | Permitted | Permitted | Creates `user_accounts` entry only; issues `CENTRAL_USER` token. |
+| **User Login (Central)** | Permitted | Permitted | Authenticates credentials; issues `CENTRAL_USER` token. |
+| **Gym Registration & Tenant Provisioning** | Permitted | **Prohibited** | Server verifies caller identity and provisions tenant DB; endpoint inaccessible from mobile workflows. |
+| **Tenant Activation & SaaS Subscription** | Permitted | **Prohibited** | Managed via desktop client / external billing; zero tenant activation or in-app purchases on mobile. |
+| **Existing-Gym Discovery (by code)** | Permitted | Permitted | Authenticated central users can lookup gym metadata. |
+| **Join Request Submission** | Permitted | Permitted | Creates `join_requests` in target tenant DB with status `PENDING`. |
+| **Join Request Approval/Rejection** | Permitted | Permitted | Requires `TENANT_ADMIN` (PRIMARY or DELEGATED) authority. |
+| **Gym Invitation Issuance** | Permitted | Permitted | Requires `TENANT_ADMIN` authority. |
+| **Gym Invitation Acceptance** | Permitted | Permitted | Validates token and creates central/tenant relationship. |
+| **Token Exchange (`EXCHANGE_TOKEN_ENDPOINT`)** | Permitted | Permitted | Server validates active `user_tenant_roles` and non-expired gym SaaS plan before issuing `TENANT` token. |
+| **Operational Gym APIs (Attendance, Coaching, Desk)** | Permitted | Permitted | Strictly requires `TENANT` token with valid role (`MEMBER`, `TRAINER`, `STAFF`, `TENANT_ADMIN`). |
 
 ---
 
@@ -783,6 +940,18 @@ For operations that modify both Central and Tenant databases (e.g. Gym Registrat
 - **Decision:** Central authentication returns a Central Access Token. Accessing tenant APIs requires calling `EXCHANGE_TOKEN_ENDPOINT` to acquire a Tenant Access Token scoped strictly to the selected gym.
 - **Consequences:** Eliminates privilege bleed between gyms. Allows users to switch gym contexts seamlessly without re-authenticating centrally.
 
+### ADR-6: Mobile Signup, Existing-Gym Onboarding, and Client Boundary Enforcement
+- **Status:** Approved
+- **Context:** The mobile application requires self-service signup without inadvertently granting administrative privileges or provisioning physical databases. Tenant activation and purchases involve business licensing and platform app-store considerations.
+- **Decision:**
+  1. The mobile application supports both Sign Up and Login, creating a central identity strictly in `user_accounts`.
+  2. Signup creates a central identity only; it never auto-creates, activates, or provisions a gym tenant, nor does it assign tenant admin roles or grant gym access.
+  3. Existing-gym onboarding requires explicit join requests (subject to tenant admin review/approval) or verified gym invitations, followed by central-to-tenant token exchange.
+  4. Desktop `.exe` exclusively handles gym registration, activation, and tenant provisioning.
+  5. The mobile application does not offer tenant activation or in-app purchases.
+  6. The backend enforces all permissions, role boundaries, and provisioning guards independently of the client interface.
+- **Consequences:** Provides a clean separation of concerns, guarantees zero-trust security, avoids complex app store digital billing requirements on mobile, and allows users to seamlessly register centrally before joining gyms.
+
 ---
 
 ## 10. Clean-Slate Schema Design for GymVerse-Backend-v2
@@ -827,11 +996,12 @@ graph LR
   - Implement `V1__init_central_schema.sql` in `db/migration/central`.
   - Create JPA entities and repositories in `com.company.GymVerse.models.central` and `com.company.GymVerse.repositories.central`.
 - **Phase 2: Unified Central Auth & JWT Engine**
-  - Implement unified central authentication service (signup initiation, OTP verification, signup completion, login, refresh).
+  - Implement unified central authentication service supporting both mobile and desktop signup (initiation, OTP verification, registration completion, login, refresh).
+  - Enforce the identity-only creation invariant (zero tenant provisioning on signup).
   - Implement namespaced JWT generation (`CENTRAL_USER` token type).
   - Configure Redis-backed OTP caching and rate limiting.
-- **Phase 3: Gym Registration & Primary Admin Establishment**
-  - Implement gym registration workflow with automated database creation and Flyway migration.
+- **Phase 3: Gym Registration & Primary Admin Establishment (Desktop .exe Exclusive)**
+  - Implement desktop-scoped gym registration workflow with automated database creation and Flyway migration.
   - Establish registrant as Primary Tenant Administrator in `user_tenant_roles`.
   - Provision default 14-day trial subscription in `gym_subscriptions`.
 - **Phase 4: Multi-Admin Governance & Token Exchange**
@@ -840,7 +1010,9 @@ graph LR
 - **Phase 5: Member Onboarding & Security Hardening**
   - Implement `V1__init_tenant_schema.sql` in `db/migration/tenant`.
   - Create tenant entities and repositories in `models.tenant` and `repositories.tenant`.
-  - Implement zero-trust `JwtFilter` with server-side database name resolution and route protection.
+  - Implement existing-gym onboarding workflows (gym discovery by code, join request submission and admin approval, invitation dispatch and acceptance).
+  - Enforce mandatory token exchange prerequisite for all protected gym APIs.
+  - Implement zero-trust `JwtFilter` with server-side database name resolution, route protection, and client-agnostic authorization.
 - **Phase 6: Tenant Operations & Social Feature Migration**
   - Implement member check-in/out with `GeoUtil` geofencing.
   - Implement friendship, streaks, and trainer workflows.
