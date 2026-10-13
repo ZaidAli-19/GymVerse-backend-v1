@@ -2,7 +2,7 @@
 id: "story-1.3"
 epic_id: "epic-1"
 title: "Central JPA Entities and Repositories"
-status: "ready-for-dev"
+status: "implemented"
 type: "architecture-persistence"
 created_at: "2026-10-13"
 dependencies:
@@ -259,9 +259,9 @@ All central repositories must extend `JpaRepository<Entity, Long>` and be manage
 
 ## Definition of Done (DoD)
 
-- [ ] All 8 enums exist in `com.company.GymVerse.models.central.enums`.
-- [ ] All 6 entities exist in `com.company.GymVerse.models.central` and match `V1__init_central_schema.sql` column definitions.
-- [ ] Monetary fields are strictly typed as `BigDecimal` with precision 10 and scale 2.
-- [ ] All 6 repositories exist in `com.company.GymVerse.repositories.central` with required query methods.
-- [ ] Central JPA configuration scans and loads entities and repositories without error.
-- [ ] Zero modifications to the 8 protected multitenancy classes.
+- [x] All 8 enums exist in `com.company.GymVerse.models.central.enums`.
+- [x] All 6 entities exist in `com.company.GymVerse.models.central` and match `V1__init_central_schema.sql` column definitions.
+- [x] Monetary fields are strictly typed as `BigDecimal` with precision 10 and scale 2.
+- [x] All 6 repositories exist in `com.company.GymVerse.repositories.central` with required query methods.
+- [x] Central JPA configuration scans and loads entities and repositories without error.
+- [x] Zero modifications to the 8 protected multitenancy classes.
