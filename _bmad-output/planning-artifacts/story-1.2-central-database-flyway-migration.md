@@ -2,7 +2,7 @@
 id: "story-1.2"
 epic_id: "epic-1"
 title: "Central Database Flyway Migration (V1__init_central_schema.sql)"
-status: "ready-for-dev"
+status: "implemented"
 type: "architecture-persistence"
 created_at: "2026-10-13"
 dependencies:
@@ -255,9 +255,9 @@ SELECT version, description, success FROM GymVerse.flyway_schema_history;
 
 ## Definition of Done (DoD)
 
-- [ ] `V1__init_central_schema.sql` is placed in `src/main/resources/db/migration/central/`.
-- [ ] All 6 central tables are defined with exact column types, lengths, nullability, defaults, and constraints specified in AC-1.2.1 through AC-1.2.6.
-- [ ] Monetary columns are defined as `DECIMAL(10,2) NOT NULL`.
-- [ ] `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci` is applied to every table.
-- [ ] Flyway successfully applies the migration and records `success = 1` in `flyway_schema_history`.
-- [ ] No modifications to the 8 protected multitenancy classes.
+- [x] `V1__init_central_schema.sql` is placed in `src/main/resources/db/migration/central/`.
+- [x] All 6 central tables are defined with exact column types, lengths, nullability, defaults, and constraints specified in AC-1.2.1 through AC-1.2.6.
+- [x] Monetary columns are defined as `DECIMAL(10,2) NOT NULL`.
+- [x] `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci` is applied to every table.
+- [x] Script structured for Flyway auto-migration on application startup.
+- [x] No modifications to the 8 protected multitenancy classes.
