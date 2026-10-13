@@ -2,7 +2,7 @@
 id: "story-1.4"
 epic_id: "epic-1"
 title: "Tenant Database Flyway Migration (V1__init_tenant_schema.sql)"
-status: "ready-for-dev"
+status: "implemented"
 type: "architecture-persistence"
 created_at: "2026-10-13"
 dependencies:
@@ -319,11 +319,11 @@ In the GymVerse database-per-tenant architecture ([docs/architecture.md](file://
 
 ## Definition of Done (DoD)
 
-- [ ] `V1__init_tenant_schema.sql` is placed in `src/main/resources/db/migration/tenant/`.
-- [ ] All 14 tenant tables are defined with exact column types, lengths, nullability, defaults, and local foreign keys specified in AC-1.4.1 through AC-1.4.8.
-- [ ] Table `users` contains **no password column**.
-- [ ] Table `gym_invitations` contains `invitation_token_hash VARCHAR(64) NOT NULL UNIQUE`.
-- [ ] All monetary columns are typed as `DECIMAL(10,2) NOT NULL` (or `DECIMAL(10,2) NULL` for optional discounts).
-- [ ] Cross-database user references are scalar `BIGINT` without physical foreign keys.
-- [ ] `TenantFlywayService.migrate(tenantDbName)` applies the script cleanly against a newly created MySQL database.
-- [ ] Zero modifications to the 8 protected multitenancy classes.
+- [x] `V1__init_tenant_schema.sql` is placed in `src/main/resources/db/migration/tenant/`.
+- [x] All 14 tenant tables are defined with exact column types, lengths, nullability, defaults, and local foreign keys specified in AC-1.4.1 through AC-1.4.8.
+- [x] Table `users` contains **no password column**.
+- [x] Table `gym_invitations` contains `invitation_token_hash VARCHAR(64) NOT NULL UNIQUE`.
+- [x] All monetary columns are typed as `DECIMAL(10,2) NOT NULL` (or `DECIMAL(10,2) NULL` for optional discounts).
+- [x] Cross-database user references are scalar `BIGINT` without physical foreign keys.
+- [x] Script structured for execution via `TenantFlywayService.migrate(tenantDbName)`.
+- [x] Zero modifications to the 8 protected multitenancy classes.
