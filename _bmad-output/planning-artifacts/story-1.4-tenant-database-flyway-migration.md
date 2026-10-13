@@ -233,13 +233,14 @@ In the GymVerse database-per-tenant architecture ([docs/architecture.md](file://
   - `friend_requests`:
     - `id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY`
     - `sender_member_id BIGINT NOT NULL`, `receiver_member_id BIGINT NOT NULL`
-    - `status VARCHAR(30) NOT NULL DEFAULT 'PENDING'` (PENDING, ACCEPTED, REJECTED)
+    - `status VARCHAR(30) NOT NULL DEFAULT 'PENDING'` (PENDING, ACCEPTED, REJECTED, REMOVED)
     - `CONSTRAINT fk_fr_sender FOREIGN KEY (sender_member_id) REFERENCES members (id) ON DELETE CASCADE`
     - `CONSTRAINT fk_fr_receiver FOREIGN KEY (receiver_member_id) REFERENCES members (id) ON DELETE CASCADE`
     - `UNIQUE KEY uq_fr_sender_receiver (sender_member_id, receiver_member_id)`
   - `custom_friends`:
     - `id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY`
     - `user_member_id BIGINT NOT NULL`, `friend_member_id BIGINT NOT NULL`
+    - `custom_name VARCHAR(100) NULL`
     - `created_at DATETIME(6) NOT NULL`
     - `CONSTRAINT fk_cf_user FOREIGN KEY (user_member_id) REFERENCES members (id) ON DELETE CASCADE`
     - `CONSTRAINT fk_cf_friend FOREIGN KEY (friend_member_id) REFERENCES members (id) ON DELETE CASCADE`

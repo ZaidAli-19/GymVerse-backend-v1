@@ -187,8 +187,8 @@ All tenant repositories must extend `JpaRepository<Entity, Long>` and be managed
 - **Given** social tables,
 - **When** mapped,
 - **Then**:
-  - `FriendRequest`: `senderMember` (`@ManyToOne`), `receiverMember` (`@ManyToOne`), `status`.
-  - `CustomFriend`: `userMember` (`@ManyToOne`), `friendMember` (`@ManyToOne`), `createdAt`.
+  - `FriendRequest`: `senderMember` (`@ManyToOne`), `receiverMember` (`@ManyToOne`), `status` (`FriendRequestStatus` enum: `PENDING`, `ACCEPTED`, `REJECTED`, `REMOVED`).
+  - `CustomFriend`: `userMember` (`@ManyToOne`), `friendMember` (`@ManyToOne`), `customName` (`String`), `createdAt` (`Instant`).
   - `FriendStreak`: `member1` (`@ManyToOne`), `member2` (`@ManyToOne`), `currentStreak`, `longestStreak`, `lastStreakDate`, `togetherCheckIns`, `togetherCheckOuts`, `lastCheckoutTogetherDate`.
 
 ### AC-1.5.8: Tenant Repository Query Methods

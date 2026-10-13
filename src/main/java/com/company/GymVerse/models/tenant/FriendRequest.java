@@ -1,7 +1,10 @@
 package com.company.GymVerse.models.tenant;
 
+import com.company.GymVerse.models.tenant.enums.FriendRequestStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -41,9 +44,10 @@ public class FriendRequest {
     @JoinColumn(name = "receiver_member_id", nullable = false)
     private Member receiverMember;
 
+    @Enumerated(EnumType.STRING)
     @Builder.Default
     @Column(nullable = false, length = 30)
-    private String status = "PENDING";
+    private FriendRequestStatus status = FriendRequestStatus.PENDING;
 
     @Override
     public boolean equals(Object o) {

@@ -43,6 +43,9 @@ public class CustomFriend {
     @JoinColumn(name = "friend_member_id", nullable = false)
     private Member friendMember;
 
+    @Column(name = "custom_name", length = 100)
+    private String customName;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

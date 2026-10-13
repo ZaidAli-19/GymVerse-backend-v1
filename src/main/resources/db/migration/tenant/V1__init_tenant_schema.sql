@@ -247,6 +247,7 @@ CREATE TABLE custom_friends (
     id BIGINT NOT NULL AUTO_INCREMENT,
     user_member_id BIGINT NOT NULL,
     friend_member_id BIGINT NOT NULL,
+    custom_name VARCHAR(100) NULL,
     created_at DATETIME(6) NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_cf_user FOREIGN KEY (user_member_id) REFERENCES members (id) ON DELETE CASCADE,

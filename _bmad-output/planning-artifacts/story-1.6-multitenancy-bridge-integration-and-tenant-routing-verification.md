@@ -2,7 +2,7 @@
 id: "story-1.6"
 epic_id: "epic-1"
 title: "Multitenancy Bridge Integration & Tenant Routing Verification"
-status: "ready-for-dev"
+status: "implemented"
 type: "architecture-persistence"
 created_at: "2026-10-13"
 dependencies:
@@ -225,9 +225,9 @@ public class TenantRoutingBridge {
 
 ## Definition of Done (DoD)
 
-- [ ] `TenantRoutingBridge.java` is implemented in `com.company.GymVerse.multitanancy`.
-- [ ] Injects `tenantTransactionManager` with `@Qualifier("tenantTransactionManager")`.
-- [ ] Establishes `TenantContext.setCurrentTenant(tenantDbName)` before transaction boundary.
-- [ ] Enforces unconditional `TenantContext.clear()` in `finally` blocks.
-- [ ] All 8 existing multitenancy classes remain 100% byte-for-byte unchanged.
-- [ ] `./mvnw clean test-compile` succeeds.
+- [x] `TenantRoutingBridge.java` is implemented in `com.company.GymVerse.multitanancy`.
+- [x] Injects `tenantTransactionManager` with `@Qualifier("tenantTransactionManager")`.
+- [x] Establishes `TenantContext.setCurrentTenant(tenantDbName)` before transaction boundary.
+- [x] Enforces unconditional `TenantContext.clear()` in `finally` blocks.
+- [x] All 8 existing multitenancy classes remain 100% byte-for-byte unchanged.
+- [x] `./mvnw clean test-compile` succeeds.
