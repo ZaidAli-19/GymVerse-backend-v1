@@ -2,7 +2,7 @@
 id: "story-1.5"
 epic_id: "epic-1"
 title: "Tenant-Local JPA Entities and Repositories"
-status: "ready-for-dev"
+status: "implemented"
 type: "architecture-persistence"
 created_at: "2026-10-13"
 dependencies:
@@ -284,11 +284,11 @@ All tenant repositories must extend `JpaRepository<Entity, Long>` and be managed
 
 ## Definition of Done (DoD)
 
-- [ ] All 14 tenant entities exist in `com.company.GymVerse.models.tenant`.
-- [ ] `TenantUser` contains scalar `centralUserId` and **zero password fields**.
-- [ ] `GymInvitation` contains `invitationTokenHash` (`VARCHAR(64)`).
-- [ ] Monetary fields use `BigDecimal` with `@Column(precision = 10, scale = 2)`.
-- [ ] All 14 repositories exist in `com.company.GymVerse.repositories.tenant`.
-- [ ] `GymInvitationRepository` provides `findByInvitationTokenHash(String tokenHash)`.
-- [ ] Scanned by `TenantJpaConfig` without mapping errors.
-- [ ] Zero modifications to the 8 protected multitenancy classes.
+- [x] All 14 tenant entities exist in `com.company.GymVerse.models.tenant`.
+- [x] `TenantUser` contains scalar `centralUserId` and **zero password fields**.
+- [x] `GymInvitation` contains `invitationTokenHash` (`VARCHAR(64)`).
+- [x] Monetary fields use `BigDecimal` with `@Column(precision = 10, scale = 2)`.
+- [x] All 14 repositories exist in `com.company.GymVerse.repositories.tenant`.
+- [x] `GymInvitationRepository` provides `findByInvitationTokenHash(String tokenHash)`.
+- [x] Scanned by `TenantJpaConfig` without mapping errors.
+- [x] Zero modifications to the 8 protected multitenancy classes.
