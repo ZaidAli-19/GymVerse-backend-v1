@@ -33,9 +33,17 @@ public class PlatformAdminResponse {
     // ==========================================
     private List<SaasPlanResponse> plans;
     private PagedResponse<SaasPlanResponse> pagedPlans;
+
+    // ==========================================
+    // FETCH_ALL_GYM_TENANTS fields
+    // ==========================================
+    private List<GymTenantSummaryResponse> tenants;
+    private PagedResponse<GymTenantSummaryResponse> pagedTenants;
+
     private Integer currentPage;
     private Integer totalPages;
     private Long totalRecords;
     private Integer pageSize;
     private Boolean last;
 }
+

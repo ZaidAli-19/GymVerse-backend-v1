@@ -14,6 +14,7 @@ This document establishes the dependency relationships, critical path, risk anal
 | **Story PA-4** | Single SaaS Subscription Plan Retrieval by Identifier | Story PA-2 | `SaasSubscriptionPlanRepository`, `ResourceNotFoundException`, `SaasPlanMapper` | Story PA-5 (plan lookup verification) |
 | **Story PA-5** | SaaS Subscription Plan Availability Management | Stories PA-2, PA-4 | `SaasSubscriptionPlanRepository`, `PlatformAdminValidations`, `SaasPlanMapper` | Tenant plan catalog filtering (`findByActiveTrue()`) |
 | **Story PA-6** | Platform Registered Gym Tenants Dynamic Directory Retrieval | None (Independent) | `GymTenantRepository` extending `JpaSpecificationExecutor`, `GymTenantSpecification`, `PagedResponse` | Platform operational oversight & future gym suspension |
+| **Story PA-7** | Platform Admin Request DTO Consolidation and Pagination Standardization | Stories PA-2, PA-3, PA-4, PA-5, PA-6 | `PlatformAdminRequest`, `SaasPlanFilterRequest`, `GymTenantFilterRequest`, `PlatformAdminValidationsImpl` | Clean, standardized API contract; elimination of precedence ambiguities |
 
 ---
 
@@ -32,6 +33,7 @@ graph TD
         PA4["Story PA-4: Single Plan Direct Retrieval by ID"]
         PA5["Story PA-5: Plan Availability Management (Active Toggle)"]
         PA6["Story PA-6: Gym Tenants Dynamic Directory (JPA Specs)"]
+        PA7["Story PA-7: DTO Consolidation & Pagination Standardization"]
     end
 
     P1 --> PA1
@@ -41,6 +43,9 @@ graph TD
     PA2 --> PA3
     PA2 --> PA4
     PA4 --> PA5
+    PA3 --> PA7
+    PA5 --> PA7
+    PA6 --> PA7
 
     classDef primary fill:#2563eb,stroke:#1d4ed8,stroke-width:2px,color:#fff;
     classDef secondary fill:#059669,stroke:#047857,stroke-width:2px,color:#fff;
@@ -48,8 +53,9 @@ graph TD
 
     class P1 baseline;
     class PA1,PA2 primary;
-    class PA3,PA4,PA5,PA6 secondary;
+    class PA3,PA4,PA5,PA6,PA7 secondary;
 ```
+
 
 ---
 
@@ -85,7 +91,12 @@ To minimize integration churn and maximize testability, the stories should be im
 - **Rationale:** Updates `GymTenantRepository` to extend `JpaSpecificationExecutor<GymTenant>`. Introduces `GymTenantSpecification` and `GymTenantSummaryMapper`. Operates purely against central data without tenant DB routing, returning `PagedResponse<GymTenantSummaryResponse>`.
 - **Verification Gate:** `GetGymTenantsIntegrationTest` verifies tenant retrieval, dynamic status/city filtering, sorting, pagination, and zero interaction with `TenantContext`.
 
+### **Step 7: Story PA-7 — Platform Admin Request DTO Consolidation and Pagination Standardization**
+- **Rationale:** Consolidates common pagination and sorting at the root of `PlatformAdminRequest`, strips duplicate pagination fields from `SaasPlanFilterRequest` and `GymTenantFilterRequest`, removes flat filter sprawl from `PlatformAdminRequest`, and eliminates dual-path fallback resolution logic across services and validations.
+- **Verification Gate:** `PlatformAdminDtoConsolidationIntegrationTest` and full suite regression test (`mvn test`) verify that all 61+ tests pass with canonical single-source DTO reading.
+
 ---
+
 
 ## 4. Risk Analysis & Mitigations
 

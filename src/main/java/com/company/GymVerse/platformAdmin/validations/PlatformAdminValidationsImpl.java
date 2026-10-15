@@ -23,6 +23,10 @@ public class PlatformAdminValidationsImpl implements PlatformAdminValidations {
             "id", "name", "price", "billingCycle", "maxMembers", "maxTrainers"
     );
 
+    private static final Set<String> ALLOWED_TENANT_SORT_FIELDS = Set.of(
+            "id", "gymName", "gymCode", "city", "status", "registeredAt"
+    );
+
     private final SaasSubscriptionPlanRepository planRepository;
 
     @Override
@@ -158,4 +162,46 @@ public class PlatformAdminValidationsImpl implements PlatformAdminValidations {
             throw new BadRequestException("Plan availability status must be specified as true or false");
         }
     }
+
+    @Override
+    public void validateFetchGymTenants(PlatformAdminRequest request) {
+        if (request == null) {
+            return;
+        }
+
+        Integer page = request.getPage() != null ? request.getPage()
+                : (request.getTenantFilter() != null ? request.getTenantFilter().getPage() : null);
+        Integer size = request.getSize() != null ? request.getSize()
+                : (request.getTenantFilter() != null ? request.getTenantFilter().getSize() : null);
+        String sortBy = request.getSortBy() != null ? request.getSortBy()
+                : (request.getTenantFilter() != null ? request.getTenantFilter().getSortBy() : null);
+        String sortDirection = request.getSortDirection() != null ? request.getSortDirection()
+                : (request.getTenantFilter() != null ? request.getTenantFilter().getSortDirection() : null);
+
+        // Validate pagination
+        if (page != null && page < 0) {
+            throw new BadRequestException("Page index must not be negative");
+        }
+        if (size != null && (size < 1 || size > 100)) {
+            throw new BadRequestException("Page size must be between 1 and 100");
+        }
+
+        // Validate sort field whitelist
+        if (sortBy != null && !sortBy.trim().isBlank()) {
+            String trimmedSort = sortBy.trim();
+            if (!ALLOWED_TENANT_SORT_FIELDS.contains(trimmedSort)) {
+                log.warn("Invalid tenant sort field rejected: '{}'", trimmedSort);
+                throw new BadRequestException("Invalid sort field: '" + trimmedSort + "'. Allowed fields: [id, gymName, gymCode, city, status, registeredAt]");
+            }
+        }
+
+        // Validate sort direction
+        if (sortDirection != null && !sortDirection.trim().isBlank()) {
+            String trimmedDir = sortDirection.trim().toLowerCase();
+            if (!"asc".equals(trimmedDir) && !"desc".equals(trimmedDir)) {
+                throw new BadRequestException("Invalid sort direction: '" + sortDirection + "'. Allowed values: [asc, desc]");
+            }
+        }
+    }
 }
+

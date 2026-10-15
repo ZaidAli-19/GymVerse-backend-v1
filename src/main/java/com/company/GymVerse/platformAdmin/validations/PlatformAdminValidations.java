@@ -34,4 +34,12 @@ public interface PlatformAdminValidations {
      * @param request the platform admin request containing planId and active flag
      */
     void validateUpdatePlanAvailability(PlatformAdminRequest request);
+
+    /**
+     * Validates pagination boundaries, sort field whitelist, and filter parameters for querying gym tenants.
+     *
+     * @param request the platform admin request containing query parameters
+     */
+    void validateFetchGymTenants(PlatformAdminRequest request);
 }
+

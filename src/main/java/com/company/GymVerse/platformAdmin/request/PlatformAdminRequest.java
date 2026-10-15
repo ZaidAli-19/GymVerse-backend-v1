@@ -1,6 +1,7 @@
 package com.company.GymVerse.platformAdmin.request;
 
 import com.company.GymVerse.models.central.enums.BillingCycle;
+import com.company.GymVerse.models.central.enums.GymStatus;
 import com.company.GymVerse.platformAdmin.util.PlatformAdminRequestType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,4 +50,13 @@ public class PlatformAdminRequest {
     private String sortBy;
     private String sortDirection;
     private SaasPlanFilterRequest planFilter;
+
+    // ==========================================
+    // FETCH_ALL_GYM_TENANTS fields
+    // ==========================================
+    private GymStatus gymStatus;
+    private String city;
+    private String gymName;
+    private String gymCode;
+    private GymTenantFilterRequest tenantFilter;
 }

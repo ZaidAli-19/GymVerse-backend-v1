@@ -562,3 +562,195 @@ curl -X POST "http://localhost:8080/api/platform-admin" \
        "active": false
      }'
 ```
+
+---
+
+### 1.5 Registered Gym Tenants Directory Retrieval
+
+1. **Feature / Module:** Platform Administration (`platformAdmin`)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/platform-admin`
+4. **Purpose:** Single command gateway query retrieving a filtered, sorted, and paginated directory of all registered gym tenants from the central database (`gym_tenants`) when `platformAdminRequestType = FETCH_ALL_GYM_TENANTS`.
+5. **Authentication & Authorization:**
+   - Role: `ROLE_PLATFORM_ADMIN` / `isPlatformAdmin = true` (central token).
+   - *(Note: In Phase 2 Epic PA, live token verification is planned for the subsequent Auth Epic; endpoints are currently open for controller testing).*
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <PLATFORM_ADMIN_JWT_TOKEN>` *(when auth is enabled)*
+7. **Path Parameters:** None
+8. **Query Parameters:** None (All filters supplied in JSON body per single gateway standard)
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "platformAdminRequestType": "FETCH_ALL_GYM_TENANTS",
+     "gymStatus": "ACTIVE",
+     "city": "Austin",
+     "gymName": "Iron",
+     "gymCode": "IR",
+     "page": 0,
+     "size": 10,
+     "sortBy": "registeredAt",
+     "sortDirection": "desc"
+   }
+   ```
+   *Note: Filter parameters can also be passed via a nested `tenantFilter` object:*
+   ```json
+   {
+     "platformAdminRequestType": "FETCH_ALL_GYM_TENANTS",
+     "tenantFilter": {
+       "status": "ACTIVE",
+       "city": "Austin",
+       "gymName": "Iron",
+       "gymCode": "IR",
+       "page": 0,
+       "size": 10,
+       "sortBy": "registeredAt",
+       "sortDirection": "desc"
+     }
+   }
+   ```
+
+   **Validation Rules:**
+   - `platformAdminRequestType`: Enum string, required (`FETCH_ALL_GYM_TENANTS`).
+   - `gymStatus` / `status`: Enum string, optional (`ACTIVE`, `SUSPENDED`, `INACTIVE`).
+   - `city`: String, optional. Evaluated as case-insensitive partial match (`%city%`).
+   - `gymName`: String, optional. Evaluated as case-insensitive partial match (`%gymName%`).
+   - `gymCode`: String, optional. Evaluated as case-insensitive prefix match (`gymCode%`).
+   - `page`: Integer, optional. Defaults to `0`. Must be `>= 0`.
+   - `size`: Integer, optional. Defaults to `10`. Must be between `1` and `100`.
+   - `sortBy`: String, optional. Defaults to `"registeredAt"`. Whitelist-guarded to allowed entity properties: `["id", "gymName", "gymCode", "city", "status", "registeredAt"]`.
+   - `sortDirection`: String, optional. Defaults to `"desc"`. Allowed values: `["asc", "desc"]` (case-insensitive).
+
+10. **Success Response:**
+    - **HTTP Status:** `200 OK`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "1 gym tenant(s) retrieved successfully",
+        "tenants": [
+          {
+            "id": 1,
+            "gymName": "Iron Fitness",
+            "contactEmail": "admin@ironfitness.com",
+            "phoneNumber": "+1-512-555-0199",
+            "address": "100 Muscle Way",
+            "city": "Austin",
+            "logoUrl": "https://assets.ironfitness.com/logo.png",
+            "gymCode": "IRONFIT",
+            "dbName": "gym_db_1",
+            "status": "ACTIVE",
+            "registeredAt": "2026-10-15T10:00:00Z",
+            "suspendedAt": null,
+            "suspensionReason": null
+          }
+        ],
+        "pagedTenants": {
+          "content": [
+            {
+              "id": 1,
+              "gymName": "Iron Fitness",
+              "contactEmail": "admin@ironfitness.com",
+              "phoneNumber": "+1-512-555-0199",
+              "address": "100 Muscle Way",
+              "city": "Austin",
+              "logoUrl": "https://assets.ironfitness.com/logo.png",
+              "gymCode": "IRONFIT",
+              "dbName": "gym_db_1",
+              "status": "ACTIVE",
+              "registeredAt": "2026-10-15T10:00:00Z"
+            }
+          ],
+          "page": 0,
+          "size": 10,
+          "totalElements": 1,
+          "totalPages": 1,
+          "last": true
+        },
+        "currentPage": 0,
+        "pageSize": 10,
+        "totalRecords": 1,
+        "totalPages": 1,
+        "last": true
+      }
+      ```
+
+11. **Error Responses:**
+    - **HTTP 400 Bad Request — Invalid Sort Property:**
+      ```json
+      {
+        "timestamp": "2026-10-15T18:20:00Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Invalid sort field: 'contactEmail'. Allowed fields: [id, gymName, gymCode, city, status, registeredAt]",
+        "path": "/api/platform-admin"
+      }
+      ```
+    - **HTTP 400 Bad Request — Invalid Sort Direction:**
+      ```json
+      {
+        "timestamp": "2026-10-15T18:20:00Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Invalid sort direction: 'down'. Allowed values: [asc, desc]",
+        "path": "/api/platform-admin"
+      }
+      ```
+    - **HTTP 400 Bad Request — Negative Page Index:**
+      ```json
+      {
+        "timestamp": "2026-10-15T18:20:00Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Page index must not be negative",
+        "path": "/api/platform-admin"
+      }
+      ```
+    - **HTTP 400 Bad Request — Out of Bounds Page Size:**
+      ```json
+      {
+        "timestamp": "2026-10-15T18:20:00Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Page size must be between 1 and 100",
+        "path": "/api/platform-admin"
+      }
+      ```
+
+12. **Implementation References:**
+    - **Controller:** `com.company.GymVerse.platformAdmin.controller.PlatformAdminController`
+    - **Factory:** `com.company.GymVerse.platformAdmin.factory.PlatformAdminFactory`
+    - **Factory Operation:** `com.company.GymVerse.platformAdmin.factory.PlatformAdminFactoryOperation`
+    - **Operation Service:** `com.company.GymVerse.platformAdmin.service.GetGymTenantsService`
+    - **Specification:** `com.company.GymVerse.platformAdmin.specifications.GymTenantSpecification`
+    - **Validation:** `com.company.GymVerse.platformAdmin.validations.PlatformAdminValidationsImpl`
+    - **Mapper:** `com.company.GymVerse.platformAdmin.mapper.GymTenantSummaryMapperImpl`
+    - **Request DTO:** `com.company.GymVerse.platformAdmin.request.PlatformAdminRequest` / `GymTenantFilterRequest`
+    - **Response DTO:** `com.company.GymVerse.platformAdmin.response.PlatformAdminResponse` / `GymTenantSummaryResponse` / `PagedResponse`
+    - **Request Type Enum:** `com.company.GymVerse.platformAdmin.util.PlatformAdminRequestType.FETCH_ALL_GYM_TENANTS`
+    - **Entity:** `com.company.GymVerse.models.central.GymTenant`
+    - **Repository:** `com.company.GymVerse.repositories.central.GymTenantRepository`
+    - **Exception Handler:** `com.company.GymVerse.exceptions.GlobalExceptionHandler`
+
+13. **Business Rules:**
+    - Zero Tenant Routing Invariant: Executes exclusively under `centralTransactionManager` (`readOnly = true`) against the central database (`gym_tenants`). Never accesses `TenantContext` or tenant databases.
+    - SQL Pushdown: All filtering, sorting, and pagination execute strictly inside MySQL via Spring Data JPA Specifications (`JpaSpecificationExecutor<GymTenant>`). No in-memory filtering.
+    - Security Property Whitelist: Client sort parameter is verified against `[id, gymName, gymCode, city, status, registeredAt]` to eliminate property path traversal and SQL injection vulnerabilities.
+    - Default Sorting: Registered gym tenants are ordered by `registeredAt` descending by default to surface newly onboarded gyms first.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/platform-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -d '{
+       "platformAdminRequestType": "FETCH_ALL_GYM_TENANTS",
+       "gymStatus": "ACTIVE",
+       "city": "Austin",
+       "page": 0,
+       "size": 10,
+       "sortBy": "registeredAt",
+       "sortDirection": "desc"
+     }'
+```
+

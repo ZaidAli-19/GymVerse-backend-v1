@@ -172,8 +172,10 @@ While authentication implementation is explicitly excluded from this epic:
 | **Story PA-4** | Single SaaS Subscription Plan Retrieval by Identifier | Direct single-resource retrieval of plan details by ID | `GetSaasPlanByIdService`, `ResourceNotFoundException`, `SaasPlanMapper` |
 | **Story PA-5** | SaaS Subscription Plan Availability Management | Isolated toggle of plan availability (`active`), guaranteeing price immutability | `UpdatePlanAvailabilityService`, `PlatformAdminValidations`, `SaasPlanMapper` |
 | **Story PA-6** | Platform Registered Gym Tenants Dynamic Directory Retrieval | Dynamic query, filtering, sorting, and pagination of gym tenants via JPA Specifications | `GymTenantSpecification`, `GetGymTenantsService`, `PagedResponse`, `GymTenantRepository` |
+| **Story PA-7** | Platform Admin Request DTO Consolidation and Pagination Standardization | Centralize pagination/sorting at root, decouple filter criteria into nested DTOs, eliminate precedence ambiguities | `PlatformAdminRequest`, `SaasPlanFilterRequest`, `GymTenantFilterRequest`, `PlatformAdminValidationsImpl` |
 
 ---
+
 
 ## 7. Epic-Level Acceptance Criteria (Amended)
 

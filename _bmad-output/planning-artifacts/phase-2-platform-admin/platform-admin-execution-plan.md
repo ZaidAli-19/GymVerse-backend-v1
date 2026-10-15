@@ -69,8 +69,20 @@ The module implementation is divided into four cohesive execution stages:
 │ - Standardized PagedResponse<T> envelope                    │
 │ - Documentation: Update /docs/payloads.md                   │
 │ - Verification: GetAllPlans & GetGymTenants Tests           │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ STAGE 5: DTO CONSOLIDATION & PAGINATION (Story PA-7)        │
+│ - Centralize pagination & sorting in PlatformAdminRequest   │
+│ - Purge duplicate pagination from plan & tenant filter DTOs │
+│ - Decouple flat filters into planFilter and tenantFilter    │
+│ - Eliminate dual-path ternary fallbacks in services/guards  │
+│ - Documentation: Update /docs/payloads.md                   │
+│ - Verification: PlatformAdminDtoConsolidationTest & full reg│
 └─────────────────────────────────────────────────────────────┘
 ```
+
 
 ---
 
@@ -158,6 +170,25 @@ The module implementation is divided into four cohesive execution stages:
   - Responses match standardized `PagedResponse<T>` schema.
   - Zero database context switching into tenant databases.
 
+### Stage 5: DTO Consolidation & Pagination Standardization (Story PA-7)
+- **Goal:** Centralize pagination and sorting on `PlatformAdminRequest`, eliminate duplicate pagination from `SaasPlanFilterRequest` and `GymTenantFilterRequest`, decouple domain filters cleanly into nested DTOs, and eliminate dual-path fallback resolution logic.
+- **Key Artifacts:**
+  - `src/main/java/com/company/GymVerse/platformAdmin/request/PlatformAdminRequest.java`
+  - `src/main/java/com/company/GymVerse/platformAdmin/request/SaasPlanFilterRequest.java`
+  - `src/main/java/com/company/GymVerse/platformAdmin/request/GymTenantFilterRequest.java`
+  - `src/main/java/com/company/GymVerse/platformAdmin/service/GetAllSaasPlansService.java`
+  - `src/main/java/com/company/GymVerse/platformAdmin/service/GetGymTenantsService.java`
+  - `src/main/java/com/company/GymVerse/platformAdmin/validations/PlatformAdminValidationsImpl.java`
+  - `docs/payloads.md` (contract documentation)
+- **Verification Commands:**
+  ```powershell
+  ./mvnw test -Dtest=PlatformAdminDtoConsolidationIntegrationTest,GetAllSaasPlansIntegrationTest,GetGymTenantsIntegrationTest
+  ```
+- **Quality Gate:**
+  - `page`, `size`, `sortBy`, `sortDirection` are read strictly from the root `PlatformAdminRequest`.
+  - Filter criteria are read strictly from `planFilter` or `tenantFilter`.
+  - All 61 existing tests and new consolidation tests pass with 0 regressions.
+
 ---
 
 ## 4. End-to-End Verification Strategy
@@ -169,8 +200,9 @@ At the completion of all stories, the full test suite must be executed to guaran
 ./mvnw clean compile
 
 # 2. Complete Integration Test Suite Execution
-./mvnw test -Dtest=ApplicationTests,CentralPersistenceIntegrationTest,TenantPersistenceIntegrationTest,TenantIsolationIntegrationTest,PlatformAdminSeedPropertiesTest,PlatformAdminProvisioningIntegrationTest,CreateSaasPlanIntegrationTest,GetSaasPlanByIdIntegrationTest,UpdatePlanAvailabilityIntegrationTest,GetAllSaasPlansIntegrationTest,GetGymTenantsIntegrationTest
+./mvnw test -Dtest=ApplicationTests,CentralPersistenceIntegrationTest,TenantPersistenceIntegrationTest,TenantIsolationIntegrationTest,PlatformAdminSeedPropertiesTest,PlatformAdminProvisioningIntegrationTest,CreateSaasPlanIntegrationTest,GetSaasPlanByIdIntegrationTest,UpdatePlanAvailabilityIntegrationTest,GetAllSaasPlansIntegrationTest,GetGymTenantsIntegrationTest,PlatformAdminDtoConsolidationIntegrationTest
 ```
+
 
 ### Verification Checklist:
 - [ ] Exit code 0 on all test executions.

@@ -107,3 +107,34 @@ In the central database schema (`V1__init_central_schema.sql`), `gym_subscriptio
   - *Rationale:* Maximizes internal database topology concealment even across administrative APIs.
 
 **Decision Required:** Please specify whether `dbName` should be included in `GymTenantSummaryResponse` (Option 6A or Option 6B).
+
+---
+
+## Decision 7: Platform Admin Request DTO Consolidation & Operation Payload Organization (Story PA-7)
+
+### Context:
+Across Stories PA-2 through PA-6, `PlatformAdminRequest` accrued top-level pagination/sorting fields (`page`, `size`, `sortBy`, `sortDirection`) alongside duplicate fields in nested filter DTOs (`SaasPlanFilterRequest`, `GymTenantFilterRequest`), flat filter fields (`minPrice`, `maxPrice`, `gymStatus`, `city`, `gymName`, `gymCode`), and dual availability fields (`planId`, `active` AND `planAvailability`).
+
+### Proposed Consolidation Structure:
+- **Centralized Pagination & Sorting**: Root `PlatformAdminRequest` holds `page`, `size`, `sortBy`, `sortDirection`. Removed from all nested filter DTOs.
+- **Dedicated Filter DTOs**: `SaasPlanFilterRequest planFilter` and `GymTenantFilterRequest tenantFilter` hold pure filter parameters without duplicate pagination.
+- **Removal of Spurious Flat Filters**: Flat filter fields (`minPrice`, `maxPrice`, `gymStatus`, `city`, `gymName`, `gymCode`) are eliminated from `PlatformAdminRequest`.
+
+### Open Choices for Review:
+1. **Sub-Issue 7.1: SaaS Plan Creation Payload Organization**:
+   - **Option 7.1A (Flat on Root — ConnectSouq Event Pattern — RECOMMENDED)**:
+     - Keep the 9 plan creation fields (`name`, `description`, `price`, `billingCycle`, `maxMembers`, `maxTrainers`, `analyticsEnabled`, `multiTrainerEnabled`, `customBrandingEnabled`) at the root of `PlatformAdminRequest`.
+     - *Rationale:* Mirrors ConnectSouq's `FranchiseOperatorRequest` where event creation attributes sit directly on the module request. Preserves existing client contracts for `CREATE_SAAS_PLAN`.
+   - **Option 7.1B (Encapsulate in Nested `CreateSaasPlanRequest createPlan`)**:
+     - Group the 9 fields into a dedicated nested object `createPlan`.
+     - *Rationale:* Isolates plan creation fields, making the root request leaner. Requires updating `CREATE_SAAS_PLAN` payload contracts.
+
+2. **Sub-Issue 7.2: Plan Availability Payload Organization**:
+   - **Option 7.2A (Flat on Root — RECOMMENDED)**:
+     - Use root `Long planId;` and `Boolean active;`.
+     - *Rationale:* `planId` is already a root scalar identifier shared with `FETCH_SAAS_PLAN_BY_ID`. Simplifies payload to `{"platformAdminRequestType": "UPDATE_PLAN_AVAILABILITY", "planId": 3, "active": false}`.
+   - **Option 7.2B (Nested `UpdatePlanAvailabilityRequest planAvailability`)**:
+     - Retain `planAvailability` nested object and eliminate root `active`.
+
+**Decision Required:** Please review and confirm your preference on Sub-Issues 7.1 and 7.2.
+
