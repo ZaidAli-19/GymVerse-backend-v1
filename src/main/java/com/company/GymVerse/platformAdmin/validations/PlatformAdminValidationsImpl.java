@@ -124,4 +124,38 @@ public class PlatformAdminValidationsImpl implements PlatformAdminValidations {
             }
         }
     }
+
+    @Override
+    public void validateFetchPlanById(PlatformAdminRequest request) {
+        if (request == null || request.getPlanId() == null) {
+            throw new BadRequestException("Plan ID is required");
+        }
+        if (request.getPlanId() <= 0) {
+            throw new BadRequestException("Plan ID must be a positive number");
+        }
+    }
+
+    @Override
+    public void validateUpdatePlanAvailability(PlatformAdminRequest request) {
+        if (request == null) {
+            throw new BadRequestException("Request payload cannot be null");
+        }
+
+        Long planId = request.getPlanId() != null ? request.getPlanId()
+                : (request.getPlanAvailability() != null ? request.getPlanAvailability().getPlanId() : null);
+
+        if (planId == null) {
+            throw new BadRequestException("Plan ID is required");
+        }
+        if (planId <= 0) {
+            throw new BadRequestException("Plan ID must be a positive number");
+        }
+
+        Boolean active = request.getActive() != null ? request.getActive()
+                : (request.getPlanAvailability() != null ? request.getPlanAvailability().getActive() : null);
+
+        if (active == null) {
+            throw new BadRequestException("Plan availability status must be specified as true or false");
+        }
+    }
 }

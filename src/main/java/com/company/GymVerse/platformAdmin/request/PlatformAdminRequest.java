@@ -33,10 +33,11 @@ public class PlatformAdminRequest {
     private Boolean customBrandingEnabled;
 
     // ==========================================
-    // UPDATE_PLAN_AVAILABILITY fields (for future use)
+    // UPDATE_PLAN_AVAILABILITY fields
     // ==========================================
     private Long planId;
     private Boolean active;
+    private UpdatePlanAvailabilityRequest planAvailability;
 
     // ==========================================
     // FETCH_ALL_SAAS_PLANS fields & pagination

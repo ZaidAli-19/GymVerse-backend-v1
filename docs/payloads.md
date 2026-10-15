@@ -313,3 +313,252 @@ curl -X POST "http://localhost:8080/api/platform-admin" \
        "sortDirection": "asc"
      }'
 ```
+
+---
+
+### 1.3 Fetch Single SaaS Subscription Plan by ID
+
+1. **Feature / Module:** Platform Administration (`platformAdmin`)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/platform-admin`
+4. **Purpose:** Single command gateway operation retrieving the complete domain details of an individual SaaS subscription plan by its identifier (`FETCH_SAAS_PLAN_BY_ID`).
+5. **Authentication & Authorization:** 
+   - Role: `ROLE_PLATFORM_ADMIN` / `isPlatformAdmin = true` (central token).
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <PLATFORM_ADMIN_JWT_TOKEN>` *(when auth is enabled)*
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "platformAdminRequestType": "FETCH_SAAS_PLAN_BY_ID",
+     "planId": 5
+   }
+   ```
+   **Validation Rules:**
+   - `platformAdminRequestType`: Enum string, required (`FETCH_SAAS_PLAN_BY_ID`).
+   - `planId`: Long, required. Must be a positive integer (`> 0`).
+
+10. **Success Response:**
+    - **HTTP Status:** `200 OK`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "SaaS subscription plan retrieved successfully",
+        "planId": 5,
+        "id": 5,
+        "name": "Growth Tier",
+        "price": 79.50,
+        "active": true,
+        "saasPlan": {
+          "id": 5,
+          "name": "Growth Tier",
+          "description": "Mid-market gym growth tier with analytics",
+          "price": 79.50,
+          "billingCycle": "MONTHLY",
+          "maxMembers": 300,
+          "maxTrainers": 8,
+          "analyticsEnabled": true,
+          "multiTrainerEnabled": true,
+          "customBrandingEnabled": false,
+          "active": true
+        }
+      }
+      ```
+
+11. **Error Responses:**
+    - **HTTP 400 Bad Request — Missing Plan ID:**
+      ```json
+      {
+        "timestamp": "2026-10-15T12:30:00Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Plan ID is required",
+        "path": "/api/platform-admin"
+      }
+      ```
+    - **HTTP 400 Bad Request — Non-Positive Plan ID:**
+      ```json
+      {
+        "timestamp": "2026-10-15T12:30:00Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Plan ID must be a positive number",
+        "path": "/api/platform-admin"
+      }
+      ```
+    - **HTTP 404 Not Found — Resource Does Not Exist:**
+      ```json
+      {
+        "timestamp": "2026-10-15T12:30:00Z",
+        "status": 404,
+        "error": "Not Found",
+        "message": "SaasSubscriptionPlan not found with id: 999999",
+        "path": "/api/platform-admin"
+      }
+      ```
+
+12. **Implementation References:**
+    - **Controller:** `com.company.GymVerse.platformAdmin.controller.PlatformAdminController`
+    - **Factory:** `com.company.GymVerse.platformAdmin.factory.PlatformAdminFactory`
+    - **Factory Operation:** `com.company.GymVerse.platformAdmin.factory.PlatformAdminFactoryOperation`
+    - **Operation Service:** `com.company.GymVerse.platformAdmin.service.GetSaasPlanByIdService`
+    - **Validation:** `com.company.GymVerse.platformAdmin.validations.PlatformAdminValidationsImpl`
+    - **Mapper:** `com.company.GymVerse.platformAdmin.mapper.SaasPlanMapperImpl`
+    - **Request DTO:** `com.company.GymVerse.platformAdmin.request.PlatformAdminRequest`
+    - **Response DTO:** `com.company.GymVerse.platformAdmin.response.PlatformAdminResponse` (with nested `SaasPlanResponse`)
+    - **Request Type Enum:** `com.company.GymVerse.platformAdmin.util.PlatformAdminRequestType.FETCH_SAAS_PLAN_BY_ID`
+    - **Entity:** `com.company.GymVerse.models.central.SaasSubscriptionPlan`
+    - **Repository:** `com.company.GymVerse.repositories.central.SaasSubscriptionPlanRepository`
+    - **Exception Handler:** `com.company.GymVerse.exceptions.GlobalExceptionHandler`
+
+13. **Business Rules:**
+    - Single entry point per module delegates lookup via `PlatformAdminFactory`.
+    - If the plan is present, returns full configuration in both scalar fields and nested `saasPlan`.
+    - If the plan does not exist, throws domain `ResourceNotFoundException`, mapped to HTTP 404.
+    - Transaction executes under `centralTransactionManager` with `readOnly = true`.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/platform-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -d '{
+       "platformAdminRequestType": "FETCH_SAAS_PLAN_BY_ID",
+       "planId": 5
+     }'
+```
+
+---
+
+### 1.4 Update SaaS Subscription Plan Availability (Activation / Deactivation)
+
+1. **Feature / Module:** Platform Administration (`platformAdmin`)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/platform-admin`
+4. **Purpose:** Single command gateway operation to surgically activate or deactivate a SaaS subscription plan's availability (`UPDATE_PLAN_AVAILABILITY`) without altering prices, capacity limits, or entitlements.
+5. **Authentication & Authorization:** 
+   - Role: `ROLE_PLATFORM_ADMIN` / `isPlatformAdmin = true` (central token).
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <PLATFORM_ADMIN_JWT_TOKEN>` *(when auth is enabled)*
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "platformAdminRequestType": "UPDATE_PLAN_AVAILABILITY",
+     "planId": 3,
+     "active": false
+   }
+   ```
+   *Note: Can also be passed as a nested object using `"planAvailability": { "planId": 3, "active": false }`.*
+
+   **Validation Rules:**
+   - `platformAdminRequestType`: Enum string, required (`UPDATE_PLAN_AVAILABILITY`).
+   - `planId`: Long, required. Must be a positive integer (`> 0`).
+   - `active`: Boolean, required (`true` or `false`). Cannot be null.
+
+10. **Success Response:**
+    - **HTTP Status:** `200 OK`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "SaaS subscription plan availability updated to: INACTIVE",
+        "planId": 3,
+        "id": 3,
+        "name": "Summer Special",
+        "price": 49.99,
+        "active": false,
+        "saasPlan": {
+          "id": 3,
+          "name": "Summer Special",
+          "description": "Seasonal promotional tier",
+          "price": 49.99,
+          "billingCycle": "MONTHLY",
+          "maxMembers": 50,
+          "maxTrainers": 2,
+          "analyticsEnabled": false,
+          "multiTrainerEnabled": false,
+          "customBrandingEnabled": false,
+          "active": false
+        }
+      }
+      ```
+
+11. **Error Responses:**
+    - **HTTP 400 Bad Request — Missing Active Status:**
+      ```json
+      {
+        "timestamp": "2026-10-15T12:40:00Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Plan availability status must be specified as true or false",
+        "path": "/api/platform-admin"
+      }
+      ```
+    - **HTTP 400 Bad Request — Missing Plan ID:**
+      ```json
+      {
+        "timestamp": "2026-10-15T12:40:00Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Plan ID is required",
+        "path": "/api/platform-admin"
+      }
+      ```
+    - **HTTP 400 Bad Request — Non-Positive Plan ID:**
+      ```json
+      {
+        "timestamp": "2026-10-15T12:40:00Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Plan ID must be a positive number",
+        "path": "/api/platform-admin"
+      }
+      ```
+    - **HTTP 404 Not Found — Plan Does Not Exist:**
+      ```json
+      {
+        "timestamp": "2026-10-15T12:40:00Z",
+        "status": 404,
+        "error": "Not Found",
+        "message": "SaasSubscriptionPlan not found with id: 8888",
+        "path": "/api/platform-admin"
+      }
+      ```
+
+12. **Implementation References:**
+    - **Controller:** `com.company.GymVerse.platformAdmin.controller.PlatformAdminController`
+    - **Factory:** `com.company.GymVerse.platformAdmin.factory.PlatformAdminFactory`
+    - **Factory Operation:** `com.company.GymVerse.platformAdmin.factory.PlatformAdminFactoryOperation`
+    - **Operation Service:** `com.company.GymVerse.platformAdmin.service.UpdatePlanAvailabilityService`
+    - **Validation:** `com.company.GymVerse.platformAdmin.validations.PlatformAdminValidationsImpl`
+    - **Mapper:** `com.company.GymVerse.platformAdmin.mapper.SaasPlanMapperImpl`
+    - **Request DTO:** `com.company.GymVerse.platformAdmin.request.PlatformAdminRequest` / `UpdatePlanAvailabilityRequest`
+    - **Response DTO:** `com.company.GymVerse.platformAdmin.response.PlatformAdminResponse` (with nested `SaasPlanResponse`)
+    - **Request Type Enum:** `com.company.GymVerse.platformAdmin.util.PlatformAdminRequestType.UPDATE_PLAN_AVAILABILITY`
+    - **Entity:** `com.company.GymVerse.models.central.SaasSubscriptionPlan`
+    - **Repository:** `com.company.GymVerse.repositories.central.SaasSubscriptionPlanRepository`
+    - **Exception Handler:** `com.company.GymVerse.exceptions.GlobalExceptionHandler`
+
+13. **Business Rules:**
+    - Critical Immutability Invariant: Mutates *only* the `active` column. Prices, billing cycles, capacity limits, and entitlements are strictly untouched to prevent corruption of existing gym tenant subscriptions.
+    - Soft-Retirement: Obsolete plans are deactivated (`active = false`) rather than hard-deleted from the database, preserving referential integrity with `gym_subscriptions`.
+    - Inactive plans are automatically excluded from tenant-facing registration catalogs (`findByActiveTrue()`).
+    - Transaction executes under `centralTransactionManager` targeting the central database `GymVerse`.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/platform-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -d '{
+       "platformAdminRequestType": "UPDATE_PLAN_AVAILABILITY",
+       "planId": 3,
+       "active": false
+     }'
+```

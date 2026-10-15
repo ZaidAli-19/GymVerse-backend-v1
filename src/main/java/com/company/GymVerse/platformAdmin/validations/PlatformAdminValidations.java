@@ -20,4 +20,18 @@ public interface PlatformAdminValidations {
      * @param request the platform admin request containing query parameters
      */
     void validateFetchPlans(PlatformAdminRequest request);
+
+    /**
+     * Validates that a plan ID is provided and is a positive non-zero number.
+     *
+     * @param request the platform admin request containing the plan ID
+     */
+    void validateFetchPlanById(PlatformAdminRequest request);
+
+    /**
+     * Validates plan ID and boolean active status for toggling plan availability.
+     *
+     * @param request the platform admin request containing planId and active flag
+     */
+    void validateUpdatePlanAvailability(PlatformAdminRequest request);
 }
