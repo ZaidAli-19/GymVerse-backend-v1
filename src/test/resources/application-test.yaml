@@ -64,6 +64,9 @@ gymverse:
   datasource:
     host: ${TENANT_DB_HOST:localhost}
     port: ${TENANT_DB_PORT:3306}
+  platform-admin:
+    seed:
+      enabled: false
 
 logging:
   level:

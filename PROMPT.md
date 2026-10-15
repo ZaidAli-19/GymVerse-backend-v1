@@ -173,30 +173,92 @@ In any enterprise or production codebase, code must be divided into clean, decou
 
 ---
 
-## 3. Controller & Routing Paradigms
+## 3. Controller & Routing Architecture: The Unified Module Factory Pattern
 
-Inspect the project to determine which routing paradigm it follows, then adhere strictly to that pattern:
+### 3.1 Sole & Mandatory Architecture: The Unified Module Factory Standard
+This codebase strictly standardizes on the **Unified Module-Level Factory Pattern** (modeled after ConnectSouq's `franchiseOperator` enterprise standard). Traditional multi-endpoint RESTful resource controllers (separate `@GetMapping`, `@PutMapping`, `@DeleteMapping`, or multiple `@PostMapping` endpoints) and generic CQRS mediator frameworks are **strictly prohibited** for business modules.
 
-### Paradigm A: The Unified Factory / Dispatcher Pattern
-- **Characteristics**: A single controller endpoint per functional module (e.g., `POST /api/domain`) receives a consolidated request object containing a discriminator field (e.g., `requestType`, `commandType`, or `action`).
-- **Resolution**: A Factory or Dispatcher component maintains an internal map of handlers (often populated automatically via dependency injection or service locator).
-- **Extending this Pattern**:
-  1. Add the new action constant to the domain's request type enum.
-  2. Implement a dedicated service for that action conforming to the operation interface.
-  3. Register the service into the factory (or let dependency injection auto-discover it).
-  4. **Do NOT add new direct endpoints on the controller.**
+Every business module follows these non-negotiable rules:
 
-### Paradigm B: Resource-Oriented RESTful Controller Pattern
-- **Characteristics**: Standard HTTP verbs map directly to resource operations (`GET /items`, `POST /items`, `GET /items/{id}`, `PUT /items/{id}`, `DELETE /items/{id}`).
-- **Extending this Pattern**:
-  1. Follow existing REST conventions, path naming (plural kebab-case or camelCase), and status codes.
-  2. Delegate to the corresponding service method.
+#### A. One Factory per Module
+- Each business module (e.g. `platformAdmin`, `franchiseOperator`) has a single, module-level factory component: `<Module>Factory` (e.g. `PlatformAdminFactory`, `FranchiseOperatorFactory`).
+- The factory maintains an internal dispatch map mapping the module's request type enum (`<Module>RequestType`) to operation handler beans (`<Module>FactoryOperation`).
+- Registered cleanly via `@PostConstruct init()`:
+  ```java
+  @Component
+  @RequiredArgsConstructor
+  public class PlatformAdminFactory {
+      private final List<PlatformAdminFactoryOperation> operations;
+      private final Map<PlatformAdminRequestType, PlatformAdminFactoryOperation> operationMap = new HashMap<>();
 
-### Paradigm C: CQRS / Command-Query Separation
-- **Characteristics**: Commands (mutations) and Queries (reads) are separated into discrete request objects, dispatched via a mediator/bus (e.g., MediatR in .NET, CommandBus in Spring/Node).
-- **Extending this Pattern**:
-  1. Define a Command/Query record or DTO.
-  2. Implement a single-responsibility Handler for that Command/Query.
+      @PostConstruct
+      void init() {
+          operations.forEach(op -> operationMap.put(op.getRequestType(), op));
+      }
+
+      public PlatformAdminFactoryOperation getOperation(PlatformAdminRequestType requestType) {
+          return operationMap.get(requestType);
+      }
+  }
+  ```
+
+#### B. Module Factory Operation Contract
+- The module defines a dedicated operation interface: `<Module>FactoryOperation` (e.g. `PlatformAdminFactoryOperation`, `FranchiseOperatorFactoryOperation`).
+- Strongly typed to the module's shared request DTO and shared response DTO (no generic `<T, R>` type parameters, no raw object casts):
+  ```java
+  public interface PlatformAdminFactoryOperation {
+      PlatformAdminRequestType getRequestType();
+      PlatformAdminResponse execute(PlatformAdminRequest request);
+  }
+  ```
+
+#### C. Shared Request & Response DTOs
+- **One Shared Request DTO per Module**: `<Module>Request` (e.g. `PlatformAdminRequest`, `FranchiseOperatorRequest`).
+  - Contains the operation discriminator enum (`<Module>RequestType`).
+  - Encapsulates operation attributes directly or via nested DTOs when complex payloads require distinct structures.
+- **One Shared Response DTO per Module**: `<Module>Response` (e.g. `PlatformAdminResponse`, `FranchiseOperatorResponse`).
+  - Structured, null-safe, annotated with `@Builder`, `@AllArgsConstructor`, `@NoArgsConstructor`, `@Getter`, `@Setter`, and `@JsonInclude(JsonInclude.Include.NON_NULL)`.
+  - Contains standard response fields such as `message`, entity IDs, and nested DTOs representing specific domain results.
+- **Nested DTOs for Complex Structures**:
+  - When specific operations involve complex, hierarchical, or distinct data structures, define dedicated nested DTOs within or alongside the shared request/response (e.g. `SaasPlanResponse`, `SpeakerInput`, `AgendaInput`).
+  - Re-use the shared module DTO across services rather than generating one-off request/response DTO pairs for every trivial action.
+
+#### D. Dedicated Operation Services
+- Each business operation resides in its own single-responsibility service bean implementing `<Module>FactoryOperation`.
+- Responsible for transaction boundaries (`@Transactional`), business logic, domain validation delegation (`<Module>Validations`), entity persistence, and mapping.
+
+#### E. Controller Ingress (Strictly ONE Gateway Endpoint per Module)
+- Every feature module controller exposes **STRICTLY ONE unified command gateway endpoint**: `@PostMapping("/<module-route>")` (e.g. `@PostMapping("/platform-admin")` or `@PostMapping("/franchise-operator")`).
+- **All operations without exception**—both write commands (`CREATE_...`, `UPDATE_...`, `DELETE_...`) and read queries (`FETCH_ALL_...`, `FETCH_BY_ID_...`, `SEARCH_...`)—must be dispatched exclusively through this single `POST` endpoint using the `<Module>RequestType` discriminator enum.
+- **NEVER** introduce additional endpoints (e.g., no `@GetMapping`, `@PutMapping`, `@DeleteMapping`, or extra `@PostMapping` sub-paths like `/plans` or `/plans/{id}`). All module interaction occurs through the single unified gateway endpoint.
+- Controllers inject only the single module factory and dispatch incoming requests:
+  ```java
+  @RestController
+  @RequiredArgsConstructor
+  public class PlatformAdminController {
+      private final PlatformAdminFactory factory;
+
+      @PostMapping("/platform-admin")
+      public PlatformAdminResponse execute(@RequestBody PlatformAdminRequest request) {
+          PlatformAdminFactoryOperation operation = factory.getOperation(request.getPlatformAdminRequestType());
+          if (operation == null) {
+              throw new BadRequestException("Unsupported platform admin request type: " + request.getPlatformAdminRequestType());
+          }
+          return operation.execute(request);
+      }
+  }
+  ```
+
+#### F. Handling Queries / Read Operations in the Unified Factory
+- Read and query operations (e.g., fetching lists, retrieving entities by ID, loading dashboards) are first-class operations implementing `<Module>FactoryOperation`.
+- The client sends a `POST` request to the module gateway endpoint with the query discriminator (e.g. `PlatformAdminRequestType.FETCH_ALL_SAAS_PLANS`, `FETCH_SAAS_PLAN_BY_ID`, `FETCH_TENANT_BY_ID`) and any query criteria (such as `id` or pagination parameters) in the shared `<Module>Request`.
+- The corresponding query service (`FetchAllSaasPlansService`, `FetchSaasPlanByIdService`, directly mirroring ConnectSouq's `FetchFranchiseCommissionEntriesService`, `FetchPendingApplicationsService`, and `FetchFranchiseOperatorDashboardService`) executes the query, validates permissions via `<Module>Validations`, maps entities to nested response DTOs or lists, and returns the shared `<Module>Response`.
+- Do not create separate HTTP `GET` endpoints for queries. All queries flow through the unified module gateway.
+
+### 3.2 Strictly Prohibited Alternative Paradigms
+- **Traditional Multi-Endpoint REST Controllers (Prohibited)**: Do NOT create resource-oriented controllers with multiple HTTP verbs (`GET /items`, `POST /items`, `GET /items/{id}`, `PUT /items/{id}`, `DELETE /items/{id}`).
+- **Generic CQRS / MediatR Frameworks (Prohibited)**: Do NOT introduce external command buses or CQRS mediator abstractions.
+- **Operation-Specific Factories / Handler Registries (Prohibited)**: Do NOT create separate factories per operation (e.g. `CreatePlanFactory`) or generic handler registries with `<T, R>` type parameters and unchecked type casts.
 
 ---
 
@@ -324,46 +386,50 @@ Every API must return a predictable, standardized error structure when operation
 
 ## 9. Concrete Implementation Examples
 
-### 9.1 Unified Factory / Dispatcher Controller Example
+### 9.1 Module Controller Example
 
 ```java
-// Controller: Accepts single entry point per domain, delegates to factory
+// Controller: Strictly ONE single unified gateway endpoint per module dispatching all commands & queries via module factory
 @RestController
+@RequestMapping("/orders")
 @RequiredArgsConstructor
 @CrossOrigin("*")
 @Slf4j
 public class OrderController {
-    private final OrderFactory orderFactory;
 
-    @PostMapping("/orders")
-    public OrderResponse handleOrderOperation(@Valid @RequestBody OrderRequest request) {
-        OrderOperation operation = orderFactory.getOperation(request.getRequestType());
+    private final OrderFactory factory;
+
+    @PostMapping
+    public OrderResponse execute(@RequestBody OrderRequest request) {
+        log.info("Processing order operation: {}", request.getOrderRequestType());
+        OrderFactoryOperation operation = factory.getOperation(request.getOrderRequestType());
+        if (operation == null) {
+            throw new BadRequestException("Unsupported order request type: " + request.getOrderRequestType());
+        }
         return operation.execute(request);
     }
 }
 ```
 
-### 9.2 Factory Router Example
+### 9.2 Module Factory Example
 
 ```java
-// Factory: Auto-registers operation services into an immutable dispatch map
+// Factory: Single module factory dispatching to operation handler beans
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class OrderFactory {
-    private final List<OrderOperation> operations;
-    private final Map<OrderRequestType, OrderOperation> operationMap = new HashMap<>();
+
+    private final List<OrderFactoryOperation> operations;
+    private final Map<OrderRequestType, OrderFactoryOperation> operationMap = new HashMap<>();
 
     @PostConstruct
     void init() {
         operations.forEach(op -> operationMap.put(op.getRequestType(), op));
     }
 
-    public OrderOperation getOperation(OrderRequestType requestType) {
-        OrderOperation op = operationMap.get(requestType);
-        if (op == null) {
-            throw new BadRequestException("Unsupported operation: " + requestType);
-        }
-        return op;
+    public OrderFactoryOperation getOperation(OrderRequestType requestType) {
+        return operationMap.get(requestType);
     }
 }
 ```
@@ -371,11 +437,12 @@ public class OrderFactory {
 ### 9.3 Operation Service Implementation Example
 
 ```java
-// Service: Executes a single, isolated business operation
+// Service: Executes a single business operation implementing the module factory operation contract
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CreateOrderService implements OrderOperation {
+public class CreateOrderService implements OrderFactoryOperation {
+
     private final OrderRepository orderRepository;
     private final OrderValidations validations;
     private final OrderMapper mapper;
@@ -406,11 +473,11 @@ public class CreateOrderService implements OrderOperation {
 
         log.info("User {} created Order {}", caller.getId(), order.getId());
 
-        // 4. Return structured response DTO
+        // 4. Return shared module response with nested detail if needed
         return OrderResponse.builder()
                 .message("Order created successfully")
                 .orderId(order.getId())
-                .order(mapper.toResponse(order))
+                .order(mapper.toDetailResponse(order))
                 .build();
     }
 }
@@ -459,9 +526,9 @@ Every AI assistant working in this repository must comply with these 21 mandator
 
 1. **Read `PROMPT.md` First**: Treat this document as the supreme coding specification for the project.
 2. **Strictly Follow the Prescribed Modular Folder Structure**: Place new components precisely in `<feature_module>/{controller, factory, service, request, response, validations, mapper}` and centralized layers (`model/`, `repositories/`, `security/`, `config/`, `exceptions/`, `util/`). Never dump classes into an ad-hoc or global folder.
-3. **Adhere to the Project's Routing Architecture**: Do not introduce conventional direct controller methods if the project uses a Factory or Dispatcher pattern, and vice versa.
+3. **Adhere to the Module-Level Factory Architecture & Single Controller Gateway (MANDATORY & ABSOLUTE)**: Follow the ConnectSouq `franchiseOperator` reference standard. Each business module has one factory (`<Module>Factory`), a dedicated operation interface (`<Module>FactoryOperation`), and shared request/response DTOs (`<Module>Request`, `<Module>Response`). The module controller must contain **strictly ONE unified gateway endpoint**: `@PostMapping("/<module-route>")`. All module actions—both write commands and read queries (e.g. `FETCH_ALL`, `FETCH_BY_ID`)—must be dispatched exclusively through this single `POST` endpoint using the `<Module>RequestType` discriminator enum. Strictly no separate RESTful endpoints, no HTTP GET endpoints, no operation-specific factories, and no generic `<T, R>` handler registries.
 4. **Inspect Sibling Code**: Always inspect the nearest existing implementation before creating a new class or service.
-5. **Use Unified Request/Response DTOs**: Extend the existing domain request/response structures instead of creating redundant wrappers.
+5. **Shared Module Request/Response DTOs & Nested DTOs**: Use the module's shared `<Module>Request` and `<Module>Response` across operations. Use strongly typed nested DTOs (e.g. `SaasPlanResponse`, `SpeakerInput`) when complex distinct payloads require them. Never use generic payload wrappers (`Payload<T>`) or generic operation handlers with unchecked casts.
 6. **Strict Constructor Injection**: Inject dependencies via constructors (`@RequiredArgsConstructor` / `readonly`). Never use field injection.
 7. **Keep Dependencies `private final`**: Ensure all injected service and repository fields are immutable.
 8. **Pair Interfaces with Implementations**: Follow the project's interface-to-implementation conventions for operations, mappers, and validations.
