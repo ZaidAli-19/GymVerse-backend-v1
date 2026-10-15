@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Builder
 @AllArgsConstructor
@@ -26,4 +27,15 @@ public class PlatformAdminResponse {
     private String name;
     private BigDecimal price;
     private Boolean active;
+
+    // ==========================================
+    // FETCH_ALL_SAAS_PLANS fields
+    // ==========================================
+    private List<SaasPlanResponse> plans;
+    private PagedResponse<SaasPlanResponse> pagedPlans;
+    private Integer currentPage;
+    private Integer totalPages;
+    private Long totalRecords;
+    private Integer pageSize;
+    private Boolean last;
 }

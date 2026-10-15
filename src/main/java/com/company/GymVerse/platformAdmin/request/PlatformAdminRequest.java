@@ -37,4 +37,15 @@ public class PlatformAdminRequest {
     // ==========================================
     private Long planId;
     private Boolean active;
+
+    // ==========================================
+    // FETCH_ALL_SAAS_PLANS fields & pagination
+    // ==========================================
+    private BigDecimal minPrice;
+    private BigDecimal maxPrice;
+    private Integer page;
+    private Integer size;
+    private String sortBy;
+    private String sortDirection;
+    private SaasPlanFilterRequest planFilter;
 }

@@ -13,4 +13,11 @@ public interface PlatformAdminValidations {
      * @param request the platform admin request containing plan details
      */
     void validateCreatePlan(PlatformAdminRequest request);
+
+    /**
+     * Validates pagination boundaries, sort field whitelist, and price ranges for querying plans.
+     *
+     * @param request the platform admin request containing query parameters
+     */
+    void validateFetchPlans(PlatformAdminRequest request);
 }

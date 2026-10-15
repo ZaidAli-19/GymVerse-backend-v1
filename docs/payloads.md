@@ -135,3 +135,181 @@ curl -X POST "http://localhost:8080/api/platform-admin" \
        "customBrandingEnabled": true
      }'
 ```
+
+---
+
+### 1.2 Fetch SaaS Subscription Plans Catalog (Dynamic Query & Pagination)
+
+1. **Feature / Module:** Platform Administration (`platformAdmin`)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/platform-admin`
+4. **Purpose:** Single command gateway query dispatching `FETCH_ALL_SAAS_PLANS`, dynamically filtering, sorting, and paginating SaaS subscription plans via Spring Data JPA Specifications.
+5. **Authentication & Authorization:** 
+   - Role: `ROLE_PLATFORM_ADMIN` / `isPlatformAdmin = true` (central token).
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <PLATFORM_ADMIN_JWT_TOKEN>` *(when auth is enabled)*
+7. **Path Parameters:** None
+8. **Query Parameters:** None (All query criteria, pagination, and sorting parameters are supplied in the request body).
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "platformAdminRequestType": "FETCH_ALL_SAAS_PLANS",
+     "active": true,
+     "billingCycle": "MONTHLY",
+     "name": "Pro",
+     "minPrice": 20.00,
+     "maxPrice": 100.00,
+     "page": 0,
+     "size": 10,
+     "sortBy": "price",
+     "sortDirection": "asc"
+   }
+   ```
+   *Note: Can also be passed as a nested object using `"planFilter": { ... }`.*
+
+   **Validation Rules:**
+   - `platformAdminRequestType`: Enum string, required (`FETCH_ALL_SAAS_PLANS`).
+   - `active`: Boolean, optional (filters active/inactive status).
+   - `billingCycle`: Enum string, optional (`MONTHLY`, `QUARTERLY`, `ANNUAL`).
+   - `name`: String, optional (case-insensitive partial substring match `%name%`).
+   - `minPrice`: Decimal/BigDecimal, optional, non-negative (`>= 0.00`).
+   - `maxPrice`: Decimal/BigDecimal, optional, non-negative (`>= 0.00`). `minPrice` must be `<= maxPrice`.
+   - `page`: Integer, optional, default `0`. Must not be negative (`>= 0`).
+   - `size`: Integer, optional, default `10`. Must be between `1` and `100`.
+   - `sortBy`: String, optional, default `"id"`. Must match sort whitelist: `[id, name, price, billingCycle, maxMembers, maxTrainers]`.
+   - `sortDirection`: String, optional, default `"asc"`. Must be `"asc"` or `"desc"` (case-insensitive).
+
+10. **Success Response:**
+    - **HTTP Status:** `200 OK`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "1 SaaS plan(s) retrieved successfully",
+        "currentPage": 0,
+        "pageSize": 10,
+        "totalRecords": 1,
+        "totalPages": 1,
+        "last": true,
+        "plans": [
+          {
+            "id": 1,
+            "name": "Monthly Pro",
+            "description": "Professional monthly tier",
+            "price": 49.99,
+            "billingCycle": "MONTHLY",
+            "maxMembers": 100,
+            "maxTrainers": 5,
+            "analyticsEnabled": true,
+            "multiTrainerEnabled": true,
+            "customBrandingEnabled": false,
+            "active": true
+          }
+        ],
+        "pagedPlans": {
+          "content": [
+            {
+              "id": 1,
+              "name": "Monthly Pro",
+              "description": "Professional monthly tier",
+              "price": 49.99,
+              "billingCycle": "MONTHLY",
+              "maxMembers": 100,
+              "maxTrainers": 5,
+              "analyticsEnabled": true,
+              "multiTrainerEnabled": true,
+              "customBrandingEnabled": false,
+              "active": true
+            }
+          ],
+          "page": 0,
+          "size": 10,
+          "totalElements": 1,
+          "totalPages": 1,
+          "last": true
+        }
+      }
+      ```
+
+11. **Error Responses:**
+    - **HTTP 400 Bad Request — Invalid Sort Field:**
+      ```json
+      {
+        "timestamp": "2026-10-15T12:00:00Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Invalid sort field: 'secretField'. Allowed fields: [id, name, price, billingCycle, maxMembers, maxTrainers]",
+        "path": "/api/platform-admin"
+      }
+      ```
+    - **HTTP 400 Bad Request — Negative Page Index:**
+      ```json
+      {
+        "timestamp": "2026-10-15T12:00:00Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Page index must not be negative",
+        "path": "/api/platform-admin"
+      }
+      ```
+    - **HTTP 400 Bad Request — Page Size Out of Bounds:**
+      ```json
+      {
+        "timestamp": "2026-10-15T12:00:00Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Page size must be between 1 and 100",
+        "path": "/api/platform-admin"
+      }
+      ```
+    - **HTTP 400 Bad Request — Invalid Price Range:**
+      ```json
+      {
+        "timestamp": "2026-10-15T12:00:00Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "minPrice cannot be greater than maxPrice",
+        "path": "/api/platform-admin"
+      }
+      ```
+
+12. **Implementation References:**
+    - **Controller:** `com.company.GymVerse.platformAdmin.controller.PlatformAdminController`
+    - **Factory:** `com.company.GymVerse.platformAdmin.factory.PlatformAdminFactory`
+    - **Factory Operation:** `com.company.GymVerse.platformAdmin.factory.PlatformAdminFactoryOperation`
+    - **Operation Service:** `com.company.GymVerse.platformAdmin.service.GetAllSaasPlansService`
+    - **JPA Specification:** `com.company.GymVerse.platformAdmin.specifications.SaasPlanSpecification`
+    - **Validation:** `com.company.GymVerse.platformAdmin.validations.PlatformAdminValidationsImpl`
+    - **Mapper:** `com.company.GymVerse.platformAdmin.mapper.SaasPlanMapperImpl`
+    - **Request DTO:** `com.company.GymVerse.platformAdmin.request.PlatformAdminRequest` / `SaasPlanFilterRequest`
+    - **Response DTO:** `com.company.GymVerse.platformAdmin.response.PlatformAdminResponse` (with nested `PagedResponse<SaasPlanResponse>`)
+    - **Request Type Enum:** `com.company.GymVerse.platformAdmin.util.PlatformAdminRequestType.FETCH_ALL_SAAS_PLANS`
+    - **Entity:** `com.company.GymVerse.models.central.SaasSubscriptionPlan`
+    - **Repository:** `com.company.GymVerse.repositories.central.SaasSubscriptionPlanRepository`
+    - **Exception Handler:** `com.company.GymVerse.exceptions.GlobalExceptionHandler`
+
+13. **Business Rules:**
+    - Dynamic query execution happens entirely in MySQL via JPA `Specification` and `CriteriaBuilder`.
+    - In-memory post-filtering is strictly forbidden.
+    - Sort parameters are validated against an explicit whitelist to prevent property traversal attacks.
+    - Read transactions execute under `centralTransactionManager` with `readOnly = true`.
+    - When no records match, an empty list with `totalRecords = 0`, `totalPages = 0`, `last = true` is returned with HTTP 200 OK.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/platform-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -d '{
+       "platformAdminRequestType": "FETCH_ALL_SAAS_PLANS",
+       "active": true,
+       "billingCycle": "MONTHLY",
+       "minPrice": 10.00,
+       "maxPrice": 100.00,
+       "page": 0,
+       "size": 10,
+       "sortBy": "price",
+       "sortDirection": "asc"
+     }'
+```
