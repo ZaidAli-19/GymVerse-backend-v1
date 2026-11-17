@@ -67,6 +67,9 @@ gymverse:
   platform-admin:
     seed:
       enabled: false
+  kafka:
+    topics:
+      otp-email: otp-email-topic
 
 logging:
   level:

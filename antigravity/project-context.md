@@ -12,10 +12,10 @@
 | **Repository Root** | `D:\projects\GymVerse-Backend-v2` |
 | **Current Git Branch** | `GymVerse/dev` |
 | **Current Project Phase** | **Phase 3: Core Security & Master DB Authentication (Active)** |
-| **Current Phase Stage** | **Story 3.2 Implemented & Verified; Ready for Story 3.3** |
-| **Last Completed Story** | **Story 3.2** (Modernized JJWT Token Engine with MASTER_ACCOUNT Token Typing) |
-| **Immediate Next Phase / Story** | **Story 3.3: Kafka Asynchronous Email Pipeline & JavaMailSender Integration** |
-| **Test Suite Health** | **87 Tests Passing (0 Failures, 0 Errors, 0 Skipped)** |
+| **Current Phase Stage** | **Story 3.3 Implemented & Verified; Ready for Story 3.4** |
+| **Last Completed Story** | **Story 3.3** (Kafka Asynchronous Email Pipeline & JavaMailSender Integration) |
+| **Immediate Next Phase / Story** | **Story 3.4: Enterprise Redis OtpService with Rate Limiting & Cooldown Engine** |
+| **Test Suite Health** | **96 Tests Passing (0 Failures, 0 Errors, 0 Skipped)** |
 | **Protected Code Status** | All 8 classes in `com.company.GymVerse.multitanancy` remain 100% byte-for-byte untouched |
 
 ---
@@ -119,8 +119,8 @@
 | :--- | :--- | :--- | :--- |
 | **Story 3.1** | Security Baseline Configuration, Password Hashing & CustomUserDetailsService | `SecurityConfig.java`, `CustomUserDetailsService.java` | ✅ Completed |
 | **Story 3.2** | Modernized JJWT Token Engine (JwtUtil & JwtFilter with MASTER_ACCOUNT Token Typing) | `JwtUtil.java`, `JwtFilter.java` | ✅ Completed |
-| **Story 3.3** | Kafka Asynchronous Email Pipeline & JavaMailSender Integration | `OtpEmailEvent.java`, `OtpEmailListener.java`, `EmailServiceImpl.java` | ⏳ Ready for Implementation |
-| **Story 3.4** | Enterprise Redis OtpService with Rate Limiting & Cooldown Engine | `OtpConfigProperties.java`, `OtpService.java`, `OtpServiceImpl.java` | ⏳ Planned |
+| **Story 3.3** | Kafka Asynchronous Email Pipeline & JavaMailSender Integration | `OtpEmailEvent.java`, `OtpEmailListener.java`, `EmailServiceImpl.java` | ✅ Completed |
+| **Story 3.4** | Enterprise Redis OtpService with Rate Limiting & Cooldown Engine | `OtpConfigProperties.java`, `OtpService.java`, `OtpServiceImpl.java` | ⏳ Ready for Implementation |
 | **Story 3.5** | Master User 3-Step Signup Lifecycle (SIGNUP_INITIATE, SIGNUP_VERIFY, SIGNUP_COMPLETE) | `SignupInitiateService`, `SignupVerifyService`, `SignupCompleteService`, `AuthValidations` | ⏳ Planned |
 | **Story 3.6** | Dual-Mode Master Authentication Engine (LOGIN_PASSWORD, LOGIN_OTP_INITIATE, LOGIN_OTP_VERIFY, REFRESH_TOKEN) | `LoginPasswordService`, `LoginOtpInitiateService`, `LoginOtpVerifyService`, `RefreshTokenService` | ⏳ Planned |
 | **Story 3.7** | Master User Password Recovery Lifecycle (FORGOT_PASSWORD_INITIATE, FORGOT_PASSWORD_VERIFY, FORGOT_PASSWORD_RESET) | `ForgotPasswordInitiateService`, `ForgotPasswordVerifyService`, `ForgotPasswordResetService` | ⏳ Planned |
@@ -128,20 +128,18 @@
 
 ---
 
-## 5. Scope & Target Artifacts for Immediate Next Work: Story 3.3
+## 5. Scope & Target Artifacts for Immediate Next Work: Story 3.4
 
-- **Story Focus:** `Story 3.3: Kafka Asynchronous Email Pipeline & JavaMailSender Integration`
+- **Story Focus:** `Story 3.4: Enterprise Redis OtpService with Rate Limiting & Cooldown Engine`
 - **Target Files to Modify / Create:**
-  - `src/main/java/com/company/GymVerse/messaging/kafka/events/OtpEmailEvent.java` (immutable Kafka event payload)
-  - `src/main/java/com/company/GymVerse/messaging/kafka/listeners/OtpEmailListener.java` (@KafkaListener consumer on topic `otp-email-topic`)
-  - `src/main/java/com/company/GymVerse/email/service/EmailService.java` (email sending interface)
-  - `src/main/java/com/company/GymVerse/email/serviceImpl/EmailServiceImpl.java` (JavaMailSender with styled HTML template)
-  - `src/test/java/com/company/GymVerse/email/EmailServiceImplTest.java` (unit tests for mail sender)
-  - `src/test/java/com/company/GymVerse/messaging/OtpEmailListenerIntegrationTest.java` (listener integration tests)
-- **Acceptance Criteria:**
-  - Standard Spring Boot Kafka auto-configuration used without manual builder boilerplate.
-  - Asynchronous event published to Kafka; listener consumes and triggers HTML email dispatch.
-  - Zero compile errors and all 88 existing tests continue to pass.
+  - `src/main/java/com/company/GymVerse/config/OtpConfigProperties.java` (@ConfigurationProperties for TTL, cooldown, and max attempts)
+  - `src/main/java/com/company/GymVerse/exceptions/otp/OtpRateLimitException.java`
+  - `src/main/java/com/company/GymVerse/exceptions/otp/InvalidOtpException.java`
+  - `src/main/java/com/company/GymVerse/exceptions/otp/OtpExpiredException.java`
+  - `src/main/java/com/company/GymVerse/exceptions/otp/OtpMaxAttemptsExceededException.java`
+  - `src/main/java/com/company/GymVerse/security/otp/service/OtpService.java`
+  - `src/main/java/com/company/GymVerse/security/otp/serviceImpl/OtpServiceImpl.java`
+  - Unit and integration tests for Redis OTP generation, cooldown throttling, attempt limiting, and verification token generation.
 
 ---
 

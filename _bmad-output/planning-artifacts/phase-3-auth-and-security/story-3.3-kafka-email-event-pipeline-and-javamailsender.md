@@ -2,7 +2,7 @@
 id: "story-3.3"
 epic_id: "epic-phase-3-security-auth"
 title: "Kafka Asynchronous Email Pipeline & JavaMailSender Integration"
-status: "planning"
+status: "implemented"
 type: "asynchronous-messaging"
 created_at: "2026-11-17"
 dependencies: []
