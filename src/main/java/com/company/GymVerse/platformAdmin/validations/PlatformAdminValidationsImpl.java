@@ -1,7 +1,7 @@
 package com.company.GymVerse.platformAdmin.validations;
 
-import com.company.GymVerse.exceptions.BadRequestException;
-import com.company.GymVerse.exceptions.ConflictException;
+import com.company.GymVerse.exceptions.common.BadRequestException;
+import com.company.GymVerse.exceptions.common.ConflictException;
 import com.company.GymVerse.platformAdmin.request.PlatformAdminRequest;
 import com.company.GymVerse.platformAdmin.request.SaasPlanFilterRequest;
 import com.company.GymVerse.repositories.central.SaasSubscriptionPlanRepository;

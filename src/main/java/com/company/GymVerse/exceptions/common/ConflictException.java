@@ -1,8 +1,7 @@
-package com.company.GymVerse.exceptions;
+package com.company.GymVerse.exceptions.common;
 
 /**
- * Exception thrown when an operation conflicts with the current state of a resource (e.g. duplicate unique key).
- * Mapped to HTTP 409 Conflict.
+ * Exception thrown when a resource already exists or a unique constraint is violated.
  */
 public class ConflictException extends RuntimeException {
 

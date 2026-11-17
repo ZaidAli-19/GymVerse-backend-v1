@@ -1,8 +1,7 @@
-package com.company.GymVerse.exceptions;
+package com.company.GymVerse.exceptions.common;
 
 /**
- * Exception thrown when a requested resource cannot be located.
- * Mapped to HTTP 404 Not Found.
+ * Exception thrown when a requested resource is not found.
  */
 public class ResourceNotFoundException extends RuntimeException {
 

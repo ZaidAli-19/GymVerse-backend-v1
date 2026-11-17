@@ -1,6 +1,6 @@
 package com.company.GymVerse.platformAdmin.service;
 
-import com.company.GymVerse.exceptions.ResourceNotFoundException;
+import com.company.GymVerse.exceptions.common.ResourceNotFoundException;
 import com.company.GymVerse.models.central.SaasSubscriptionPlan;
 import com.company.GymVerse.platformAdmin.factory.PlatformAdminFactoryOperation;
 import com.company.GymVerse.platformAdmin.mapper.SaasPlanMapper;
@@ -58,7 +58,8 @@ public class UpdatePlanAvailabilityService implements PlatformAdminFactoryOperat
         SaasSubscriptionPlan updatedPlan = planRepository.save(plan);
 
         String statusLabel = active ? "ACTIVE" : "INACTIVE";
-        log.info("SaaS subscription plan id={} availability updated to: {}", planId, statusLabel);
+        log.info("SaaS subscription plan id={} availability updated to: {}",
+                planId, statusLabel);
 
         // 4. Map to response
         SaasPlanResponse responseDto = planMapper.toResponse(updatedPlan);

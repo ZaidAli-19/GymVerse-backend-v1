@@ -1,5 +1,9 @@
-package com.company.GymVerse.exceptions;
+package com.company.GymVerse.exceptions.handler;
 
+import com.company.GymVerse.exceptions.common.BadRequestException;
+import com.company.GymVerse.exceptions.common.ConflictException;
+import com.company.GymVerse.exceptions.common.ResourceNotFoundException;
+import com.company.GymVerse.exceptions.payload.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

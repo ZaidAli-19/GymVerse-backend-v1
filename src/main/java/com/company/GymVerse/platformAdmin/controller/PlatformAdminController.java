@@ -1,6 +1,6 @@
 package com.company.GymVerse.platformAdmin.controller;
 
-import com.company.GymVerse.exceptions.BadRequestException;
+import com.company.GymVerse.exceptions.common.BadRequestException;
 import com.company.GymVerse.platformAdmin.factory.PlatformAdminFactory;
 import com.company.GymVerse.platformAdmin.factory.PlatformAdminFactoryOperation;
 import com.company.GymVerse.platformAdmin.request.PlatformAdminRequest;

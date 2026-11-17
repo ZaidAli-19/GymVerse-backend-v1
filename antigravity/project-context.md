@@ -11,10 +11,10 @@
 | **Project Name** | `GymVerse-Backend-v2` |
 | **Repository Root** | `D:\projects\GymVerse-Backend-v2` |
 | **Current Git Branch** | `GymVerse/dev` |
-| **Current Project Phase** | **Phase 3: Core Security & Master DB Authentication (Planning & Alignment)** |
-| **Current Phase Stage** | **Phase 2 Complete; Scoping Phase 3 Security Baseline & Top-Layer User Lifecycle** |
+| **Current Project Phase** | **Phase 3: Core Security & Master DB Authentication (Ready for Implementation)** |
+| **Current Phase Stage** | **Stories 3.1 - 3.8 Planned & Specified; Ready to Begin Story 3.1** |
 | **Last Completed Story** | **Story PA-7** (Request DTO Consolidation & Pagination Standardization) |
-| **Immediate Next Phase / Story** | **Phase 3 Specification & Design** (Awaiting user reference project & exact directives) |
+| **Immediate Next Phase / Story** | **Story 3.1: Security Baseline Configuration, Password Hashing & CustomUserDetailsService** |
 | **Test Suite Health** | **69 Tests Passing (0 Failures, 0 Errors, 0 Skipped)** |
 | **Protected Code Status** | All 8 classes in `com.company.GymVerse.multitanancy` remain 100% byte-for-byte untouched |
 
@@ -113,41 +113,35 @@
 
 ---
 
-## 4. Phase 2 Story Breakdown & Completion Details
+## 4. Phase 3 Story Breakdown & Implementation Roadmap
 
-| Story ID | Description | Request Type | Key Components | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| **Story PA-1** | Initial Platform Administrator Provisioning | Startup Boot | `platformAdminSeed.yml`, `PlatformAdminProvisioningService`, `PlatformAdminBootstrapConfig` | ✅ Completed |
-| **Story PA-2** | SaaS Subscription Plan Creation | `CREATE_SAAS_PLAN` | `CreateSaasPlanService`, `SaasPlanMapper`, `PlatformAdminValidations`, `PlatformAdminController` | ✅ Completed |
-| **Story PA-3** | SaaS Subscription Plans Catalog Retrieval | `FETCH_ALL_SAAS_PLANS` | `GetAllSaasPlansService`, `SaasPlanSpecification`, `PagedResponse` | ✅ Completed |
-| **Story PA-4** | Single SaaS Subscription Plan Retrieval | `FETCH_SAAS_PLAN_BY_ID` | `GetSaasPlanByIdService`, `ResourceNotFoundException` | ✅ Completed |
-| **Story PA-5** | SaaS Subscription Plan Availability Management | `UPDATE_PLAN_AVAILABILITY`| `UpdatePlanAvailabilityService`, price immutability guard | ✅ Completed |
-| **Story PA-6** | Registered Gym Tenants Dynamic Directory | `FETCH_ALL_GYM_TENANTS` | `GetGymTenantsService`, `GymTenantSpecification`, `GymTenantSummaryMapper` | ✅ Completed |
-| **Story PA-7** | Request DTO Consolidation & Pagination Standardization | Multiple | Root-level pagination/sorting, pure filter encapsulation (`planFilter`, `tenantFilter`), eliminate duplicate/flat fields | ✅ Completed |
+| Story ID | Description | Core Artifacts | Status |
+| :--- | :--- | :--- | :--- |
+| **Story 3.1** | Security Baseline Configuration, Password Hashing & CustomUserDetailsService | `SecurityConfig.java`, `CustomUserDetailsService.java` | ⏳ Ready for Implementation |
+| **Story 3.2** | Modernized JJWT Token Engine (JwtUtil & JwtFilter with MASTER_ACCOUNT Token Typing) | `JwtUtil.java`, `JwtFilter.java` | ⏳ Planned |
+| **Story 3.3** | Kafka Asynchronous Email Pipeline & JavaMailSender Integration | `OtpEmailEvent.java`, `OtpEmailListener.java`, `EmailServiceImpl.java` | ⏳ Planned |
+| **Story 3.4** | Enterprise Redis OtpService with Rate Limiting & Cooldown Engine | `OtpConfigProperties.java`, `OtpService.java`, `OtpServiceImpl.java` | ⏳ Planned |
+| **Story 3.5** | Master User 3-Step Signup Lifecycle (SIGNUP_INITIATE, SIGNUP_VERIFY, SIGNUP_COMPLETE) | `SignupInitiateService`, `SignupVerifyService`, `SignupCompleteService`, `AuthValidations` | ⏳ Planned |
+| **Story 3.6** | Dual-Mode Master Authentication Engine (LOGIN_PASSWORD, LOGIN_OTP_INITIATE, LOGIN_OTP_VERIFY, REFRESH_TOKEN) | `LoginPasswordService`, `LoginOtpInitiateService`, `LoginOtpVerifyService`, `RefreshTokenService` | ⏳ Planned |
+| **Story 3.7** | Master User Password Recovery Lifecycle (FORGOT_PASSWORD_INITIATE, FORGOT_PASSWORD_VERIFY, FORGOT_PASSWORD_RESET) | `ForgotPasswordInitiateService`, `ForgotPasswordVerifyService`, `ForgotPasswordResetService` | ⏳ Planned |
+| **Story 3.8** | Unified Controller Gateway Integration (/api/auth), Exception Translation & API Payload Docs | `AuthController.java`, `AuthFactory.java`, `GlobalExceptionHandler.java`, `docs/payloads.md` | ⏳ Planned |
 
 ---
 
-## 5. Scope & Roadmap for Immediate Next Work: Phase 3
+## 5. Scope & Target Artifacts for Immediate Next Work: Story 3.1
 
-- **Phase Objective:** Establish the core security foundation and master database platform user authentication layer.
-- **Key Focus Areas & Requirements:**
-  1. **Security Baseline & Dependencies**:
-     - Spring Security integration, JWT utility, and JWT authentication filter chain.
-     - Architecture will follow patterns from the user's reference project (pending user details).
-  2. **Top-Layer Master DB User Management**:
-     - Agnostic base user entity in central DB (can later assume tenant owner, admin, or member roles).
-     - **Signup Lifecycle**:
-       1. Intake: Full Name, Email, Phone Number.
-       2. OTP Generation & Dispatch to Email.
-       3. OTP Verification.
-       4. Password Set & Final Master User Activation.
-     - **Authentication Lifecycle**:
-       1. Email + Password authentication.
-       2. Email + OTP authentication.
-     - **Password Recovery Lifecycle**:
-       1. Forgot password request triggering Email OTP.
-       2. OTP verification and password reset.
-- **Current Directive:** **ON HOLD for execution.** Awaiting user's reference project details and structural guidelines before proceeding with any implementation.
+- **Story Focus:** `Story 3.1: Security Baseline Configuration, Password Hashing & CustomUserDetailsService`
+- **Target Files to Modify / Create:**
+  - `src/main/java/com/company/GymVerse/config/SecurityConfig.java` (stateless session, CSRF disabled, public `/api/auth/**`, secured default)
+  - `src/main/java/com/company/GymVerse/security/jwt/CustomUserDetailsService.java` (Spring Security `UserDetailsService` backed by `UserAccountRepository`)
+  - `src/test/java/com/company/GymVerse/security/CustomUserDetailsServiceTest.java` (unit tests)
+  - `src/test/java/com/company/GymVerse/security/SecurityBaselineIntegrationTest.java` (integration tests)
+- **Acceptance Criteria:**
+  - Central `user_accounts` table queried by email.
+  - Returns `UserDetails` with `ROLE_PLATFORM_ADMIN` or `ROLE_USER_ACCOUNT`.
+  - Rejects inactive/suspended accounts (`accountLocked = true`).
+  - Public `/api/auth/**` permitted, all other endpoints require authentication.
+  - Zero compile errors and all 69 existing tests continue to pass.
 
 ---
 

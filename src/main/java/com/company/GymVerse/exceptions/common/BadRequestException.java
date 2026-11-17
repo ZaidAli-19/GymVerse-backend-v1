@@ -1,8 +1,7 @@
-package com.company.GymVerse.exceptions;
+package com.company.GymVerse.exceptions.common;
 
 /**
- * Exception thrown when client input violates domain invariants, format constraints, or business rules.
- * Mapped to HTTP 400 Bad Request.
+ * Exception thrown when a client request is malformed, invalid, or violates domain preconditions.
  */
 public class BadRequestException extends RuntimeException {
 

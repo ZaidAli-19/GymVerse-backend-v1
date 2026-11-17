@@ -1,7 +1,7 @@
 package com.company.GymVerse.platformAdmin;
 
-import com.company.GymVerse.exceptions.BadRequestException;
-import com.company.GymVerse.exceptions.ResourceNotFoundException;
+import com.company.GymVerse.exceptions.common.BadRequestException;
+import com.company.GymVerse.exceptions.common.ResourceNotFoundException;
 import com.company.GymVerse.models.central.SaasSubscriptionPlan;
 import com.company.GymVerse.models.central.enums.BillingCycle;
 import com.company.GymVerse.platformAdmin.factory.PlatformAdminFactory;

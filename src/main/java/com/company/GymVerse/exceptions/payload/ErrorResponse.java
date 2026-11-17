@@ -1,30 +1,28 @@
-package com.company.GymVerse.exceptions;
+package com.company.GymVerse.exceptions.payload;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 
 /**
- * Standard uniform error response payload conforming to PROMPT.md Section 4.3.
+ * Standardized error payload representation returned by GlobalExceptionHandler.
  */
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "UTC")
     private Instant timestamp;
-
     private int status;
-
     private String error;
-
     private String message;
-
     private String path;
 }
