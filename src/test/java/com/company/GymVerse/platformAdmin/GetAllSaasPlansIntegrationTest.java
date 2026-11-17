@@ -136,9 +136,11 @@ class GetAllSaasPlansIntegrationTest {
     void testDynamicFilterByActiveAndBillingCycle() throws Exception {
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_SAAS_PLANS)
-                .name(PLAN_PREFIX)
-                .active(true)
-                .billingCycle(BillingCycle.MONTHLY)
+                .planFilter(SaasPlanFilterRequest.builder()
+                        .name(PLAN_PREFIX)
+                        .active(true)
+                        .billingCycle(BillingCycle.MONTHLY)
+                        .build())
                 .page(0)
                 .size(10)
                 .build();
@@ -160,9 +162,11 @@ class GetAllSaasPlansIntegrationTest {
     void testPartialNameSearchAndPriceRangeFilter() throws Exception {
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_SAAS_PLANS)
-                .name("pro")
-                .minPrice(new BigDecimal("40.00"))
-                .maxPrice(new BigDecimal("100.00"))
+                .planFilter(SaasPlanFilterRequest.builder()
+                        .name("pro")
+                        .minPrice(new BigDecimal("40.00"))
+                        .maxPrice(new BigDecimal("100.00"))
+                        .build())
                 .build();
 
         mockMvc.perform(post("/api/platform-admin")
@@ -179,7 +183,9 @@ class GetAllSaasPlansIntegrationTest {
     void testWhitelistGuardedSortingPriceDesc() throws Exception {
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_SAAS_PLANS)
-                .name(PLAN_PREFIX)
+                .planFilter(SaasPlanFilterRequest.builder()
+                        .name(PLAN_PREFIX)
+                        .build())
                 .sortBy("price")
                 .sortDirection("desc")
                 .page(0)
@@ -217,7 +223,9 @@ class GetAllSaasPlansIntegrationTest {
     void testPaginationBoundaries() throws Exception {
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_SAAS_PLANS)
-                .name(PLAN_PREFIX)
+                .planFilter(SaasPlanFilterRequest.builder()
+                        .name(PLAN_PREFIX)
+                        .build())
                 .sortBy("name")
                 .sortDirection("asc")
                 .page(0)
@@ -281,8 +289,10 @@ class GetAllSaasPlansIntegrationTest {
     void testMinPriceGreaterThanMaxPriceRejected() throws Exception {
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_SAAS_PLANS)
-                .minPrice(new BigDecimal("100.00"))
-                .maxPrice(new BigDecimal("50.00"))
+                .planFilter(SaasPlanFilterRequest.builder()
+                        .minPrice(new BigDecimal("100.00"))
+                        .maxPrice(new BigDecimal("50.00"))
+                        .build())
                 .build();
 
         mockMvc.perform(post("/api/platform-admin")
@@ -297,7 +307,9 @@ class GetAllSaasPlansIntegrationTest {
     void testEmptyResultsStructure() throws Exception {
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_SAAS_PLANS)
-                .name("NON_EXISTENT_NAME_XYZ")
+                .planFilter(SaasPlanFilterRequest.builder()
+                        .name("NON_EXISTENT_NAME_XYZ")
+                        .build())
                 .build();
 
         mockMvc.perform(post("/api/platform-admin")
@@ -319,7 +331,9 @@ class GetAllSaasPlansIntegrationTest {
 
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_SAAS_PLANS)
-                .name(PLAN_PREFIX)
+                .planFilter(SaasPlanFilterRequest.builder()
+                        .name(PLAN_PREFIX)
+                        .build())
                 .page(0)
                 .size(5)
                 .build();

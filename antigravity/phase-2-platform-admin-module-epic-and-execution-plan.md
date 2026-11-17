@@ -4,7 +4,7 @@
 **Status:** AMENDMENTS COMPLETE — PENDING USER APPROVAL  
 **Author:** Winston (System Architect) & Antigravity AI Agent  
 **Project:** `GymVerse-Backend-v2` (`D:/projects/GymVerse-Backend-v2`)  
-**Target Artifacts Directory:** `_bmad-output/planning-artifacts/platform-admin/`  
+**Target Artifacts Directory:** `../_bmad-output/planning-artifacts/phase-2-platform-admin`  
 
 ---
 
@@ -38,7 +38,7 @@ In response to user directives, the Phase 2 Platform Admin Module plan has been 
 
 ## 2. Inventory of Amended Planning Artifacts
 
-The following documents in `_bmad-output/planning-artifacts/platform-admin/` were updated:
+The following documents in `../_bmad-output/planning-artifacts/phase-2-platform-admin` were updated:
 
 1. **[`platform-admin-epic.md`](file:///D:/projects/GymVerse-Backend-v2/_bmad-output/planning-artifacts/platform-admin/platform-admin-epic.md)**:
    - Revised epic scope, directory layout, and acceptance criteria (AC-PA.1) to mandate `src/main/resources/platformAdminSeed.yml`, configuration import, and the safe conflict policy.
@@ -59,5 +59,5 @@ The following documents in `_bmad-output/planning-artifacts/platform-admin/` wer
 ## 3. Verification & Git Status Confirmation
 
 - `git status` verifies: zero application source code, resources, migrations, or existing test files were modified.
-- All modifications are strictly restricted to markdown planning documents in `_bmad-output/planning-artifacts/platform-admin/` and this task log in `antigravity/`.
+- All modifications are strictly restricted to markdown planning documents in `../_bmad-output/planning-artifacts/phase-2-platform-admin` and this task log in `antigravity/`.
 - Ready for user review and formal approval.

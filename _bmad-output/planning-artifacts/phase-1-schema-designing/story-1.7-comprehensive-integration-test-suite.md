@@ -54,10 +54,10 @@ Phase 1 delivers the persistence foundation for `GymVerse-Backend-v2`. To declar
 ## Scope & Out-of-Scope Boundaries
 
 ### In Scope
-1. Update `src/test/java/com/company/GymVerse/ApplicationTests.java` with `@ActiveProfiles("test")`.
-2. Creation of `src/test/java/com/company/GymVerse/persistence/CentralPersistenceIntegrationTest.java`.
-3. Creation of `src/test/java/com/company/GymVerse/persistence/TenantPersistenceIntegrationTest.java`.
-4. Creation of `src/test/java/com/company/GymVerse/persistence/TenantIsolationIntegrationTest.java`.
+1. Update `../../../src/test/java/com/company/GymVerse/ApplicationTests.java` with `@ActiveProfiles("test")`.
+2. Creation of `../../../src/test/java/com/company/GymVerse/persistence/CentralPersistenceIntegrationTest.java`.
+3. Creation of `../../../src/test/java/com/company/GymVerse/persistence/TenantPersistenceIntegrationTest.java`.
+4. Creation of `../../../src/test/java/com/company/GymVerse/persistence/TenantIsolationIntegrationTest.java`.
 5. Testing unique constraints, monetary types (`BigDecimal` scale 2), foreign keys, and zero-password invariants.
 6. Rigorous test cleanup (`@AfterEach` and `@AfterAll`) ensuring zero orphaned databases or leaked connection pools.
 
@@ -126,10 +126,10 @@ Phase 1 delivers the persistence foundation for `GymVerse-Backend-v2`. To declar
 
 | File Path | Action | Description |
 | :--- | :--- | :--- |
-| `src/test/java/com/company/GymVerse/ApplicationTests.java` | Update | Add `@ActiveProfiles("test")` and verify dual EntityManager bean presence. |
-| `src/test/java/com/company/GymVerse/persistence/CentralPersistenceIntegrationTest.java` | Create | Integration tests for central Flyway schema, unique constraints, and entity CRUD. |
-| `src/test/java/com/company/GymVerse/persistence/TenantPersistenceIntegrationTest.java` | Create | Integration tests for dynamic tenant creation, Flyway execution, and tenant entity persistence. |
-| `src/test/java/com/company/GymVerse/persistence/TenantIsolationIntegrationTest.java` | Create | Multi-tenant isolation test proving physical separation between multiple tenant databases. |
+| `../../../src/test/java/com/company/GymVerse/ApplicationTests.java` | Update | Add `@ActiveProfiles("test")` and verify dual EntityManager bean presence. |
+| `../../../src/test/java/com/company/GymVerse/persistence/CentralPersistenceIntegrationTest.java` | Create | Integration tests for central Flyway schema, unique constraints, and entity CRUD. |
+| `../../../src/test/java/com/company/GymVerse/persistence/TenantPersistenceIntegrationTest.java` | Create | Integration tests for dynamic tenant creation, Flyway execution, and tenant entity persistence. |
+| `../../../src/test/java/com/company/GymVerse/persistence/TenantIsolationIntegrationTest.java` | Create | Multi-tenant isolation test proving physical separation between multiple tenant databases. |
 
 ---
 

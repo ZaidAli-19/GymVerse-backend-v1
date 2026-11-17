@@ -10,7 +10,8 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 /**
- * Filter criteria and pagination parameters for querying SaaS subscription plans.
+ * Filter criteria for querying SaaS subscription plans.
+ * Pagination and sorting are managed exclusively at the root PlatformAdminRequest level.
  */
 @Getter
 @Setter
@@ -24,8 +25,4 @@ public class SaasPlanFilterRequest {
     private String name;
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
-    private Integer page;
-    private Integer size;
-    private String sortBy;
-    private String sortDirection;
 }

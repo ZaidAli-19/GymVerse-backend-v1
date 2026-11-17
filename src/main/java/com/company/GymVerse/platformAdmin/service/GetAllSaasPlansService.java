@@ -5,6 +5,7 @@ import com.company.GymVerse.models.central.enums.BillingCycle;
 import com.company.GymVerse.platformAdmin.factory.PlatformAdminFactoryOperation;
 import com.company.GymVerse.platformAdmin.mapper.SaasPlanMapper;
 import com.company.GymVerse.platformAdmin.request.PlatformAdminRequest;
+import com.company.GymVerse.platformAdmin.request.SaasPlanFilterRequest;
 import com.company.GymVerse.platformAdmin.response.PagedResponse;
 import com.company.GymVerse.platformAdmin.response.PlatformAdminResponse;
 import com.company.GymVerse.platformAdmin.response.SaasPlanResponse;
@@ -27,7 +28,7 @@ import java.util.List;
 
 /**
  * Service executing dynamic catalog query and retrieval of SaaS subscription plans
- * utilizing Spring Data JPA Specifications and pagination boundaries.
+ * utilizing Spring Data JPA Specifications and centralized pagination boundaries.
  */
 @Service
 @RequiredArgsConstructor
@@ -51,33 +52,21 @@ public class GetAllSaasPlansService implements PlatformAdminFactoryOperation {
         // 1. Validate pagination boundaries, sort field whitelist, and price ranges
         validations.validateFetchPlans(request);
 
-        // 2. Resolve query parameters (supporting both direct fields and nested planFilter)
-        Boolean active = request != null && request.getActive() != null ? request.getActive()
-                : (request != null && request.getPlanFilter() != null ? request.getPlanFilter().getActive() : null);
-        BillingCycle billingCycle = request != null && request.getBillingCycle() != null ? request.getBillingCycle()
-                : (request != null && request.getPlanFilter() != null ? request.getPlanFilter().getBillingCycle() : null);
-        String name = request != null && request.getName() != null ? request.getName()
-                : (request != null && request.getPlanFilter() != null ? request.getPlanFilter().getName() : null);
-        BigDecimal minPrice = request != null && request.getMinPrice() != null ? request.getMinPrice()
-                : (request != null && request.getPlanFilter() != null ? request.getPlanFilter().getMinPrice() : null);
-        BigDecimal maxPrice = request != null && request.getMaxPrice() != null ? request.getMaxPrice()
-                : (request != null && request.getPlanFilter() != null ? request.getPlanFilter().getMaxPrice() : null);
+        // 2. Resolve query filter parameters strictly from planFilter
+        SaasPlanFilterRequest filter = request != null ? request.getPlanFilter() : null;
+        Boolean active = filter != null ? filter.getActive() : null;
+        BillingCycle billingCycle = filter != null ? filter.getBillingCycle() : null;
+        String name = filter != null ? filter.getName() : null;
+        BigDecimal minPrice = filter != null ? filter.getMinPrice() : null;
+        BigDecimal maxPrice = filter != null ? filter.getMaxPrice() : null;
 
-        // 3. Resolve pagination defaults
-        int page = request != null && request.getPage() != null ? request.getPage()
-                : (request != null && request.getPlanFilter() != null && request.getPlanFilter().getPage() != null
-                ? request.getPlanFilter().getPage() : 0);
-        int size = request != null && request.getSize() != null ? request.getSize()
-                : (request != null && request.getPlanFilter() != null && request.getPlanFilter().getSize() != null
-                ? request.getPlanFilter().getSize() : 10);
+        // 3. Resolve pagination & sorting strictly from root PlatformAdminRequest
+        int page = request != null && request.getPage() != null ? request.getPage() : 0;
+        int size = request != null && request.getSize() != null ? request.getSize() : 10;
         String sortBy = request != null && request.getSortBy() != null && !request.getSortBy().trim().isBlank()
-                ? request.getSortBy().trim()
-                : (request != null && request.getPlanFilter() != null && request.getPlanFilter().getSortBy() != null && !request.getPlanFilter().getSortBy().trim().isBlank()
-                ? request.getPlanFilter().getSortBy().trim() : "id");
+                ? request.getSortBy().trim() : "id";
         String sortDir = request != null && request.getSortDirection() != null && !request.getSortDirection().trim().isBlank()
-                ? request.getSortDirection().trim()
-                : (request != null && request.getPlanFilter() != null && request.getPlanFilter().getSortDirection() != null && !request.getPlanFilter().getSortDirection().trim().isBlank()
-                ? request.getPlanFilter().getSortDirection().trim() : "asc");
+                ? request.getSortDirection().trim() : "asc";
 
         Sort.Direction direction = "desc".equalsIgnoreCase(sortDir) ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
@@ -107,13 +96,13 @@ public class GetAllSaasPlansService implements PlatformAdminFactoryOperation {
         log.info("Retrieved {} SaaS plans for page {} of {}", content.size(), planPage.getNumber(), planPage.getTotalPages());
 
         return PlatformAdminResponse.builder()
-                .message(planPage.getTotalElements() + " SaaS plan(s) retrieved successfully")
+                .message("SaaS subscription plans catalog retrieved successfully")
                 .plans(content)
                 .pagedPlans(pagedResponse)
                 .currentPage(planPage.getNumber())
-                .pageSize(planPage.getSize())
-                .totalRecords(planPage.getTotalElements())
                 .totalPages(planPage.getTotalPages())
+                .totalRecords(planPage.getTotalElements())
+                .pageSize(planPage.getSize())
                 .last(planPage.isLast())
                 .build();
     }

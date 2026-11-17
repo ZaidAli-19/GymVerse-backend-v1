@@ -49,7 +49,7 @@ In the GymVerse architecture ([docs/architecture.md](file:///D:/projects/GymVers
 ## Scope & Out-of-Scope Boundaries
 
 ### In Scope
-1. Creation of `src/main/resources/db/migration/central/V1__init_central_schema.sql`.
+1. Creation of `../../../src/main/resources/db/migration/central/V1__init_central_schema.sql`.
 2. Definition of all 6 central platform tables:
    - `user_accounts`
    - `gym_tenants`
@@ -193,7 +193,7 @@ In the GymVerse architecture ([docs/architecture.md](file:///D:/projects/GymVers
 
 | File Path | Action | Description |
 | :--- | :--- | :--- |
-| `src/main/resources/db/migration/central/V1__init_central_schema.sql` | Create | Complete DDL script creating all 6 central tables, constraints, foreign keys, indexes, and monetary precision types. |
+| `../../../src/main/resources/db/migration/central/V1__init_central_schema.sql` | Create | Complete DDL script creating all 6 central tables, constraints, foreign keys, indexes, and monetary precision types. |
 
 ---
 
@@ -255,7 +255,7 @@ SELECT version, description, success FROM GymVerse.flyway_schema_history;
 
 ## Definition of Done (DoD)
 
-- [x] `V1__init_central_schema.sql` is placed in `src/main/resources/db/migration/central/`.
+- [x] `V1__init_central_schema.sql` is placed in `../../../src/main/resources/db/migration/central`.
 - [x] All 6 central tables are defined with exact column types, lengths, nullability, defaults, and constraints specified in AC-1.2.1 through AC-1.2.6.
 - [x] Monetary columns are defined as `DECIMAL(10,2) NOT NULL`.
 - [x] `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci` is applied to every table.

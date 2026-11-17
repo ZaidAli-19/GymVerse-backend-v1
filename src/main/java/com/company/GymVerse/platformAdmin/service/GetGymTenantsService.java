@@ -4,6 +4,7 @@ import com.company.GymVerse.models.central.GymTenant;
 import com.company.GymVerse.models.central.enums.GymStatus;
 import com.company.GymVerse.platformAdmin.factory.PlatformAdminFactoryOperation;
 import com.company.GymVerse.platformAdmin.mapper.GymTenantSummaryMapper;
+import com.company.GymVerse.platformAdmin.request.GymTenantFilterRequest;
 import com.company.GymVerse.platformAdmin.request.PlatformAdminRequest;
 import com.company.GymVerse.platformAdmin.response.GymTenantSummaryResponse;
 import com.company.GymVerse.platformAdmin.response.PagedResponse;
@@ -26,7 +27,7 @@ import java.util.List;
 
 /**
  * Service executing dynamic directory query and retrieval of registered gym tenants
- * utilizing Spring Data JPA Specifications and pagination boundaries.
+ * utilizing Spring Data JPA Specifications and centralized pagination boundaries.
  */
 @Service
 @RequiredArgsConstructor
@@ -50,31 +51,20 @@ public class GetGymTenantsService implements PlatformAdminFactoryOperation {
         // 1. Validate pagination boundaries, sort field whitelist, and directions
         validations.validateFetchGymTenants(request);
 
-        // 2. Resolve query parameters (supporting both direct fields and nested tenantFilter)
-        GymStatus status = request != null && request.getGymStatus() != null ? request.getGymStatus()
-                : (request != null && request.getTenantFilter() != null ? request.getTenantFilter().getStatus() : null);
-        String city = request != null && request.getCity() != null ? request.getCity()
-                : (request != null && request.getTenantFilter() != null ? request.getTenantFilter().getCity() : null);
-        String gymName = request != null && request.getGymName() != null ? request.getGymName()
-                : (request != null && request.getTenantFilter() != null ? request.getTenantFilter().getGymName() : null);
-        String gymCode = request != null && request.getGymCode() != null ? request.getGymCode()
-                : (request != null && request.getTenantFilter() != null ? request.getTenantFilter().getGymCode() : null);
+        // 2. Resolve query filter parameters strictly from tenantFilter
+        GymTenantFilterRequest filter = request != null ? request.getTenantFilter() : null;
+        GymStatus status = filter != null ? filter.getStatus() : null;
+        String city = filter != null ? filter.getCity() : null;
+        String gymName = filter != null ? filter.getGymName() : null;
+        String gymCode = filter != null ? filter.getGymCode() : null;
 
-        // 3. Resolve pagination defaults (default sortBy: "registeredAt", default sortDir: "desc")
-        int page = request != null && request.getPage() != null ? request.getPage()
-                : (request != null && request.getTenantFilter() != null && request.getTenantFilter().getPage() != null
-                ? request.getTenantFilter().getPage() : 0);
-        int size = request != null && request.getSize() != null ? request.getSize()
-                : (request != null && request.getTenantFilter() != null && request.getTenantFilter().getSize() != null
-                ? request.getTenantFilter().getSize() : 10);
+        // 3. Resolve pagination defaults strictly from root PlatformAdminRequest
+        int page = request != null && request.getPage() != null ? request.getPage() : 0;
+        int size = request != null && request.getSize() != null ? request.getSize() : 10;
         String sortBy = request != null && request.getSortBy() != null && !request.getSortBy().trim().isBlank()
-                ? request.getSortBy().trim()
-                : (request != null && request.getTenantFilter() != null && request.getTenantFilter().getSortBy() != null && !request.getTenantFilter().getSortBy().trim().isBlank()
-                ? request.getTenantFilter().getSortBy().trim() : "registeredAt");
+                ? request.getSortBy().trim() : "registeredAt";
         String sortDir = request != null && request.getSortDirection() != null && !request.getSortDirection().trim().isBlank()
-                ? request.getSortDirection().trim()
-                : (request != null && request.getTenantFilter() != null && request.getTenantFilter().getSortDirection() != null && !request.getTenantFilter().getSortDirection().trim().isBlank()
-                ? request.getTenantFilter().getSortDirection().trim() : "desc");
+                ? request.getSortDirection().trim() : "desc";
 
         Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
@@ -100,13 +90,13 @@ public class GetGymTenantsService implements PlatformAdminFactoryOperation {
         log.info("Retrieved {} gym tenants for page {} of {}", content.size(), tenantPage.getNumber(), tenantPage.getTotalPages());
 
         return PlatformAdminResponse.builder()
-                .message(tenantPage.getTotalElements() + " gym tenant(s) retrieved successfully")
+                .message("Registered gym tenants directory retrieved successfully")
                 .tenants(content)
                 .pagedTenants(pagedResponse)
                 .currentPage(tenantPage.getNumber())
-                .pageSize(tenantPage.getSize())
-                .totalRecords(tenantPage.getTotalElements())
                 .totalPages(tenantPage.getTotalPages())
+                .totalRecords(tenantPage.getTotalElements())
+                .pageSize(tenantPage.getSize())
                 .last(tenantPage.isLast())
                 .build();
     }

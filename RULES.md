@@ -21,14 +21,8 @@
 - **Modular Feature Architecture**:
   - Encapsulate feature components in `<feature_module>/{controller, factory, service, request, response, validations, mapper}`.
   - Keep cross-cutting concerns centralized in `model/`, `repositories/`, `security/`, `config/`, `exceptions/`, `util/`.
-- **Unified Single-Endpoint Controller Gateway (MANDATORY & ABSOLUTE)**:
-  - Every feature module controller must expose **strictly ONE unified endpoint**: `@PostMapping("/<module-route>")` (e.g., `@PostMapping("/platform-admin")`).
-  - **All operations without exception**—both write mutations (`CREATE`, `UPDATE`, `DELETE`) and read queries (`FETCH_ALL`, `FETCH_BY_ID`, `SEARCH`)—must be dispatched exclusively through this single `POST` endpoint using the `<Module>RequestType` discriminator enum.
-  - **NEVER** add ad-hoc controller endpoints, HTTP GET endpoints, or sub-path routes (e.g. no `@GetMapping`, `@PutMapping`, `@DeleteMapping`, or extra `@PostMapping("/sub-path")`).
-- **Module-Level Factory Pattern (ConnectSouq Reference Standard)**:
-  - One factory per module (`<Module>Factory`) dispatching to concrete operation beans implementing `<Module>FactoryOperation`.
-  - One shared `<Module>Request` and `<Module>Response` per module, with nested DTOs for complex or distinct payloads.
-  - Strictly no operation-specific factories, no generic `<T, R>` registries, and no unchecked casts.
+- **Factory / Dispatcher Pattern**:
+  - Respect the unified factory dispatching pattern. Do not add ad-hoc controller endpoints where factories/operations exist.
 - **Dependency Injection**:
   - Use constructor injection via `@RequiredArgsConstructor` with `private final` fields. No field injection (`@Autowired`).
 - **Object Mapping & Validations**:
@@ -42,3 +36,11 @@
 - **API Payloads Documentation**:
   - Whenever an API is added or modified, update `/docs/payloads.md` (or `docs/payloads/manual-test.md`) with the 13 required fields and copy-pasteable curl commands.
 
+## 5. Agent Context & Session Continuity Maintenance (`antigravity/agentContext.md`) (MANDATORY)
+- **Mandatory Context Updates After Every Task Execution**: Immediately upon completing any engineering task, story, subtask, or bugfix, the agent MUST update `antigravity/agentContext.md`.
+- **Maintain Chat & Session Continuity ("Where We Left Off")**:
+  - Keep the active state section in `antigravity/agentContext.md` updated with where the conversation and implementation left off last time.
+  - Record active branch, current Git HEAD, completed tasks, tasks currently in progress, pending next steps, and any open decisions or user instructions.
+  - In normal conversational interactions, ensure any significant contextual changes or milestone agreements are reflected in `agentContext.md` so future sessions resume seamlessly without context loss.
+- **Audit & Story Synchronization**:
+  - Keep the executed task inventory in `agentContext.md` strictly synchronized with `/docs` specifications and `/antigravity` execution logs.

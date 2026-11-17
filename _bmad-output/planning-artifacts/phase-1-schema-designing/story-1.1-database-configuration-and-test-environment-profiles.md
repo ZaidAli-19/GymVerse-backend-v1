@@ -51,12 +51,12 @@ To support this architecture, the application relies on an existing, verified mu
 ## Scope & Out-of-Scope Boundaries
 
 ### In Scope
-1. **Audit & Refine `src/main/resources/application.yaml`**:
+1. **Audit & Refine `../../../src/main/resources/application.yaml`**:
    - Verify that `spring.datasource.*` correctly externalizes `${DB_URL}`, `${DB_USERNAME}`, `${DB_PASSWORD}` with local developer fallback values.
    - Verify that `gymverse.central.db-name`, `gymverse.datasource.host`, and `gymverse.datasource.port` are consistently mapped.
    - Ensure `spring.flyway.enabled: true` with `locations: classpath:db/migration/central` and `baseline-on-migrate: true`.
    - Ensure Hibernate DDL generation remains disabled (`spring.jpa.hibernate.ddl-auto: none`) in favor of Flyway migration management.
-2. **Author `src/test/resources/application-test.yaml`**:
+2. **Author `../../../src/test/resources/application-test.yaml`**:
    - Create a dedicated test profile configuration active during test execution (`@ActiveProfiles("test")`).
    - Configure isolated test database credentials pointing to local MySQL with fallback defaults.
    - Disable automatic startup of Kafka listeners (`spring.kafka.listener.auto-startup: false`) to allow tests to run without an active Kafka broker.
@@ -76,7 +76,7 @@ To support this architecture, the application relies on an existing, verified mu
 ## Detailed Acceptance Criteria
 
 ### AC-1.1.1: Central Datasource & Property Externalization
-- **Given** the application configuration in `src/main/resources/application.yaml`,
+- **Given** the application configuration in `../../../src/main/resources/application.yaml`,
 - **When** the Spring environment is initialized,
 - **Then** the primary datasource resolves:
   - `spring.datasource.url`: `${DB_URL:jdbc:mysql://localhost:3306/GymVerse?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}`
@@ -95,7 +95,7 @@ To support this architecture, the application relies on an existing, verified mu
   `jdbc:mysql://<host>:<port>/<dbName>?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC`.
 
 ### AC-1.1.3: Central Flyway Migration Configuration
-- **Given** Flyway auto-configuration in `src/main/resources/application.yaml`,
+- **Given** Flyway auto-configuration in `../../../src/main/resources/application.yaml`,
 - **When** the central application context starts up,
 - **Then** `spring.flyway.enabled` is `true`,
 - **And** `spring.flyway.locations` is explicitly set to `classpath:db/migration/central`,
@@ -103,7 +103,7 @@ To support this architecture, the application relies on an existing, verified mu
 - **And** tenant Flyway migrations under `classpath:db/migration/tenant` are not scanned or executed by Spring's central Flyway bean.
 
 ### AC-1.1.4: Creation of Test Environment Profile (`application-test.yaml`)
-- **Given** the test environment under `src/test/resources/`,
+- **Given** the test environment under `../../../src/test/resources`,
 - **When** `application-test.yaml` is created and evaluated under the active profile `test`,
 - **Then** it provides configuration overrides for test execution that mirror the MySQL central datasource and multitenancy host/port mappings,
 - **And** sets `spring.flyway.enabled: true` with `locations: classpath:db/migration/central`.
@@ -135,14 +135,14 @@ To support this architecture, the application relies on an existing, verified mu
 
 | File Path | Action | Description |
 | :--- | :--- | :--- |
-| `src/main/resources/application.yaml` | Inspect / Update | Verify central datasource, Flyway location, and tenant host/port configuration properties. |
-| `src/test/resources/application-test.yaml` | Create | New test configuration profile disabling Kafka listener auto-startup, configuring offline testing, and enabling multitenancy debug logging. |
+| `../../../src/main/resources/application.yaml` | Inspect / Update | Verify central datasource, Flyway location, and tenant host/port configuration properties. |
+| `../../../src/test/resources/application-test.yaml` | Create | New test configuration profile disabling Kafka listener auto-startup, configuring offline testing, and enabling multitenancy debug logging. |
 
 ---
 
 ## Technical Implementation Guidance
 
-### 1. `src/main/resources/application.yaml` Verification
+### 1. `../../../src/main/resources/application.yaml` Verification
 Ensure the following blocks are present and cleanly structured:
 ```yaml
 spring:
@@ -173,7 +173,7 @@ gymverse:
     port: ${TENANT_DB_PORT:3306}
 ```
 
-### 2. `src/test/resources/application-test.yaml` Structure
+### 2. `../../../src/test/resources/application-test.yaml` Structure
 Create the file with the following specifications:
 ```yaml
 spring:
@@ -263,8 +263,8 @@ When executed with `-Dspring.profiles.active=test`, the application context must
 
 ## Definition of Done (DoD)
 
-- [x] `src/main/resources/application.yaml` is verified to have correct central datasource, Flyway, and tenant host/port properties.
-- [x] `src/test/resources/application-test.yaml` is created with active profile `test`.
+- [x] `../../../src/main/resources/application.yaml` is verified to have correct central datasource, Flyway, and tenant host/port properties.
+- [x] `../../../src/test/resources/application-test.yaml` is created with active profile `test`.
 - [x] Kafka listener auto-startup is disabled (`spring.kafka.listener.auto-startup: false`) in `application-test.yaml`.
 - [x] External mail probing is neutralized in `application-test.yaml`.
 - [x] Flyway location in both profiles strictly targets `classpath:db/migration/central`.

@@ -4,7 +4,7 @@
 **Status:** FORENSIC REVIEW & REFINEMENT COMPLETE — PENDING USER APPROVAL  
 **Author:** Winston, System Architect 🏗️  
 **Project:** `GymVerse-Backend-v2` (`D:/projects/GymVerse-Backend-v2`)  
-**Target Artifact:** `_bmad-output/planning-artifacts/phase-1-epics.md`  
+**Target Artifact:** `../_bmad-output/planning-artifacts/phase-1-schema-designing`  
 
 ---
 
@@ -12,7 +12,7 @@
 
 In response to forensic review directives, the planning breakdown for **Phase 1: Enterprise Multi-Tenant Persistence Foundation** has been thoroughly audited and refined.
 
-All updates were applied exclusively to `_bmad-output/planning-artifacts/phase-1-epics.md`. No Java code, configuration files, migration scripts, dependencies, tests, or architecture documents were modified.
+All updates were applied exclusively to `../_bmad-output/planning-artifacts/phase-1-schema-designing`. No Java code, configuration files, migration scripts, dependencies, tests, or architecture documents were modified.
 
 ---
 

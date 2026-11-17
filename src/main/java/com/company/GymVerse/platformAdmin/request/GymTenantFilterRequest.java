@@ -8,7 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Filter criteria and pagination parameters for querying registered gym tenants.
+ * Filter criteria for querying registered gym tenants.
+ * Pagination and sorting are managed exclusively at the root PlatformAdminRequest level.
  */
 @Getter
 @Setter
@@ -21,8 +22,4 @@ public class GymTenantFilterRequest {
     private String city;
     private String gymName;
     private String gymCode;
-    private Integer page;
-    private Integer size;
-    private String sortBy;
-    private String sortDirection;
 }

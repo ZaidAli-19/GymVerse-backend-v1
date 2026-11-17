@@ -52,7 +52,7 @@ In the GymVerse database-per-tenant architecture ([docs/architecture.md](file://
 ## Scope & Out-of-Scope Boundaries
 
 ### In Scope
-1. Creation of `src/main/resources/db/migration/tenant/V1__init_tenant_schema.sql`.
+1. Creation of `../../../src/main/resources/db/migration/tenant/V1__init_tenant_schema.sql`.
 2. Definition of all 14 tenant operational tables:
    - `users` (tenant operational profile with scalar `central_user_id`, zero passwords)
    - `gym_config` (geofence center, radius, business hours, timezone)
@@ -264,7 +264,7 @@ In the GymVerse database-per-tenant architecture ([docs/architecture.md](file://
 
 | File Path | Action | Description |
 | :--- | :--- | :--- |
-| `src/main/resources/db/migration/tenant/V1__init_tenant_schema.sql` | Create | Complete DDL script creating all 14 tenant tables, local constraints, indexes, monetary precision types, and hashed token storage. |
+| `../../../src/main/resources/db/migration/tenant/V1__init_tenant_schema.sql` | Create | Complete DDL script creating all 14 tenant tables, local constraints, indexes, monetary precision types, and hashed token storage. |
 
 ---
 
@@ -320,7 +320,7 @@ In the GymVerse database-per-tenant architecture ([docs/architecture.md](file://
 
 ## Definition of Done (DoD)
 
-- [x] `V1__init_tenant_schema.sql` is placed in `src/main/resources/db/migration/tenant/`.
+- [x] `V1__init_tenant_schema.sql` is placed in `../../../src/main/resources/db/migration/tenant`.
 - [x] All 14 tenant tables are defined with exact column types, lengths, nullability, defaults, and local foreign keys specified in AC-1.4.1 through AC-1.4.8.
 - [x] Table `users` contains **no password column**.
 - [x] Table `gym_invitations` contains `invitation_token_hash VARCHAR(64) NOT NULL UNIQUE`.

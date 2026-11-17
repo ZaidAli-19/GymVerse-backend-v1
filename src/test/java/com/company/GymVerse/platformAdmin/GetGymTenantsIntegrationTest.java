@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-@DisplayName("Story PA-6: Platform Registered Gym Tenants Dynamic Directory Retrieval Integration Tests")
+@DisplayName("Story PA-6: Platform Registered Gym Tenants Dynamic Directory Integration Tests")
 class GetGymTenantsIntegrationTest {
 
     @Autowired
@@ -53,7 +53,7 @@ class GetGymTenantsIntegrationTest {
     private PlatformAdminFactory platformAdminFactory;
 
     private static final String TENANT_PREFIX = "PA6_TEST_";
-    private static final String CODE_PREFIX = "PA6_";
+    private static final String CODE_PREFIX = "PA6";
 
     private GymTenant tenantA;
     private GymTenant tenantB;
@@ -64,16 +64,16 @@ class GetGymTenantsIntegrationTest {
     void setUp() {
         cleanTestData();
 
-        Instant baseTime = Instant.now().minusSeconds(1000);
+        Instant baseTime = Instant.parse("2026-01-01T10:00:00Z");
 
         // Tenant A: Austin, ACTIVE, Iron Fitness
         tenantA = gymTenantRepository.save(GymTenant.builder()
                 .gymName(TENANT_PREFIX + "Iron Fitness")
-                .contactEmail("admin@ironfitness.com")
-                .phoneNumber("+1-512-555-0199")
-                .address("100 Muscle Way")
+                .contactEmail("iron@austin.com")
+                .phoneNumber("+1-512-555-0101")
+                .address("100 Congress Ave")
                 .city("Austin")
-                .logoUrl("https://assets.ironfitness.com/logo.png")
+                .logoUrl("https://s3.gymverse.com/logos/iron.png")
                 .gymCode(CODE_PREFIX + "IRONFIT")
                 .dbName("gym_db_pa6_1")
                 .status(GymStatus.ACTIVE)
@@ -83,11 +83,11 @@ class GetGymTenantsIntegrationTest {
         // Tenant B: Dallas, ACTIVE, Metro Health
         tenantB = gymTenantRepository.save(GymTenant.builder()
                 .gymName(TENANT_PREFIX + "Metro Health")
-                .contactEmail("info@metrohealth.com")
-                .phoneNumber("+1-214-555-0188")
-                .address("200 Metro Blvd")
+                .contactEmail("metro@dallas.com")
+                .phoneNumber("+1-214-555-0122")
+                .address("200 Main St")
                 .city("Dallas")
-                .logoUrl("https://assets.metrohealth.com/logo.png")
+                .logoUrl(null)
                 .gymCode(CODE_PREFIX + "METRO")
                 .dbName("gym_db_pa6_2")
                 .status(GymStatus.ACTIVE)
@@ -98,15 +98,14 @@ class GetGymTenantsIntegrationTest {
         tenantC = gymTenantRepository.save(GymTenant.builder()
                 .gymName(TENANT_PREFIX + "Austin Fit")
                 .contactEmail("austin@fit.com")
-                .phoneNumber("+1-512-555-0177")
-                .address("300 Austin Lane")
+                .phoneNumber("+1-512-555-0144")
+                .address("300 Lamar Blvd")
                 .city("Austin")
-                .logoUrl("https://assets.austinfit.com/logo.png")
+                .logoUrl(null)
                 .gymCode(CODE_PREFIX + "AUSFIT")
                 .dbName("gym_db_pa6_3")
                 .status(GymStatus.SUSPENDED)
                 .registeredAt(baseTime.plusSeconds(300))
-                .suspendedAt(Instant.now())
                 .suspensionReason("Payment default")
                 .build());
 
@@ -143,9 +142,11 @@ class GetGymTenantsIntegrationTest {
     void testDynamicFilterByStatusAndCity() throws Exception {
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_GYM_TENANTS)
-                .gymName(TENANT_PREFIX)
-                .gymStatus(GymStatus.ACTIVE)
-                .city("austin")
+                .tenantFilter(GymTenantFilterRequest.builder()
+                        .gymName(TENANT_PREFIX)
+                        .status(GymStatus.ACTIVE)
+                        .city("austin")
+                        .build())
                 .page(0)
                 .size(10)
                 .build();
@@ -168,8 +169,10 @@ class GetGymTenantsIntegrationTest {
     void testSearchByGymCodePrefixAndPartialName() throws Exception {
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_GYM_TENANTS)
-                .gymCode(CODE_PREFIX.toLowerCase() + "iron")
-                .gymName("fit")
+                .tenantFilter(GymTenantFilterRequest.builder()
+                        .gymCode(CODE_PREFIX.toLowerCase() + "iron")
+                        .gymName("fit")
+                        .build())
                 .build();
 
         mockMvc.perform(post("/api/platform-admin")
@@ -186,7 +189,9 @@ class GetGymTenantsIntegrationTest {
     void testWhitelistGuardedSortingRegisteredAtDesc() throws Exception {
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_GYM_TENANTS)
-                .gymName(TENANT_PREFIX)
+                .tenantFilter(GymTenantFilterRequest.builder()
+                        .gymName(TENANT_PREFIX)
+                        .build())
                 .sortBy("registeredAt")
                 .sortDirection("desc")
                 .page(0)
@@ -209,7 +214,9 @@ class GetGymTenantsIntegrationTest {
     void testWhitelistGuardedSortingGymNameAsc() throws Exception {
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_GYM_TENANTS)
-                .gymName(TENANT_PREFIX)
+                .tenantFilter(GymTenantFilterRequest.builder()
+                        .gymName(TENANT_PREFIX)
+                        .build())
                 .sortBy("gymName")
                 .sortDirection("asc")
                 .page(0)
@@ -263,7 +270,9 @@ class GetGymTenantsIntegrationTest {
     void testPaginationBoundaries() throws Exception {
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_GYM_TENANTS)
-                .gymName(TENANT_PREFIX)
+                .tenantFilter(GymTenantFilterRequest.builder()
+                        .gymName(TENANT_PREFIX)
+                        .build())
                 .sortBy("gymName")
                 .sortDirection("asc")
                 .page(0)
@@ -288,7 +297,9 @@ class GetGymTenantsIntegrationTest {
         // Second page
         PlatformAdminRequest page2 = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_GYM_TENANTS)
-                .gymName(TENANT_PREFIX)
+                .tenantFilter(GymTenantFilterRequest.builder()
+                        .gymName(TENANT_PREFIX)
+                        .build())
                 .sortBy("gymName")
                 .sortDirection("asc")
                 .page(1)
@@ -352,7 +363,9 @@ class GetGymTenantsIntegrationTest {
 
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_GYM_TENANTS)
-                .gymName(TENANT_PREFIX)
+                .tenantFilter(GymTenantFilterRequest.builder()
+                        .gymName(TENANT_PREFIX)
+                        .build())
                 .build();
 
         mockMvc.perform(post("/api/platform-admin")
@@ -368,7 +381,9 @@ class GetGymTenantsIntegrationTest {
     void testEmptyResultsStructure() throws Exception {
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_GYM_TENANTS)
-                .gymName("NON_EXISTENT_GYM_NAME_XYZ")
+                .tenantFilter(GymTenantFilterRequest.builder()
+                        .gymName("NON_EXISTENT_GYM_NAME_XYZ")
+                        .build())
                 .build();
 
         mockMvc.perform(post("/api/platform-admin")
@@ -390,7 +405,9 @@ class GetGymTenantsIntegrationTest {
 
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_GYM_TENANTS)
-                .gymName(TENANT_PREFIX)
+                .tenantFilter(GymTenantFilterRequest.builder()
+                        .gymName(TENANT_PREFIX)
+                        .build())
                 .page(0)
                 .size(5)
                 .build();
@@ -409,15 +426,15 @@ class GetGymTenantsIntegrationTest {
                 .status(GymStatus.INACTIVE)
                 .city("Houston")
                 .gymCode(CODE_PREFIX + "HOU")
-                .page(0)
-                .size(5)
-                .sortBy("registeredAt")
-                .sortDirection("desc")
                 .build();
 
         PlatformAdminRequest request = PlatformAdminRequest.builder()
                 .platformAdminRequestType(PlatformAdminRequestType.FETCH_ALL_GYM_TENANTS)
                 .tenantFilter(filter)
+                .page(0)
+                .size(5)
+                .sortBy("registeredAt")
+                .sortDirection("desc")
                 .build();
 
         mockMvc.perform(post("/api/platform-admin")

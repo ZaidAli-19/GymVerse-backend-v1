@@ -140,7 +140,7 @@ In Spring Boot JPA multi-tenancy, when a method annotated with `@Transactional("
 
 | File Path | Action | Description |
 | :--- | :--- | :--- |
-| `src/main/java/com/company/GymVerse/multitanancy/TenantRoutingBridge.java` | Create | Infrastructure component managing tenant context lifecycle, programmatic transaction demarcation, and cleanup. |
+| `../../../src/main/java/com/company/GymVerse/multitanancy/TenantRoutingBridge.java` | Create | Infrastructure component managing tenant context lifecycle, programmatic transaction demarcation, and cleanup. |
 
 ---
 

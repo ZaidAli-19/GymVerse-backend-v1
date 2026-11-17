@@ -3,27 +3,29 @@ package com.company.GymVerse.platformAdmin.validations;
 import com.company.GymVerse.exceptions.BadRequestException;
 import com.company.GymVerse.exceptions.ConflictException;
 import com.company.GymVerse.platformAdmin.request.PlatformAdminRequest;
+import com.company.GymVerse.platformAdmin.request.SaasPlanFilterRequest;
 import com.company.GymVerse.repositories.central.SaasSubscriptionPlanRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Implementation of domain invariant and permission checks for platform administration.
+ * Provides unified, reusable pagination and whitelist-guarded sorting validations.
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class PlatformAdminValidationsImpl implements PlatformAdminValidations {
 
-    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+    private static final List<String> ALLOWED_PLAN_SORT_FIELDS = List.of(
             "id", "name", "price", "billingCycle", "maxMembers", "maxTrainers"
     );
 
-    private static final Set<String> ALLOWED_TENANT_SORT_FIELDS = Set.of(
+    private static final List<String> ALLOWED_TENANT_SORT_FIELDS = List.of(
             "id", "gymName", "gymCode", "city", "status", "registeredAt"
     );
 
@@ -79,52 +81,24 @@ public class PlatformAdminValidationsImpl implements PlatformAdminValidations {
             return;
         }
 
-        BigDecimal minPrice = request.getMinPrice() != null ? request.getMinPrice()
-                : (request.getPlanFilter() != null ? request.getPlanFilter().getMinPrice() : null);
-        BigDecimal maxPrice = request.getMaxPrice() != null ? request.getMaxPrice()
-                : (request.getPlanFilter() != null ? request.getPlanFilter().getMaxPrice() : null);
-        Integer page = request.getPage() != null ? request.getPage()
-                : (request.getPlanFilter() != null ? request.getPlanFilter().getPage() : null);
-        Integer size = request.getSize() != null ? request.getSize()
-                : (request.getPlanFilter() != null ? request.getPlanFilter().getSize() : null);
-        String sortBy = request.getSortBy() != null ? request.getSortBy()
-                : (request.getPlanFilter() != null ? request.getPlanFilter().getSortBy() : null);
-        String sortDirection = request.getSortDirection() != null ? request.getSortDirection()
-                : (request.getPlanFilter() != null ? request.getPlanFilter().getSortDirection() : null);
+        // 1. Validate common pagination and sorting at root
+        validatePagination(request.getPage(), request.getSize(), request.getSortBy(), request.getSortDirection(),
+                ALLOWED_PLAN_SORT_FIELDS);
 
-        // Validate price range
-        if (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) < 0) {
-            throw new BadRequestException("minPrice must not be negative");
-        }
-        if (maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) < 0) {
-            throw new BadRequestException("maxPrice must not be negative");
-        }
-        if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
-            throw new BadRequestException("minPrice cannot be greater than maxPrice");
-        }
+        // 2. Validate planFilter criteria if provided
+        SaasPlanFilterRequest filter = request.getPlanFilter();
+        if (filter != null) {
+            BigDecimal minPrice = filter.getMinPrice();
+            BigDecimal maxPrice = filter.getMaxPrice();
 
-        // Validate pagination
-        if (page != null && page < 0) {
-            throw new BadRequestException("Page index must not be negative");
-        }
-        if (size != null && (size < 1 || size > 100)) {
-            throw new BadRequestException("Page size must be between 1 and 100");
-        }
-
-        // Validate sort field whitelist
-        if (sortBy != null && !sortBy.trim().isBlank()) {
-            String trimmedSort = sortBy.trim();
-            if (!ALLOWED_SORT_FIELDS.contains(trimmedSort)) {
-                log.warn("Invalid sort field rejected: '{}'", trimmedSort);
-                throw new BadRequestException("Invalid sort field: '" + trimmedSort + "'. Allowed fields: [id, name, price, billingCycle, maxMembers, maxTrainers]");
+            if (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) < 0) {
+                throw new BadRequestException("minPrice must not be negative");
             }
-        }
-
-        // Validate sort direction
-        if (sortDirection != null && !sortDirection.trim().isBlank()) {
-            String trimmedDir = sortDirection.trim().toLowerCase();
-            if (!"asc".equals(trimmedDir) && !"desc".equals(trimmedDir)) {
-                throw new BadRequestException("Invalid sort direction: '" + sortDirection + "'. Allowed values: [asc, desc]");
+            if (maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) < 0) {
+                throw new BadRequestException("maxPrice must not be negative");
+            }
+            if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
+                throw new BadRequestException("minPrice cannot be greater than maxPrice");
             }
         }
     }
@@ -169,16 +143,17 @@ public class PlatformAdminValidationsImpl implements PlatformAdminValidations {
             return;
         }
 
-        Integer page = request.getPage() != null ? request.getPage()
-                : (request.getTenantFilter() != null ? request.getTenantFilter().getPage() : null);
-        Integer size = request.getSize() != null ? request.getSize()
-                : (request.getTenantFilter() != null ? request.getTenantFilter().getSize() : null);
-        String sortBy = request.getSortBy() != null ? request.getSortBy()
-                : (request.getTenantFilter() != null ? request.getTenantFilter().getSortBy() : null);
-        String sortDirection = request.getSortDirection() != null ? request.getSortDirection()
-                : (request.getTenantFilter() != null ? request.getTenantFilter().getSortDirection() : null);
+        // Validate common pagination and sorting at root
+        validatePagination(request.getPage(), request.getSize(), request.getSortBy(), request.getSortDirection(),
+                ALLOWED_TENANT_SORT_FIELDS);
+    }
 
-        // Validate pagination
+    /**
+     * Reusable helper validating standard pagination boundaries and whitelist-guarded sorting parameters.
+     */
+    private void validatePagination(Integer page, Integer size, String sortBy, String sortDirection,
+                                    List<String> allowedSortFields) {
+        // Validate pagination boundaries
         if (page != null && page < 0) {
             throw new BadRequestException("Page index must not be negative");
         }
@@ -189,9 +164,9 @@ public class PlatformAdminValidationsImpl implements PlatformAdminValidations {
         // Validate sort field whitelist
         if (sortBy != null && !sortBy.trim().isBlank()) {
             String trimmedSort = sortBy.trim();
-            if (!ALLOWED_TENANT_SORT_FIELDS.contains(trimmedSort)) {
-                log.warn("Invalid tenant sort field rejected: '{}'", trimmedSort);
-                throw new BadRequestException("Invalid sort field: '" + trimmedSort + "'. Allowed fields: [id, gymName, gymCode, city, status, registeredAt]");
+            if (!allowedSortFields.contains(trimmedSort)) {
+                log.warn("Invalid sort field rejected: '{}'", trimmedSort);
+                throw new BadRequestException("Invalid sort field: '" + trimmedSort + "'. Allowed fields: " + allowedSortFields);
             }
         }
 
@@ -204,4 +179,3 @@ public class PlatformAdminValidationsImpl implements PlatformAdminValidations {
         }
     }
 }
-

@@ -329,15 +329,15 @@ Existing `GymVerse-Backend-v2` project scaffold with Spring Boot 3.3.5, Java 21,
    **When** `application.yaml` is evaluated,  
    **Then** central datasource parameters point to `${DB_URL}` with sensible local defaults, multitenancy host/port properties (`gymverse.datasource.host`, `gymverse.datasource.port`) are externalized, and Flyway central migration location is set to `classpath:db/migration/central`.
 2. **Given** automated testing requirements,  
-   **When** `src/test/resources/application-test.yaml` is evaluated under active profile `test`,  
+   **When** `../../../src/test/resources/application-test.yaml` is evaluated under active profile `test`,  
    **Then** it defines isolated test database credentials, disables external Kafka consumer/producer initialization (`spring.kafka.listener.auto-startup: false`), disables mail connection probing, and configures test connection pool timeouts.
 3. **Given** Flyway configuration in `application.yaml`,  
    **When** Spring Boot initializes,  
    **Then** `spring.flyway.enabled: true` applies strictly to the central datasource (`classpath:db/migration/central`), while tenant migrations remain deferred to programmatic execution via `TenantFlywayService`.
 
 **Files Affected:**
-- `src/main/resources/application.yaml`
-- `src/test/resources/application-test.yaml`
+- `../../../src/main/resources/application.yaml`
+- `../../../src/test/resources/application-test.yaml`
 
 **Verification Command:**
 ```powershell
@@ -376,7 +376,7 @@ Story 1.1 completed.
    **Then** `flyway_schema_history` successfully logs the migration with `success = 1` and matching checksum.
 
 **Files Affected:**
-- `src/main/resources/db/migration/central/V1__init_central_schema.sql`
+- `../../../src/main/resources/db/migration/central/V1__init_central_schema.sql`
 
 **Verification Command:**
 ```powershell
@@ -466,7 +466,7 @@ Story 1.1 completed.
    **Then** `flyway_schema_history` inside the target tenant database records successful execution.
 
 **Files Affected:**
-- `src/main/resources/db/migration/tenant/V1__init_tenant_schema.sql`
+- `../../../src/main/resources/db/migration/tenant/V1__init_tenant_schema.sql`
 
 **Verification Command:**
 ```powershell
@@ -474,7 +474,7 @@ Story 1.1 completed.
 ```
 
 **Definition of Done:**
-Migration script resides in `src/main/resources/db/migration/tenant/`, executes cleanly via `TenantFlywayService.migrate(tenantDbName)`, and establishes the complete tenant schema.
+Migration script resides in `../../../src/main/resources/db/migration/tenant`, executes cleanly via `TenantFlywayService.migrate(tenantDbName)`, and establishes the complete tenant schema.
 
 ---
 
@@ -557,8 +557,8 @@ Story 1.3 and Story 1.5 completed.
    **Then** it programmatically enforces the pre-transaction context setup, transactional execution, and `finally` cleanup sequence.
 
 **Files Affected:**
-- `src/main/java/com/company/GymVerse/multitanancy/` (zero modifications to existing 8 files)
-- `src/main/java/com/company/GymVerse/multitanancy/TenantRoutingBridge.java` (new helper service, or bridge in `service/`)
+- `../../../src/main/java/com/company/GymVerse/multitanancy` (zero modifications to existing 8 files)
+- `../../../src/main/java/com/company/GymVerse/multitanancy/TenantRoutingBridge.java` (new helper service, or bridge in `service/`)
 
 **Verification Command:**
 ```powershell
@@ -612,11 +612,11 @@ Stories 1.1 through 1.6 completed.
 - Administrative user credentials (e.g. user `root` with `${DB_PASSWORD}`) holding `ALL PRIVILEGES` on `GymVerse` and `gym_db_%` (`CREATE`, `DROP`, `ALTER`, `SELECT`, `INSERT`, `UPDATE`, `DELETE`).
 
 **Files Affected:**
-- `src/test/java/com/company/GymVerse/ApplicationTests.java`
-- `src/test/java/com/company/GymVerse/persistence/CentralPersistenceIntegrationTest.java`
-- `src/test/java/com/company/GymVerse/persistence/TenantPersistenceIntegrationTest.java`
-- `src/test/java/com/company/GymVerse/persistence/TenantIsolationIntegrationTest.java`
-- `src/test/resources/application-test.yaml`
+- `../../../src/test/java/com/company/GymVerse/ApplicationTests.java`
+- `../../../src/test/java/com/company/GymVerse/persistence/CentralPersistenceIntegrationTest.java`
+- `../../../src/test/java/com/company/GymVerse/persistence/TenantPersistenceIntegrationTest.java`
+- `../../../src/test/java/com/company/GymVerse/persistence/TenantIsolationIntegrationTest.java`
+- `../../../src/test/resources/application-test.yaml`
 
 **Verification Commands:**
 ```powershell
@@ -647,7 +647,7 @@ graph TD
 
 | Order | Story ID | Title | Primary Deliverable |
 | :---: | :--- | :--- | :--- |
-| **1** | **Story 1.1** | Database Config & Test Profiles | `application.yaml`, `src/test/resources/application-test.yaml` |
+| **1** | **Story 1.1** | Database Config & Test Profiles | `application.yaml`, `../../../src/test/resources/application-test.yaml` |
 | **2** | **Story 1.2** | Central Flyway Migration | `V1__init_central_schema.sql` (Central DDL, `DECIMAL(10,2)` monetary types) |
 | **3** | **Story 1.3** | Central JPA Entities & Repositories | `models.central.*` (`BigDecimal` prices), `repositories.central.*` |
 | **4** | **Story 1.4** | Tenant Flyway Migration | `V1__init_tenant_schema.sql` (Tenant DDL, `DECIMAL(10,2)`, no password) |

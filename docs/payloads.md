@@ -156,30 +156,33 @@ curl -X POST "http://localhost:8080/api/platform-admin" \
    ```json
    {
      "platformAdminRequestType": "FETCH_ALL_SAAS_PLANS",
-     "active": true,
-     "billingCycle": "MONTHLY",
-     "name": "Pro",
-     "minPrice": 20.00,
-     "maxPrice": 100.00,
      "page": 0,
      "size": 10,
      "sortBy": "price",
-     "sortDirection": "asc"
+     "sortDirection": "asc",
+     "planFilter": {
+       "active": true,
+       "billingCycle": "MONTHLY",
+       "name": "Pro",
+       "minPrice": 20.00,
+       "maxPrice": 100.00
+     }
    }
    ```
-   *Note: Can also be passed as a nested object using `"planFilter": { ... }`.*
+   *Note: Pagination (`page`, `size`) and sorting (`sortBy`, `sortDirection`) are consolidated strictly at the root level. Domain filter criteria are encapsulated inside `planFilter` (optional).*
 
    **Validation Rules:**
    - `platformAdminRequestType`: Enum string, required (`FETCH_ALL_SAAS_PLANS`).
-   - `active`: Boolean, optional (filters active/inactive status).
-   - `billingCycle`: Enum string, optional (`MONTHLY`, `QUARTERLY`, `ANNUAL`).
-   - `name`: String, optional (case-insensitive partial substring match `%name%`).
-   - `minPrice`: Decimal/BigDecimal, optional, non-negative (`>= 0.00`).
-   - `maxPrice`: Decimal/BigDecimal, optional, non-negative (`>= 0.00`). `minPrice` must be `<= maxPrice`.
    - `page`: Integer, optional, default `0`. Must not be negative (`>= 0`).
    - `size`: Integer, optional, default `10`. Must be between `1` and `100`.
    - `sortBy`: String, optional, default `"id"`. Must match sort whitelist: `[id, name, price, billingCycle, maxMembers, maxTrainers]`.
    - `sortDirection`: String, optional, default `"asc"`. Must be `"asc"` or `"desc"` (case-insensitive).
+   - `planFilter`: Object, optional containing:
+     - `active`: Boolean, optional (filters active/inactive status).
+     - `billingCycle`: Enum string, optional (`MONTHLY`, `QUARTERLY`, `ANNUAL`).
+     - `name`: String, optional (case-insensitive partial substring match `%name%`).
+     - `minPrice`: Decimal/BigDecimal, optional, non-negative (`>= 0.00`).
+     - `maxPrice`: Decimal/BigDecimal, optional, non-negative (`>= 0.00`). `minPrice` must be `<= maxPrice`.
 
 10. **Success Response:**
     - **HTTP Status:** `200 OK`
@@ -303,14 +306,16 @@ curl -X POST "http://localhost:8080/api/platform-admin" \
      -H "Accept: application/json" \
      -d '{
        "platformAdminRequestType": "FETCH_ALL_SAAS_PLANS",
-       "active": true,
-       "billingCycle": "MONTHLY",
-       "minPrice": 10.00,
-       "maxPrice": 100.00,
        "page": 0,
        "size": 10,
        "sortBy": "price",
-       "sortDirection": "asc"
+       "sortDirection": "asc",
+       "planFilter": {
+         "active": true,
+         "billingCycle": "MONTHLY",
+         "minPrice": 10.00,
+         "maxPrice": 100.00
+       }
      }'
 ```
 
@@ -584,43 +589,31 @@ curl -X POST "http://localhost:8080/api/platform-admin" \
    ```json
    {
      "platformAdminRequestType": "FETCH_ALL_GYM_TENANTS",
-     "gymStatus": "ACTIVE",
-     "city": "Austin",
-     "gymName": "Iron",
-     "gymCode": "IR",
      "page": 0,
      "size": 10,
      "sortBy": "registeredAt",
-     "sortDirection": "desc"
-   }
-   ```
-   *Note: Filter parameters can also be passed via a nested `tenantFilter` object:*
-   ```json
-   {
-     "platformAdminRequestType": "FETCH_ALL_GYM_TENANTS",
+     "sortDirection": "desc",
      "tenantFilter": {
        "status": "ACTIVE",
        "city": "Austin",
        "gymName": "Iron",
-       "gymCode": "IR",
-       "page": 0,
-       "size": 10,
-       "sortBy": "registeredAt",
-       "sortDirection": "desc"
+       "gymCode": "IR"
      }
    }
    ```
+   *Note: Pagination (`page`, `size`) and sorting (`sortBy`, `sortDirection`) are consolidated strictly at the root level. Domain filter criteria are encapsulated inside `tenantFilter` (optional).*
 
    **Validation Rules:**
    - `platformAdminRequestType`: Enum string, required (`FETCH_ALL_GYM_TENANTS`).
-   - `gymStatus` / `status`: Enum string, optional (`ACTIVE`, `SUSPENDED`, `INACTIVE`).
-   - `city`: String, optional. Evaluated as case-insensitive partial match (`%city%`).
-   - `gymName`: String, optional. Evaluated as case-insensitive partial match (`%gymName%`).
-   - `gymCode`: String, optional. Evaluated as case-insensitive prefix match (`gymCode%`).
    - `page`: Integer, optional. Defaults to `0`. Must be `>= 0`.
    - `size`: Integer, optional. Defaults to `10`. Must be between `1` and `100`.
    - `sortBy`: String, optional. Defaults to `"registeredAt"`. Whitelist-guarded to allowed entity properties: `["id", "gymName", "gymCode", "city", "status", "registeredAt"]`.
    - `sortDirection`: String, optional. Defaults to `"desc"`. Allowed values: `["asc", "desc"]` (case-insensitive).
+   - `tenantFilter`: Object, optional containing:
+     - `status`: Enum string, optional (`ACTIVE`, `SUSPENDED`, `INACTIVE`).
+     - `city`: String, optional. Evaluated as case-insensitive partial match (`%city%`).
+     - `gymName`: String, optional. Evaluated as case-insensitive partial match (`%gymName%`).
+     - `gymCode`: String, optional. Evaluated as case-insensitive prefix match (`gymCode%`).
 
 10. **Success Response:**
     - **HTTP Status:** `200 OK`
@@ -745,12 +738,14 @@ curl -X POST "http://localhost:8080/api/platform-admin" \
      -H "Accept: application/json" \
      -d '{
        "platformAdminRequestType": "FETCH_ALL_GYM_TENANTS",
-       "gymStatus": "ACTIVE",
-       "city": "Austin",
        "page": 0,
        "size": 10,
        "sortBy": "registeredAt",
-       "sortDirection": "desc"
+       "sortDirection": "desc",
+       "tenantFilter": {
+         "status": "ACTIVE",
+         "city": "Austin"
+       }
      }'
 ```
 
