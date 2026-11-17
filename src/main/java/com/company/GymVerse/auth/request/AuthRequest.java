@@ -20,4 +20,6 @@ public class AuthRequest {
     private AuthRequestType authRequestType;
 
     private SignupRequest signupRequest;
+
+    private LoginRequest loginRequest;
 }

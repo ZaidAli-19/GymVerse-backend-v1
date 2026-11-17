@@ -1,5 +1,6 @@
 package com.company.GymVerse.auth.validations;
 
+import com.company.GymVerse.auth.request.LoginRequest;
 import com.company.GymVerse.auth.request.SignupRequest;
 import com.company.GymVerse.exceptions.common.BadRequestException;
 import org.springframework.stereotype.Component;
@@ -124,5 +125,43 @@ public class AuthValidationsImpl implements AuthValidations {
         }
         validateEmail(request.getEmail());
         validatePasswordStrength(request.getPassword());
+    }
+
+    @Override
+    public void validateLoginPassword(LoginRequest request) {
+        if (request == null) {
+            throw new BadRequestException("LoginRequest must not be null");
+        }
+        validateEmail(request.getEmail());
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new BadRequestException("Password is required");
+        }
+    }
+
+    @Override
+    public void validateLoginOtpInitiate(LoginRequest request) {
+        if (request == null) {
+            throw new BadRequestException("LoginRequest must not be null");
+        }
+        validateEmail(request.getEmail());
+    }
+
+    @Override
+    public void validateLoginOtpVerify(LoginRequest request) {
+        if (request == null) {
+            throw new BadRequestException("LoginRequest must not be null");
+        }
+        validateEmail(request.getEmail());
+        validateOtp(request.getOtp());
+    }
+
+    @Override
+    public void validateRefreshToken(LoginRequest request) {
+        if (request == null) {
+            throw new BadRequestException("LoginRequest must not be null");
+        }
+        if (request.getRefreshToken() == null || request.getRefreshToken().isBlank()) {
+            throw new BadRequestException("Refresh token is required");
+        }
     }
 }

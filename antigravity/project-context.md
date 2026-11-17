@@ -12,10 +12,10 @@
 | **Repository Root** | `D:\projects\GymVerse-Backend-v2` |
 | **Current Git Branch** | `GymVerse/dev` |
 | **Current Project Phase** | **Phase 3: Core Security & Master DB Authentication (Active)** |
-| **Current Phase Stage** | **Story 3.5 Implemented & Verified; Ready for Story 3.6** |
-| **Last Completed Story** | **Story 3.5** (Master User 3-Step Signup Lifecycle: SIGNUP_INITIATE, SIGNUP_VERIFY, SIGNUP_COMPLETE) |
-| **Immediate Next Phase / Story** | **Story 3.6: Dual-Mode Master Authentication Engine (LOGIN_PASSWORD, LOGIN_OTP_INITIATE, LOGIN_OTP_VERIFY, REFRESH_TOKEN)** |
-| **Test Suite Health** | **121 Tests Passing (0 Failures, 0 Errors, 0 Skipped)** |
+| **Current Phase Stage** | **Story 3.6 Implemented & Verified; Ready for Story 3.7** |
+| **Last Completed Story** | **Story 3.6** (Dual-Mode Master Authentication Engine: LOGIN_PASSWORD, LOGIN_OTP_INITIATE, LOGIN_OTP_VERIFY, REFRESH_TOKEN) |
+| **Immediate Next Phase / Story** | **Story 3.7: Master User Password Recovery Lifecycle (FORGOT_PASSWORD_INITIATE, FORGOT_PASSWORD_VERIFY, FORGOT_PASSWORD_RESET)** |
+| **Test Suite Health** | **131 Tests Passing (0 Failures, 0 Errors, 0 Skipped)** |
 | **Protected Code Status** | All 8 classes in `com.company.GymVerse.multitanancy` remain 100% byte-for-byte untouched |
 
 ---
@@ -122,23 +122,22 @@
 | **Story 3.3** | Kafka Asynchronous Email Pipeline & JavaMailSender Integration | `OtpEmailEvent.java`, `OtpEmailListener.java`, `EmailServiceImpl.java` | ✅ Completed |
 | **Story 3.4** | Enterprise Redis OtpService with Rate Limiting & Cooldown Engine | `OtpConfigProperties.java`, `OtpService.java`, `OtpServiceImpl.java` | ✅ Completed |
 | **Story 3.5** | Master User 3-Step Signup Lifecycle (SIGNUP_INITIATE, SIGNUP_VERIFY, SIGNUP_COMPLETE) | `SignupInitiateService`, `SignupVerifyService`, `SignupCompleteService`, `AuthValidations` | ✅ Completed |
-| **Story 3.6** | Dual-Mode Master Authentication Engine (LOGIN_PASSWORD, LOGIN_OTP_INITIATE, LOGIN_OTP_VERIFY, REFRESH_TOKEN) | `LoginPasswordService`, `LoginOtpInitiateService`, `LoginOtpVerifyService`, `RefreshTokenService` | ⏳ Ready for Implementation |
-| **Story 3.7** | Master User Password Recovery Lifecycle (FORGOT_PASSWORD_INITIATE, FORGOT_PASSWORD_VERIFY, FORGOT_PASSWORD_RESET) | `ForgotPasswordInitiateService`, `ForgotPasswordVerifyService`, `ForgotPasswordResetService` | ⏳ Planned |
+| **Story 3.6** | Dual-Mode Master Authentication Engine (LOGIN_PASSWORD, LOGIN_OTP_INITIATE, LOGIN_OTP_VERIFY, REFRESH_TOKEN) | `LoginPasswordService`, `LoginOtpInitiateService`, `LoginOtpVerifyService`, `RefreshTokenService` | ✅ Completed |
+| **Story 3.7** | Master User Password Recovery Lifecycle (FORGOT_PASSWORD_INITIATE, FORGOT_PASSWORD_VERIFY, FORGOT_PASSWORD_RESET) | `ForgotPasswordInitiateService`, `ForgotPasswordVerifyService`, `ForgotPasswordResetService` | ⏳ Ready for Implementation |
 | **Story 3.8** | Unified Controller Gateway Integration (/api/auth), Exception Translation & API Payload Docs | `AuthController.java`, `AuthFactory.java`, `GlobalExceptionHandler.java`, `docs/payloads.md` | ⏳ Planned |
 
 ---
 
-## 5. Scope & Target Artifacts for Immediate Next Work: Story 3.6
+## 5. Scope & Target Artifacts for Immediate Next Work: Story 3.7
 
-- **Story Focus:** `Story 3.6: Dual-Mode Master Authentication Engine (LOGIN_PASSWORD, LOGIN_OTP_INITIATE, LOGIN_OTP_VERIFY, REFRESH_TOKEN)`
+- **Story Focus:** `Story 3.7: Master User Password Recovery Lifecycle (FORGOT_PASSWORD_INITIATE, FORGOT_PASSWORD_VERIFY, FORGOT_PASSWORD_RESET)`
 - **Target Files to Modify / Create:**
-  - `src/main/java/com/company/GymVerse/auth/request/LoginRequest.java` (credentials, otp, or refresh token payload)
-  - `src/main/java/com/company/GymVerse/auth/request/AuthRequest.java` (attach loginRequest field)
-  - `src/main/java/com/company/GymVerse/auth/service/LoginPasswordService.java`
-  - `src/main/java/com/company/GymVerse/auth/service/LoginOtpInitiateService.java`
-  - `src/main/java/com/company/GymVerse/auth/service/LoginOtpVerifyService.java`
-  - `src/main/java/com/company/GymVerse/auth/service/RefreshTokenService.java`
-  - Unit and integration tests covering password login, OTP login lifecycle, account status checks (SUSPENDED / DEACTIVATED lockout), and token refresh.
+  - `src/main/java/com/company/GymVerse/auth/request/ForgotPasswordRequest.java` (email, otp, newPassword)
+  - `src/main/java/com/company/GymVerse/auth/request/AuthRequest.java` (attach forgotPasswordRequest field)
+  - `src/main/java/com/company/GymVerse/auth/service/ForgotPasswordInitiateService.java`
+  - `src/main/java/com/company/GymVerse/auth/service/ForgotPasswordVerifyService.java`
+  - `src/main/java/com/company/GymVerse/auth/service/ForgotPasswordResetService.java`
+  - Unit and integration tests covering password reset initiation, OTP verification, password strength checks, and database password update.
 
 ---
 

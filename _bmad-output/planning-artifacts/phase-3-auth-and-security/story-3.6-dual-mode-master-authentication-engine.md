@@ -2,7 +2,7 @@
 id: "story-3.6"
 epic_id: "epic-phase-3-security-auth"
 title: "Dual-Mode Master Authentication Engine (LOGIN_PASSWORD, LOGIN_OTP_INITIATE, LOGIN_OTP_VERIFY, REFRESH_TOKEN)"
-status: "planning"
+status: "implemented"
 type: "auth-login"
 created_at: "2026-11-17"
 dependencies: ["story-3.1", "story-3.2", "story-3.4", "story-3.5"]

@@ -1,5 +1,6 @@
 package com.company.GymVerse.auth.validations;
 
+import com.company.GymVerse.auth.request.LoginRequest;
 import com.company.GymVerse.auth.request.SignupRequest;
 
 /**
@@ -22,4 +23,12 @@ public interface AuthValidations {
     void validateSignupVerify(SignupRequest request);
 
     void validateSignupComplete(SignupRequest request);
+
+    void validateLoginPassword(LoginRequest request);
+
+    void validateLoginOtpInitiate(LoginRequest request);
+
+    void validateLoginOtpVerify(LoginRequest request);
+
+    void validateRefreshToken(LoginRequest request);
 }
