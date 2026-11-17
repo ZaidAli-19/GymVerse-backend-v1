@@ -2,7 +2,7 @@
 id: "story-3.1"
 epic_id: "epic-phase-3-security-auth"
 title: "Security Baseline Configuration, Password Hashing & CustomUserDetailsService"
-status: "planning"
+status: "implemented"
 type: "security-foundation"
 created_at: "2026-11-17"
 dependencies: []

@@ -11,11 +11,11 @@
 | **Project Name** | `GymVerse-Backend-v2` |
 | **Repository Root** | `D:\projects\GymVerse-Backend-v2` |
 | **Current Git Branch** | `GymVerse/dev` |
-| **Current Project Phase** | **Phase 3: Core Security & Master DB Authentication (Ready for Implementation)** |
-| **Current Phase Stage** | **Stories 3.1 - 3.8 Planned & Specified; Ready to Begin Story 3.1** |
-| **Last Completed Story** | **Story PA-7** (Request DTO Consolidation & Pagination Standardization) |
-| **Immediate Next Phase / Story** | **Story 3.1: Security Baseline Configuration, Password Hashing & CustomUserDetailsService** |
-| **Test Suite Health** | **69 Tests Passing (0 Failures, 0 Errors, 0 Skipped)** |
+| **Current Project Phase** | **Phase 3: Core Security & Master DB Authentication (Active)** |
+| **Current Phase Stage** | **Story 3.2 Implemented & Verified; Ready for Story 3.3** |
+| **Last Completed Story** | **Story 3.2** (Modernized JJWT Token Engine with MASTER_ACCOUNT Token Typing) |
+| **Immediate Next Phase / Story** | **Story 3.3: Kafka Asynchronous Email Pipeline & JavaMailSender Integration** |
+| **Test Suite Health** | **87 Tests Passing (0 Failures, 0 Errors, 0 Skipped)** |
 | **Protected Code Status** | All 8 classes in `com.company.GymVerse.multitanancy` remain 100% byte-for-byte untouched |
 
 ---
@@ -117,9 +117,9 @@
 
 | Story ID | Description | Core Artifacts | Status |
 | :--- | :--- | :--- | :--- |
-| **Story 3.1** | Security Baseline Configuration, Password Hashing & CustomUserDetailsService | `SecurityConfig.java`, `CustomUserDetailsService.java` | ⏳ Ready for Implementation |
-| **Story 3.2** | Modernized JJWT Token Engine (JwtUtil & JwtFilter with MASTER_ACCOUNT Token Typing) | `JwtUtil.java`, `JwtFilter.java` | ⏳ Planned |
-| **Story 3.3** | Kafka Asynchronous Email Pipeline & JavaMailSender Integration | `OtpEmailEvent.java`, `OtpEmailListener.java`, `EmailServiceImpl.java` | ⏳ Planned |
+| **Story 3.1** | Security Baseline Configuration, Password Hashing & CustomUserDetailsService | `SecurityConfig.java`, `CustomUserDetailsService.java` | ✅ Completed |
+| **Story 3.2** | Modernized JJWT Token Engine (JwtUtil & JwtFilter with MASTER_ACCOUNT Token Typing) | `JwtUtil.java`, `JwtFilter.java` | ✅ Completed |
+| **Story 3.3** | Kafka Asynchronous Email Pipeline & JavaMailSender Integration | `OtpEmailEvent.java`, `OtpEmailListener.java`, `EmailServiceImpl.java` | ⏳ Ready for Implementation |
 | **Story 3.4** | Enterprise Redis OtpService with Rate Limiting & Cooldown Engine | `OtpConfigProperties.java`, `OtpService.java`, `OtpServiceImpl.java` | ⏳ Planned |
 | **Story 3.5** | Master User 3-Step Signup Lifecycle (SIGNUP_INITIATE, SIGNUP_VERIFY, SIGNUP_COMPLETE) | `SignupInitiateService`, `SignupVerifyService`, `SignupCompleteService`, `AuthValidations` | ⏳ Planned |
 | **Story 3.6** | Dual-Mode Master Authentication Engine (LOGIN_PASSWORD, LOGIN_OTP_INITIATE, LOGIN_OTP_VERIFY, REFRESH_TOKEN) | `LoginPasswordService`, `LoginOtpInitiateService`, `LoginOtpVerifyService`, `RefreshTokenService` | ⏳ Planned |
@@ -128,20 +128,20 @@
 
 ---
 
-## 5. Scope & Target Artifacts for Immediate Next Work: Story 3.1
+## 5. Scope & Target Artifacts for Immediate Next Work: Story 3.3
 
-- **Story Focus:** `Story 3.1: Security Baseline Configuration, Password Hashing & CustomUserDetailsService`
+- **Story Focus:** `Story 3.3: Kafka Asynchronous Email Pipeline & JavaMailSender Integration`
 - **Target Files to Modify / Create:**
-  - `src/main/java/com/company/GymVerse/config/SecurityConfig.java` (stateless session, CSRF disabled, public `/api/auth/**`, secured default)
-  - `src/main/java/com/company/GymVerse/security/jwt/CustomUserDetailsService.java` (Spring Security `UserDetailsService` backed by `UserAccountRepository`)
-  - `src/test/java/com/company/GymVerse/security/CustomUserDetailsServiceTest.java` (unit tests)
-  - `src/test/java/com/company/GymVerse/security/SecurityBaselineIntegrationTest.java` (integration tests)
+  - `src/main/java/com/company/GymVerse/messaging/kafka/events/OtpEmailEvent.java` (immutable Kafka event payload)
+  - `src/main/java/com/company/GymVerse/messaging/kafka/listeners/OtpEmailListener.java` (@KafkaListener consumer on topic `otp-email-topic`)
+  - `src/main/java/com/company/GymVerse/email/service/EmailService.java` (email sending interface)
+  - `src/main/java/com/company/GymVerse/email/serviceImpl/EmailServiceImpl.java` (JavaMailSender with styled HTML template)
+  - `src/test/java/com/company/GymVerse/email/EmailServiceImplTest.java` (unit tests for mail sender)
+  - `src/test/java/com/company/GymVerse/messaging/OtpEmailListenerIntegrationTest.java` (listener integration tests)
 - **Acceptance Criteria:**
-  - Central `user_accounts` table queried by email.
-  - Returns `UserDetails` with `ROLE_PLATFORM_ADMIN` or `ROLE_USER_ACCOUNT`.
-  - Rejects inactive/suspended accounts (`accountLocked = true`).
-  - Public `/api/auth/**` permitted, all other endpoints require authentication.
-  - Zero compile errors and all 69 existing tests continue to pass.
+  - Standard Spring Boot Kafka auto-configuration used without manual builder boilerplate.
+  - Asynchronous event published to Kafka; listener consumes and triggers HTML email dispatch.
+  - Zero compile errors and all 88 existing tests continue to pass.
 
 ---
 

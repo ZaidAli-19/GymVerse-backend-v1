@@ -2,7 +2,7 @@
 id: "story-3.2"
 epic_id: "epic-phase-3-security-auth"
 title: "Modernized JJWT Token Engine (JwtUtil & JwtFilter with MASTER_ACCOUNT Token Typing)"
-status: "planning"
+status: "implemented"
 type: "jwt-token-engine"
 created_at: "2026-11-17"
 dependencies: ["story-3.1"]
