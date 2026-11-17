@@ -3,6 +3,9 @@ package com.company.GymVerse.exceptions.handler;
 import com.company.GymVerse.exceptions.common.BadRequestException;
 import com.company.GymVerse.exceptions.common.ConflictException;
 import com.company.GymVerse.exceptions.common.ResourceNotFoundException;
+import com.company.GymVerse.exceptions.otp.OtpExpiredException;
+import com.company.GymVerse.exceptions.otp.OtpInvalidException;
+import com.company.GymVerse.exceptions.otp.OtpRateLimitException;
 import com.company.GymVerse.exceptions.payload.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +43,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex, HttpServletRequest request) {
         log.warn("Resource not found at [{}]: {}", request.getRequestURI(), ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(OtpRateLimitException.class)
+    public ResponseEntity<ErrorResponse> handleOtpRateLimitException(OtpRateLimitException ex, HttpServletRequest request) {
+        log.warn("OTP rate limit exceeded at [{}]: {}", request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler({OtpInvalidException.class, OtpExpiredException.class})
+    public ResponseEntity<ErrorResponse> handleOtpValidationException(RuntimeException ex, HttpServletRequest request) {
+        log.warn("OTP validation failure at [{}]: {}", request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

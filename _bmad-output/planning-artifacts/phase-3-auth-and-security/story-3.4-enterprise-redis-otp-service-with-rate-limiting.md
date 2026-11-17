@@ -2,7 +2,7 @@
 id: "story-3.4"
 epic_id: "epic-phase-3-security-auth"
 title: "Enterprise Redis OtpService with Rate Limiting & Cooldown Engine"
-status: "planning"
+status: "implemented"
 type: "otp-domain-service"
 created_at: "2026-11-17"
 dependencies: ["story-3.3"]

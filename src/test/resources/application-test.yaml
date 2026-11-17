@@ -70,6 +70,16 @@ gymverse:
   kafka:
     topics:
       otp-email: otp-email-topic
+  otp:
+    length: 6
+    ttl: 10m
+    resend-cooldown: 60s
+    max-attempts: 5
+    verified-ttl: 15m
+    prefix-code: "gymverse:otp:code:"
+    prefix-cooldown: "gymverse:otp:cooldown:"
+    prefix-attempts: "gymverse:otp:attempts:"
+    prefix-verified: "gymverse:otp:verified:"
 
 logging:
   level:

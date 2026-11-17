@@ -2,7 +2,7 @@
 id: "story-3.5"
 epic_id: "epic-phase-3-security-auth"
 title: "Master User 3-Step Signup Lifecycle (SIGNUP_INITIATE, SIGNUP_VERIFY, SIGNUP_COMPLETE)"
-status: "planning"
+status: "implemented"
 type: "auth-lifecycle"
 created_at: "2026-11-17"
 dependencies: ["story-3.1", "story-3.2", "story-3.4"]
