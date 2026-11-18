@@ -2,7 +2,7 @@
 id: "story-4.2"
 epic_id: "epic-phase-4-tenant-onboarding-and-rbac"
 title: "Tenant-Scoped JWT Engine & Security Context Resolution"
-status: "planned"
+status: "implemented"
 type: "security-foundation"
 created_at: "2026-11-18"
 dependencies:

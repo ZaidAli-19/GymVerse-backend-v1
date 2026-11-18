@@ -11,17 +11,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Filter intercepting incoming requests, extracting and validating Bearer tokens,
- * blocking refresh tokens from accessing APIs, and populating the Spring SecurityContext.
+ * blocking refresh tokens from accessing APIs, establishing multi-tenant context,
+ * and populating the Spring SecurityContext with appropriate granted authorities.
  */
 @Component
 @RequiredArgsConstructor
@@ -65,11 +69,36 @@ public class JwtFilter extends OncePerRequestFilter {
                     && SecurityContextHolder.getContext().getAuthentication() == null
                     && jwtUtil.isTokenValid(jwtToken, subject)) {
 
+                final String tokenType = jwtUtil.extractTokenType(jwtToken);
+                final List<GrantedAuthority> authorities = new ArrayList<>();
+
+                if (JwtUtil.TOKEN_TYPE_MASTER_ACCOUNT.equalsIgnoreCase(tokenType)) {
+                    // Master account operates at central platform layer; zero tenant context and empty authorities list
+                } else if (JwtUtil.TOKEN_TYPE_TENANT_ACCOUNT.equalsIgnoreCase(tokenType)) {
+                    final String dbName = jwtUtil.extractTenantDbName(jwtToken);
+                    if (dbName == null || dbName.isBlank()) {
+                        throw new BadCredentialsException("Tenant token missing tenantDbName claim");
+                    }
+                    TenantContext.setCurrentTenant(dbName);
+
+                    final String role = jwtUtil.extractRole(jwtToken);
+                    if (role != null && !role.isBlank()) {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
+                    }
+
+                    final String adminAuthority = jwtUtil.extractAdminAuthority(jwtToken);
+                    if (adminAuthority != null && !adminAuthority.isBlank() && !"NONE".equalsIgnoreCase(adminAuthority)) {
+                        authorities.add(new SimpleGrantedAuthority("AUTHORITY_" + adminAuthority.toUpperCase()));
+                    }
+                } else {
+                    throw new BadCredentialsException("Unsupported or unknown token type: " + tokenType);
+                }
+
                 final UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
                                 subject,
                                 null,
-                                Collections.emptyList()
+                                authorities
                         );
 
                 authToken.setDetails(

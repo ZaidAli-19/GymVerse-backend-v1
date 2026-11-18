@@ -12,10 +12,10 @@
 | **Repository Root** | `D:\projects\GymVerse-Backend-v2` |
 | **Current Git Branch** | `GymVerse/dev` |
 | **Current Project Phase** | **Phase 4: Tenant Onboarding, Dynamic Provisioning & Scoped RBAC** |
-| **Current Phase Stage** | **Story 4.1 Completed & Verified; Ready for Story 4.2** |
-| **Last Completed Story** | **Story 4.1: SaaS Trial Engine Configuration & Properties** |
-| **Immediate Next Phase / Story** | **Story 4.2: Tenant-Scoped JWT Engine & Security Context Resolution** |
-| **Test Suite Health** | **162 Tests Passing (0 Failures, 0 Errors, 0 Skipped)** |
+| **Current Phase Stage** | **Story 4.2 Completed & Verified; Ready for Story 4.3** |
+| **Last Completed Story** | **Story 4.2: Tenant-Scoped JWT Engine & Security Context Resolution** |
+| **Immediate Next Phase / Story** | **Story 4.3: Dynamic Tenant Provisioning & Schema Migration Service** |
+| **Test Suite Health** | **169 Tests Passing (0 Failures, 0 Errors, 0 Skipped)** |
 | **Protected Code Status** | All 8 classes in `com.company.GymVerse.multitanancy` remain 100% byte-for-byte untouched |
 
 ---
@@ -131,27 +131,27 @@
 | Story ID | Description | Core Artifacts | Status |
 | :--- | :--- | :--- | :--- |
 | **Story 4.1** | SaaS Trial Engine Configuration & Properties | `TenantConfigProperties.java`, `SubscriptionDateUtil.java`, `application.yaml` | ✅ Completed |
-| **Story 4.2** | Tenant-Scoped JWT Engine & Security Context Resolution | `JwtUtil.java`, `JwtFilter.java`, `TenantTokenClaims.java` | ⏳ Ready |
-| **Story 4.3** | Dynamic Tenant Provisioning & Schema Migration Service | `TenantProvisioningService.java`, rollback guard | ⏳ Planned |
+| **Story 4.2** | Tenant-Scoped JWT Engine & Security Context Resolution | `JwtUtil.java`, `JwtFilter.java`, `TenantTokenClaims.java` | ✅ Completed |
+| **Story 4.3** | Dynamic Tenant Provisioning & Schema Migration Service | `TenantProvisioningService.java`, rollback guard | ⏳ Ready |
 | **Story 4.4** | Gym Registration Gateway (REGISTER_GYM) | `TenantAdminController.java`, `RegisterGymService.java`, platform guard | ⏳ Planned |
 | **Story 4.5** | User Tenants Directory & Token Exchange Gateway | `FetchMyTenantsService.java`, `SwitchTenantService.java` | ⏳ Planned |
 | **Story 4.6** | Subscription Insights & Entitlements Management | `FetchTenantSubscriptionService.java`, `docs/payloads.md` | ⏳ Planned |
 
 ---
 
-## 5. Scope & Target Artifacts for Immediate Next Work: Story 4.2
+## 5. Scope & Target Artifacts for Immediate Next Work: Story 4.3
 
-- **Active Story:** `Story 4.2: Tenant-Scoped JWT Engine & Security Context Resolution`
-- **Planning Artifact:** `_bmad-output/planning-artifacts/phase-4-tenant-onboarding-and-rbac/story-4.2-tenant-scoped-jwt-engine-and-security-context-resolution.md`
+- **Active Story:** `Story 4.3: Dynamic Tenant Provisioning & Schema Migration Service`
+- **Planning Artifact:** `_bmad-output/planning-artifacts/phase-4-tenant-onboarding-and-rbac/story-4.3-dynamic-tenant-provisioning-and-schema-migration-service.md`
 - **Target Files:**
-  - `src/main/java/com/company/GymVerse/security/jwt/TenantTokenClaims.java`
-  - `src/main/java/com/company/GymVerse/security/jwt/JwtUtil.java` (add `generateTenantAccessToken`, `generateTenantRefreshToken`, `extractTenantClaims`)
-  - `src/main/java/com/company/GymVerse/security/jwt/JwtFilter.java` (tenant token resolution, `TenantContext` setting, `ROLE_*` authority mapping)
-  - `src/test/java/com/company/GymVerse/security/jwt/TenantJwtTokenTest.java`
+  - `src/main/java/com/company/GymVerse/tenantAdmin/service/TenantProvisioningService.java`
+  - `src/main/java/com/company/GymVerse/tenantAdmin/service/dto/TenantProvisioningCommand.java`
+  - `src/main/java/com/company/GymVerse/tenantAdmin/service/dto/TenantProvisioningResult.java`
+  - `src/test/java/com/company/GymVerse/tenantAdmin/service/TenantProvisioningServiceTest.java`
 - **Invariants:**
   - Multitenancy protected classes must remain 100% byte-for-byte untouched.
-  - Zero ThreadLocal leaks: guaranteed `TenantContext.clear()` in `finally` block of `JwtFilter`.
-  - Refresh tokens (`type: REFRESH`) strictly barred from API access.
+  - Automatic rollback guard: if provisioning fails, drop created orphan database.
+  - Zero passwords in tenant `users` table: link via `central_user_id`.
 
 ---
 
