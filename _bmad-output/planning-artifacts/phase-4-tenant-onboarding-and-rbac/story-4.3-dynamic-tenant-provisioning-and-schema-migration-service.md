@@ -2,7 +2,7 @@
 id: "story-4.3"
 epic_id: "epic-phase-4-tenant-onboarding-and-rbac"
 title: "Dynamic Tenant Provisioning & Schema Migration Service"
-status: "planned"
+status: "completed"
 type: "infrastructure-orchestration"
 created_at: "2026-11-18"
 dependencies:

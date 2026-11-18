@@ -95,6 +95,12 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
     }
 
+    @ExceptionHandler(com.company.GymVerse.tenantAdmin.exceptions.TenantProvisioningException.class)
+    public ResponseEntity<ErrorResponse> handleTenantProvisioningException(com.company.GymVerse.tenantAdmin.exceptions.TenantProvisioningException ex, HttpServletRequest request) {
+        log.error("Tenant provisioning failure at [{}]: {}", request.getRequestURI(), ex.getMessage(), ex);
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request.getRequestURI());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
         log.error("Unhandled internal server error at [{}]: ", request.getRequestURI(), ex);
