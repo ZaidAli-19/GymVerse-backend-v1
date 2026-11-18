@@ -24,7 +24,8 @@ import java.util.Objects;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@BuilGymConfig {
+@Builder
+public class GymConfig {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

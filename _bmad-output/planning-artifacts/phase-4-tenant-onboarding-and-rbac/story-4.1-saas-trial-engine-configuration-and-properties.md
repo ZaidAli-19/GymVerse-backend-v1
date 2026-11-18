@@ -2,7 +2,7 @@
 id: "story-4.1"
 epic_id: "epic-phase-4-tenant-onboarding-and-rbac"
 title: "SaaS Trial Engine Configuration & Properties"
-status: "planned"
+status: "implemented"
 type: "configuration-foundation"
 created_at: "2026-11-18"
 dependencies: []

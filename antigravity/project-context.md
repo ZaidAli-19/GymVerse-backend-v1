@@ -12,10 +12,10 @@
 | **Repository Root** | `D:\projects\GymVerse-Backend-v2` |
 | **Current Git Branch** | `GymVerse/dev` |
 | **Current Project Phase** | **Phase 4: Tenant Onboarding, Dynamic Provisioning & Scoped RBAC** |
-| **Current Phase Stage** | **Phase 4 Stories Planned & Ready; Executing Story 4.1** |
-| **Last Completed Story** | **Phase 4 Story Planning (Stories 4.1 – 4.6 & Dependency Matrix)** |
-| **Immediate Next Phase / Story** | **Story 4.1: SaaS Trial Engine Configuration & Properties** |
-| **Test Suite Health** | **148 Tests Passing (0 Failures, 0 Errors, 0 Skipped)** |
+| **Current Phase Stage** | **Story 4.1 Completed & Verified; Ready for Story 4.2** |
+| **Last Completed Story** | **Story 4.1: SaaS Trial Engine Configuration & Properties** |
+| **Immediate Next Phase / Story** | **Story 4.2: Tenant-Scoped JWT Engine & Security Context Resolution** |
+| **Test Suite Health** | **162 Tests Passing (0 Failures, 0 Errors, 0 Skipped)** |
 | **Protected Code Status** | All 8 classes in `com.company.GymVerse.multitanancy` remain 100% byte-for-byte untouched |
 
 ---
@@ -113,8 +113,9 @@
 
 ---
 
-## 4. Phase 3 Story Breakdown & Implementation Roadmap
+## 4. Phase Story Breakdown & Implementation Roadmap
 
+### 4.1 Phase 3 Story Status (Completed)
 | Story ID | Description | Core Artifacts | Status |
 | :--- | :--- | :--- | :--- |
 | **Story 3.1** | Security Baseline Configuration, Password Hashing & CustomUserDetailsService | `SecurityConfig.java`, `CustomUserDetailsService.java` | ✅ Completed |
@@ -126,19 +127,31 @@
 | **Story 3.7** | Master User Password Recovery Lifecycle (FORGOT_PASSWORD_INITIATE, FORGOT_PASSWORD_VERIFY, FORGOT_PASSWORD_RESET) | `ForgotPasswordInitiateService`, `ForgotPasswordVerifyService`, `ForgotPasswordResetService` | ✅ Completed |
 | **Story 3.8** | Unified Controller Gateway Integration (/api/auth), Exception Translation & API Payload Docs | `AuthController.java`, `AuthMapper.java`, `AuthMapperImpl.java`, `AuthUnifiedGatewayIntegrationTest.java`, `docs/payloads.md` | ✅ Completed |
 
+### 4.2 Phase 4 Story Status (In Progress)
+| Story ID | Description | Core Artifacts | Status |
+| :--- | :--- | :--- | :--- |
+| **Story 4.1** | SaaS Trial Engine Configuration & Properties | `TenantConfigProperties.java`, `SubscriptionDateUtil.java`, `application.yaml` | ✅ Completed |
+| **Story 4.2** | Tenant-Scoped JWT Engine & Security Context Resolution | `JwtUtil.java`, `JwtFilter.java`, `TenantTokenClaims.java` | ⏳ Ready |
+| **Story 4.3** | Dynamic Tenant Provisioning & Schema Migration Service | `TenantProvisioningService.java`, rollback guard | ⏳ Planned |
+| **Story 4.4** | Gym Registration Gateway (REGISTER_GYM) | `TenantAdminController.java`, `RegisterGymService.java`, platform guard | ⏳ Planned |
+| **Story 4.5** | User Tenants Directory & Token Exchange Gateway | `FetchMyTenantsService.java`, `SwitchTenantService.java` | ⏳ Planned |
+| **Story 4.6** | Subscription Insights & Entitlements Management | `FetchTenantSubscriptionService.java`, `docs/payloads.md` | ⏳ Planned |
+
 ---
 
-## 5. Scope & Target Artifacts for Immediate Next Work: Phase 4 Execution
+## 5. Scope & Target Artifacts for Immediate Next Work: Story 4.2
 
-- **Active Phase:** `Phase 4: Tenant Onboarding, Dynamic Provisioning & Scoped RBAC`
-- **Planning Artifact:** `_bmad-output/planning-artifacts/phase-4-tenant-onboarding-and-rbac/phase-4-epic.md`
-- **Core Objectives:**
-  - Story 4.1: SaaS Trial Engine Configuration & Properties (`TenantConfigProperties`, `application.yaml`).
-  - Story 4.2: Tenant-Scoped JWT Engine & Security Context Resolution (`JwtUtil`, `JwtFilter`, authorities, `TenantContext` lifecycle).
-  - Story 4.3: Dynamic Tenant Database Provisioning & Schema Migration Service (`TenantProvisioningService`, rollback guard, central & tenant persistence).
-  - Story 4.4: Gym Registration Gateway (`REGISTER_GYM`, `X-Client-Platform` validation, controller, factory, mapper, free trial activation, direct token issuance).
-  - Story 4.5: User Tenant Directory (`FETCH_MY_TENANTS`) & Tenant Switching Gateway (`SWITCH_TENANT`).
-  - Story 4.6: SaaS Subscription Insights & Entitlements Management (`FETCH_TENANT_SUBSCRIPTION`, `EXTEND_SUBSCRIPTION`, plan quotas).
+- **Active Story:** `Story 4.2: Tenant-Scoped JWT Engine & Security Context Resolution`
+- **Planning Artifact:** `_bmad-output/planning-artifacts/phase-4-tenant-onboarding-and-rbac/story-4.2-tenant-scoped-jwt-engine-and-security-context-resolution.md`
+- **Target Files:**
+  - `src/main/java/com/company/GymVerse/security/jwt/TenantTokenClaims.java`
+  - `src/main/java/com/company/GymVerse/security/jwt/JwtUtil.java` (add `generateTenantAccessToken`, `generateTenantRefreshToken`, `extractTenantClaims`)
+  - `src/main/java/com/company/GymVerse/security/jwt/JwtFilter.java` (tenant token resolution, `TenantContext` setting, `ROLE_*` authority mapping)
+  - `src/test/java/com/company/GymVerse/security/jwt/TenantJwtTokenTest.java`
+- **Invariants:**
+  - Multitenancy protected classes must remain 100% byte-for-byte untouched.
+  - Zero ThreadLocal leaks: guaranteed `TenantContext.clear()` in `finally` block of `JwtFilter`.
+  - Refresh tokens (`type: REFRESH`) strictly barred from API access.
 
 ---
 

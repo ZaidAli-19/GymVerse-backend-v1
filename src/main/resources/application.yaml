@@ -80,6 +80,10 @@ jwt:
 gymverse:
   central:
     db-name: ${CENTRAL_DB_NAME:GymVerse}
+  saas:
+    trial:
+      duration-days: ${GYMVERSE_TRIAL_DAYS:14}
+      default-plan-id: ${GYMVERSE_TRIAL_DEFAULT_PLAN_ID:1}
   datasource:
     host: ${TENANT_DB_HOST:localhost}
     port: ${TENANT_DB_PORT:3306}
