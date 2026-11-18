@@ -2,7 +2,7 @@
 id: "story-3.8"
 epic_id: "epic-phase-3-security-auth"
 title: "Unified Controller Gateway Integration (/api/auth), Exception Translation & API Payload Contract Documentation"
-status: "planning"
+status: "implemented"
 type: "gateway-integration"
 created_at: "2026-11-17"
 dependencies: ["story-3.1", "story-3.2", "story-3.3", "story-3.4", "story-3.5", "story-3.6", "story-3.7"]

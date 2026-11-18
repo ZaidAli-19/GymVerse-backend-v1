@@ -1,5 +1,6 @@
 package com.company.GymVerse.auth.validations;
 
+import com.company.GymVerse.auth.request.ForgotPasswordRequest;
 import com.company.GymVerse.auth.request.LoginRequest;
 import com.company.GymVerse.auth.request.SignupRequest;
 import com.company.GymVerse.exceptions.common.BadRequestException;
@@ -163,5 +164,31 @@ public class AuthValidationsImpl implements AuthValidations {
         if (request.getRefreshToken() == null || request.getRefreshToken().isBlank()) {
             throw new BadRequestException("Refresh token is required");
         }
+    }
+
+    @Override
+    public void validateForgotPasswordInitiate(ForgotPasswordRequest request) {
+        if (request == null) {
+            throw new BadRequestException("ForgotPasswordRequest must not be null");
+        }
+        validateEmail(request.getEmail());
+    }
+
+    @Override
+    public void validateForgotPasswordVerify(ForgotPasswordRequest request) {
+        if (request == null) {
+            throw new BadRequestException("ForgotPasswordRequest must not be null");
+        }
+        validateEmail(request.getEmail());
+        validateOtp(request.getOtp());
+    }
+
+    @Override
+    public void validateForgotPasswordReset(ForgotPasswordRequest request) {
+        if (request == null) {
+            throw new BadRequestException("ForgotPasswordRequest must not be null");
+        }
+        validateEmail(request.getEmail());
+        validatePasswordStrength(request.getNewPassword());
     }
 }

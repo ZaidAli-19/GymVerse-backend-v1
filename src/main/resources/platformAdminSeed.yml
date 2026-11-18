@@ -5,7 +5,7 @@ gymverse:
       email: ${PLATFORM_ADMIN_EMAIL:admin@gymverse.com}
       first-name: ${PLATFORM_ADMIN_FIRST_NAME:Platform}
       last-name: ${PLATFORM_ADMIN_LAST_NAME:Superadmin}
-      password: ${PLATFORM_ADMIN_PASSWORD:}
+      password: ${PLATFORM_ADMIN_PASSWORD:sszzaa123}
       phone-number: ${PLATFORM_ADMIN_PHONE:+10000000000}
       email-verified: ${PLATFORM_ADMIN_EMAIL_VERIFIED:true}
       is-platform-admin: ${PLATFORM_ADMIN_IS_PLATFORM_ADMIN:true}

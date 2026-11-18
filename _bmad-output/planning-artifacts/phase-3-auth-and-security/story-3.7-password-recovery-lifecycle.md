@@ -2,7 +2,7 @@
 id: "story-3.7"
 epic_id: "epic-phase-3-security-auth"
 title: "Master User Password Recovery Lifecycle (FORGOT_PASSWORD_INITIATE, FORGOT_PASSWORD_VERIFY, FORGOT_PASSWORD_RESET)"
-status: "planning"
+status: "implemented"
 type: "password-recovery"
 created_at: "2026-11-17"
 dependencies: ["story-3.1", "story-3.4", "story-3.5"]

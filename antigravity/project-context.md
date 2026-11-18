@@ -11,11 +11,11 @@
 | **Project Name** | `GymVerse-Backend-v2` |
 | **Repository Root** | `D:\projects\GymVerse-Backend-v2` |
 | **Current Git Branch** | `GymVerse/dev` |
-| **Current Project Phase** | **Phase 3: Core Security & Master DB Authentication (Active)** |
-| **Current Phase Stage** | **Story 3.6 Implemented & Verified; Ready for Story 3.7** |
-| **Last Completed Story** | **Story 3.6** (Dual-Mode Master Authentication Engine: LOGIN_PASSWORD, LOGIN_OTP_INITIATE, LOGIN_OTP_VERIFY, REFRESH_TOKEN) |
-| **Immediate Next Phase / Story** | **Story 3.7: Master User Password Recovery Lifecycle (FORGOT_PASSWORD_INITIATE, FORGOT_PASSWORD_VERIFY, FORGOT_PASSWORD_RESET)** |
-| **Test Suite Health** | **131 Tests Passing (0 Failures, 0 Errors, 0 Skipped)** |
+| **Current Project Phase** | **Phase 4: Tenant Onboarding, Dynamic Provisioning & Scoped RBAC** |
+| **Current Phase Stage** | **Phase 4 Stories Planned & Ready; Executing Story 4.1** |
+| **Last Completed Story** | **Phase 4 Story Planning (Stories 4.1 – 4.6 & Dependency Matrix)** |
+| **Immediate Next Phase / Story** | **Story 4.1: SaaS Trial Engine Configuration & Properties** |
+| **Test Suite Health** | **148 Tests Passing (0 Failures, 0 Errors, 0 Skipped)** |
 | **Protected Code Status** | All 8 classes in `com.company.GymVerse.multitanancy` remain 100% byte-for-byte untouched |
 
 ---
@@ -93,13 +93,13 @@
                                     │
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│ PHASE 3: CORE SECURITY & MASTER DB AUTHENTICATION [⏳ PLANNING]        │
-│ - Security Baseline: JWT Util, Filter Chain, Security Dependencies     │
+│ PHASE 3: CORE SECURITY & MASTER DB AUTHENTICATION [✅ 100% COMPLETED]   │
+│ - Security Baseline: JWT Util, Filter Chain, Security Dependencies     │ [✅ DONE]
 │ - Top-Layer Master User Lifecycle (Central DB):                        │
-│   • Signup: Full Name, Email, Phone -> Email OTP -> Password Creation   │
-│   • Login: Dual mode (Email + Password OR Email OTP)                   │
-│   • Password Recovery: Forgot Password via Email OTP                   │
-│ - Reference project alignment & structural integration                 │
+│   • Signup: Full Name, Email, Phone -> Email OTP -> Password Creation   │ [✅ DONE]
+│   • Login: Dual mode (Email + Password OR Email OTP)                   │ [✅ DONE]
+│   • Password Recovery: Forgot Password via Email OTP                   │ [✅ DONE]
+│ - Unified Single-Endpoint Controller Gateway (/api/auth) & API Docs    │ [✅ DONE]
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
                                     ▼
@@ -123,21 +123,22 @@
 | **Story 3.4** | Enterprise Redis OtpService with Rate Limiting & Cooldown Engine | `OtpConfigProperties.java`, `OtpService.java`, `OtpServiceImpl.java` | ✅ Completed |
 | **Story 3.5** | Master User 3-Step Signup Lifecycle (SIGNUP_INITIATE, SIGNUP_VERIFY, SIGNUP_COMPLETE) | `SignupInitiateService`, `SignupVerifyService`, `SignupCompleteService`, `AuthValidations` | ✅ Completed |
 | **Story 3.6** | Dual-Mode Master Authentication Engine (LOGIN_PASSWORD, LOGIN_OTP_INITIATE, LOGIN_OTP_VERIFY, REFRESH_TOKEN) | `LoginPasswordService`, `LoginOtpInitiateService`, `LoginOtpVerifyService`, `RefreshTokenService` | ✅ Completed |
-| **Story 3.7** | Master User Password Recovery Lifecycle (FORGOT_PASSWORD_INITIATE, FORGOT_PASSWORD_VERIFY, FORGOT_PASSWORD_RESET) | `ForgotPasswordInitiateService`, `ForgotPasswordVerifyService`, `ForgotPasswordResetService` | ⏳ Ready for Implementation |
-| **Story 3.8** | Unified Controller Gateway Integration (/api/auth), Exception Translation & API Payload Docs | `AuthController.java`, `AuthFactory.java`, `GlobalExceptionHandler.java`, `docs/payloads.md` | ⏳ Planned |
+| **Story 3.7** | Master User Password Recovery Lifecycle (FORGOT_PASSWORD_INITIATE, FORGOT_PASSWORD_VERIFY, FORGOT_PASSWORD_RESET) | `ForgotPasswordInitiateService`, `ForgotPasswordVerifyService`, `ForgotPasswordResetService` | ✅ Completed |
+| **Story 3.8** | Unified Controller Gateway Integration (/api/auth), Exception Translation & API Payload Docs | `AuthController.java`, `AuthMapper.java`, `AuthMapperImpl.java`, `AuthUnifiedGatewayIntegrationTest.java`, `docs/payloads.md` | ✅ Completed |
 
 ---
 
-## 5. Scope & Target Artifacts for Immediate Next Work: Story 3.7
+## 5. Scope & Target Artifacts for Immediate Next Work: Phase 4 Execution
 
-- **Story Focus:** `Story 3.7: Master User Password Recovery Lifecycle (FORGOT_PASSWORD_INITIATE, FORGOT_PASSWORD_VERIFY, FORGOT_PASSWORD_RESET)`
-- **Target Files to Modify / Create:**
-  - `src/main/java/com/company/GymVerse/auth/request/ForgotPasswordRequest.java` (email, otp, newPassword)
-  - `src/main/java/com/company/GymVerse/auth/request/AuthRequest.java` (attach forgotPasswordRequest field)
-  - `src/main/java/com/company/GymVerse/auth/service/ForgotPasswordInitiateService.java`
-  - `src/main/java/com/company/GymVerse/auth/service/ForgotPasswordVerifyService.java`
-  - `src/main/java/com/company/GymVerse/auth/service/ForgotPasswordResetService.java`
-  - Unit and integration tests covering password reset initiation, OTP verification, password strength checks, and database password update.
+- **Active Phase:** `Phase 4: Tenant Onboarding, Dynamic Provisioning & Scoped RBAC`
+- **Planning Artifact:** `_bmad-output/planning-artifacts/phase-4-tenant-onboarding-and-rbac/phase-4-epic.md`
+- **Core Objectives:**
+  - Story 4.1: SaaS Trial Engine Configuration & Properties (`TenantConfigProperties`, `application.yaml`).
+  - Story 4.2: Tenant-Scoped JWT Engine & Security Context Resolution (`JwtUtil`, `JwtFilter`, authorities, `TenantContext` lifecycle).
+  - Story 4.3: Dynamic Tenant Database Provisioning & Schema Migration Service (`TenantProvisioningService`, rollback guard, central & tenant persistence).
+  - Story 4.4: Gym Registration Gateway (`REGISTER_GYM`, `X-Client-Platform` validation, controller, factory, mapper, free trial activation, direct token issuance).
+  - Story 4.5: User Tenant Directory (`FETCH_MY_TENANTS`) & Tenant Switching Gateway (`SWITCH_TENANT`).
+  - Story 4.6: SaaS Subscription Insights & Entitlements Management (`FETCH_TENANT_SUBSCRIPTION`, `EXTEND_SUBSCRIPTION`, plan quotas).
 
 ---
 
