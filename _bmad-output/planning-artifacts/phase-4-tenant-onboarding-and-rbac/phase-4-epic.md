@@ -293,8 +293,13 @@ To support the token exchange lifecycle:
 
 #### Story 4.6: Subscription Insights & Entitlements Management
 * **Objective:** Provide tenant admins with subscription visibility (trial countdown, plan quotas, feature flags) on their subscription page, and support subscription extension.
-* **Target Artifacts:** `FetchTenantSubscriptionService.java`, `ExtendTenantSubscriptionService.java`, `docs/payloads.md`.
+* **Target Artifacts:** `FetchTenantSubscriptionService.java`, `TenantAdminMapper.java`, `docs/payloads.md`.
 * **Testing:** Subscription query integration tests, entitlement flag checks, comprehensive suite execution.
+
+#### Story 4.7: Default SaaS Trial Plan Seeding & Self-Bootstrapping Engine
+* **Objective:** Automatically seed and bootstrap a default SaaS trial plan on startup driven by `application.yaml` configuration, ensuring `REGISTER_GYM` never crashes on a clean database due to a missing plan record.
+* **Target Artifacts:** `DefaultSaasPlanSeeder.java`, `TenantConfigProperties.java`, `application.yaml`, `TenantProvisioningService.java`.
+* **Testing:** Seeder unit tests, idempotency checks, clean database registration end-to-end integration test.
 
 ---
 

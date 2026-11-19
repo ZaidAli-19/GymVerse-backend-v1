@@ -1,5 +1,7 @@
 package com.company.GymVerse.user.service;
 
+import com.company.GymVerse.config.DefaultSaasPlanSeeder;
+import com.company.GymVerse.config.DefaultTrialPlanSeedProperties;
 import com.company.GymVerse.exceptions.common.BadRequestException;
 import com.company.GymVerse.models.central.GymSubscription;
 import com.company.GymVerse.models.central.GymTenant;
@@ -77,6 +79,8 @@ class TenantProvisioningServiceTest {
     private GymConfigRepository gymConfigRepository;
 
     private TenantConfigProperties tenantConfigProperties;
+    private DefaultTrialPlanSeedProperties seedProperties;
+    private DefaultSaasPlanSeeder defaultSaasPlanSeeder;
     private TenantProvisioningService provisioningService;
 
     private UserAccount mockUserAccount;
@@ -101,6 +105,8 @@ class TenantProvisioningServiceTest {
                 .name("Growth Tier")
                 .price(BigDecimal.valueOf(99.00))
                 .billingCycle(BillingCycle.MONTHLY)
+                .isTrial(true)
+                .active(true)
                 .build();
 
         gymTenantRepository = (GymTenantRepository) Proxy.newProxyInstance(
@@ -155,6 +161,12 @@ class TenantProvisioningServiceTest {
                 SaasSubscriptionPlanRepository.class.getClassLoader(),
                 new Class<?>[]{SaasSubscriptionPlanRepository.class},
                 (proxy, method, args) -> {
+                    if ("findFirstByIsTrialTrueAndActiveTrue".equals(method.getName())) {
+                        if (defaultPlan != null && defaultPlan.isTrial() && defaultPlan.isActive()) {
+                            return Optional.of(defaultPlan);
+                        }
+                        return Optional.empty();
+                    }
                     if ("findById".equals(method.getName())) {
                         Long id = (Long) args[0];
                         if (defaultPlan != null && defaultPlan.getId().equals(id)) {
@@ -196,7 +208,9 @@ class TenantProvisioningServiceTest {
 
         tenantConfigProperties = new TenantConfigProperties();
         tenantConfigProperties.setDurationDays(14);
-        tenantConfigProperties.setDefaultPlanId(1L);
+
+        seedProperties = new DefaultTrialPlanSeedProperties();
+        defaultSaasPlanSeeder = new DefaultSaasPlanSeeder(saasSubscriptionPlanRepository, seedProperties);
 
         TenantProvisioningValidations tenantProvisioningValidations = new TenantProvisioningValidationsImpl(gymTenantRepository);
 
@@ -213,7 +227,8 @@ class TenantProvisioningServiceTest {
                 gymConfigRepository,
                 tenantConfigProperties,
                 tenantProvisioningValidations,
-                new FakeTransactionManager()
+                new FakeTransactionManager(),
+                defaultSaasPlanSeeder
         );
 
         mockUserAccount = UserAccount.builder()
@@ -396,15 +411,65 @@ class TenantProvisioningServiceTest {
     @DisplayName("Executes compensation rollback when central SaaS plan resolution fails")
     void provisionTenant_PlanNotFound_RollsBackAndDropsDatabase() {
         TenantProvisioningCommand command = buildValidCommand();
-        defaultPlan = null; // Forces plan not found
+        defaultPlan = null; // Forces plan not found in database
+        seedProperties.setEnabled(false); // Disables seeding, causing seeder to throw exception
 
         assertThatThrownBy(() -> provisioningService.provisionTenant(command))
                 .isInstanceOf(TenantProvisioningException.class)
-                .hasMessageContaining("Default SaaS subscription plan not found with ID: 1");
+                .hasMessageContaining("Active SaaS trial subscription plan not found and seeding is disabled");
 
         assertThat(fakeDatabaseService.createdDb).isNotNull();
         assertThat(fakeDataSourceCache.evictedDb).isEqualTo(fakeDatabaseService.createdDb);
         assertThat(fakeDatabaseService.droppedDb).isEqualTo(fakeDatabaseService.createdDb);
+    }
+
+    @Test
+    @DisplayName("Self-heals and auto-seeds default SaaS plan when missing on initial provisioning")
+    void provisionTenant_PlanMissingInitially_AutoSeedsAndSucceeds() {
+        TenantProvisioningCommand command = buildValidCommand();
+        defaultPlan = null; // Forces plan not found in database initially
+
+        SaasSubscriptionPlan autoSeededPlan = SaasSubscriptionPlan.builder()
+                .id(1L)
+                .name("Starter (Free Trial)")
+                .price(new BigDecimal("29.99"))
+                .billingCycle(BillingCycle.MONTHLY)
+                .maxMembers(100)
+                .maxTrainers(5)
+                .isTrial(true)
+                .active(true)
+                .build();
+
+        DefaultSaasPlanSeeder fakeSeeder = new DefaultSaasPlanSeeder(saasSubscriptionPlanRepository, seedProperties) {
+            @Override
+            public SaasSubscriptionPlan seedDefaultTrialPlan() {
+                return autoSeededPlan;
+            }
+        };
+
+        TenantProvisioningService serviceWithSeeder = new TenantProvisioningService(
+                fakeDatabaseService,
+                fakeFlywayService,
+                fakeRoutingBridge,
+                fakeDataSourceCache,
+                gymTenantRepository,
+                userTenantRoleRepository,
+                gymSubscriptionRepository,
+                saasSubscriptionPlanRepository,
+                tenantUserRepository,
+                gymConfigRepository,
+                tenantConfigProperties,
+                new TenantProvisioningValidationsImpl(gymTenantRepository),
+                new FakeTransactionManager(),
+                fakeSeeder
+        );
+
+        TenantProvisioningResult result = serviceWithSeeder.provisionTenant(command);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getGymSubscription().getPlan()).isEqualTo(autoSeededPlan);
+        assertThat(result.getGymSubscription().getStatus()).isEqualTo(GymSubscriptionStatus.TRIAL);
+        assertThat(result.getGymSubscription().getPricePaid()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
     // --- Lightweight Test Doubles (Zero ByteBuddy / Zero Java Agent Loading) ---

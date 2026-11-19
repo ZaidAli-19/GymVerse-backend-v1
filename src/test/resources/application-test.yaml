@@ -2,6 +2,8 @@ spring:
   config:
     activate:
       on-profile: test
+    import:
+      - classpath:defaultTrialPlanSeed.yml
 
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/GymVerse?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
@@ -64,7 +66,6 @@ gymverse:
   saas:
     trial:
       duration-days: ${GYMVERSE_TRIAL_DAYS:14}
-      default-plan-id: ${GYMVERSE_TRIAL_DEFAULT_PLAN_ID:1}
   datasource:
     host: ${TENANT_DB_HOST:localhost}
     port: ${TENANT_DB_PORT:3306}

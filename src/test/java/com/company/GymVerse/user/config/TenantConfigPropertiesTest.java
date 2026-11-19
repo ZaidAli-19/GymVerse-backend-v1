@@ -14,7 +14,6 @@ class TenantConfigPropertiesTest {
     void defaultValues() {
         TenantConfigProperties properties = new TenantConfigProperties();
         assertThat(properties.getDurationDays()).isEqualTo(14);
-        assertThat(properties.getDefaultPlanId()).isEqualTo(1L);
     }
 
     @Test
@@ -36,26 +35,5 @@ class TenantConfigPropertiesTest {
         assertThatThrownBy(() -> properties.setDurationDays(-5))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Trial durationDays must be at least 1 day");
-    }
-
-    @Test
-    @DisplayName("Set valid defaultPlanId successfully")
-    void setValidDefaultPlanId() {
-        TenantConfigProperties properties = new TenantConfigProperties();
-        properties.setDefaultPlanId(5L);
-        assertThat(properties.getDefaultPlanId()).isEqualTo(5L);
-    }
-
-    @Test
-    @DisplayName("Set non-positive defaultPlanId throws IllegalArgumentException")
-    void setInvalidDefaultPlanId() {
-        TenantConfigProperties properties = new TenantConfigProperties();
-        assertThatThrownBy(() -> properties.setDefaultPlanId(0L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Default plan ID must be a positive number");
-
-        assertThatThrownBy(() -> properties.setDefaultPlanId(-1L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Default plan ID must be a positive number");
     }
 }

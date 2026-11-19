@@ -14,7 +14,8 @@ This document establishes the dependency relationships, critical path, risk anal
 | **Story 4.4** | **Gym Registration Gateway (`REGISTER_GYM`)** | Stories 4.1, 4.2, 4.3 | `TenantProvisioningService`, `RegisterGymService`, `gym_subscriptions` | Story 4.4R |
 | **Story 4.4R** | **Central User Module Gateway Architecture & Onboarding Refactoring** | Story 4.4 | `UserController` (`/api/user`), `UserFactory`, `UserValidations`, `SecurityConfig` | Story 4.5 |
 | **Story 4.5** | **User Tenants Directory (`FETCH_MY_TENANTS`) & Token Exchange (`SWITCH_TENANT`)** | Stories 4.2, 4.4R | `user_tenant_roles`, `AuthController`, `AuthFactory`, `UserFactory` | Enables users to switch into their registered or joined gyms |
-| **Story 4.6** | **Subscription Insights & Entitlements Management** | Stories 4.1, 4.4R, 4.5 | `TenantAdminController` (`/api/tenant-admin`), `gym_subscriptions`, `saas_subscription_plans`, `docs/payloads.md` | Phase 4 completion gate; Enables Phase 5 (Tenant Operations) |
+| **Story 4.6** | **Subscription Insights & Entitlements Management** | Stories 4.1, 4.4R, 4.5 | `TenantAdminController` (`/api/tenant-admin`), `gym_subscriptions`, `saas_subscription_plans`, `docs/payloads.md` | Enables in-gym subscription visibility |
+| **Story 4.7** | **Default SaaS Trial Plan Seeding & Self-Bootstrapping Engine** | Stories 4.1, 4.3, 4.4R, 4.6 | `DefaultSaasPlanSeeder`, `TenantConfigProperties`, `TenantProvisioningService` | Guarantees self-bootstrapping clean onboarding; Phase 4 completion gate |
 
 ---
 

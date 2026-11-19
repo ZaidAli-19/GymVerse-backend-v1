@@ -1,0 +1,15 @@
+gymverse:
+  saas:
+    trial:
+      plan:
+        seed:
+          enabled: ${DEFAULT_TRIAL_PLAN_SEED_ENABLED:true}
+          name: ${DEFAULT_TRIAL_PLAN_NAME:Starter (Free Trial)}
+          description: ${DEFAULT_TRIAL_PLAN_DESC:Default introductory trial plan with standard feature entitlements}
+          price: ${DEFAULT_TRIAL_PLAN_PRICE:29.99}
+          billing-cycle: ${DEFAULT_TRIAL_PLAN_BILLING_CYCLE:MONTHLY}
+          max-members: ${DEFAULT_TRIAL_PLAN_MAX_MEMBERS:100}
+          max-trainers: ${DEFAULT_TRIAL_PLAN_MAX_TRAINERS:5}
+          analytics-enabled: ${DEFAULT_TRIAL_PLAN_ANALYTICS:true}
+          multi-trainer-enabled: ${DEFAULT_TRIAL_PLAN_MULTI_TRAINER:true}
+          custom-branding-enabled: ${DEFAULT_TRIAL_PLAN_BRANDING:false}

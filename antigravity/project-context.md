@@ -11,11 +11,11 @@
 | **Project Name** | `GymVerse-Backend-v2` |
 | **Repository Root** | `D:\projects\GymVerse-Backend-v2` |
 | **Current Git Branch** | `GymVerse/dev` |
-| **Current Project Phase** | **Phase 4: Tenant Onboarding, Dynamic Provisioning & Scoped RBAC [✅ 100% COMPLETED]** |
-| **Current Phase Stage** | **Phase 4 Complete; Staged for Phase 5 (Tenant Operations & Member Management)** |
-| **Last Completed Story** | **Story 4.6: Subscription Insights & Entitlements Management** |
-| **Immediate Next Phase / Story** | **Phase 5: Tenant Core Operations & Management** |
-| **Test Suite Health** | **82 Unit & Integration Tests Passing (0 Failures, 0 Errors)** |
+| **Current Project Phase** | **Phase 4: Tenant Onboarding, Dynamic Provisioning & Scoped RBAC** |
+| **Current Phase Stage** | **Phase 4 100% Completed (Story 4.1 through 4.7 Verified)** |
+| **Last Completed Story** | **Story 4.7: Default SaaS Trial Plan Seeding & Self-Bootstrapping Engine** |
+| **Immediate Next Phase / Story** | **Phase 5: Tenant-Level Core Operations & Domain Modules** |
+| **Test Suite Health** | **94 Unit & Integration Tests Passing (0 Failures, 0 Errors)** |
 | **Protected Code Status** | All 8 classes in `com.company.GymVerse.multitanancy` remain 100% byte-for-byte untouched |
 
 ---
@@ -104,10 +104,12 @@
                                     │
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│ PHASE 4: TENANT ONBOARDING, PROVISIONING & RBAC [PLANNED]              │
-│ - Gym Tenant Database Auto-Provisioning & Dynamic Flyway Migration     │
-│ - Tenant Association (Tenant Owner / Admin / Member mapping)           │
-│ - RBAC across Platform Admin & Tenant Endpoints                        │
+│ PHASE 4: TENANT ONBOARDING, PROVISIONING & RBAC [✅ 100% COMPLETED]    │
+│ - Gym Tenant Database Auto-Provisioning & Dynamic Flyway Migration     │ [✅ DONE]
+│ - Tenant Association & Directory (Fetch My Tenants, Switch Tenant)     │ [✅ DONE]
+│ - Scoped RBAC across Platform Admin, Central User & Tenant Admin Gateways│ [✅ DONE]
+│ - Subscription Insights & Entitlements Management (/api/tenant-admin)   │ [✅ DONE]
+│ - Default SaaS Trial Plan Seeding & Self-Bootstrapping Engine          │ [✅ DONE]
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -137,24 +139,21 @@
 | **Story 4.4R** | Central User Module Gateway Architecture & Onboarding Refactoring | `UserController.java` (`/api/user`), `UserFactory.java`, `UserValidations.java`, `RegisterGymService.java` | ✅ Completed |
 | **Story 4.5** | User Tenants Directory & Token Exchange Gateway | `FetchMyTenantsService.java` (`/api/user`), `SwitchTenantService.java` (`/api/auth`), `AuthMapper`, `UserMapper` | ✅ Completed |
 | **Story 4.6** | Subscription Insights & Entitlements Management | `TenantAdminController.java` (`/api/tenant-admin`), `FetchTenantSubscriptionService.java`, `TenantAdminMapper` | ✅ Completed |
+| **Story 4.7** | Default SaaS Trial Plan Seeding & Self-Bootstrapping Engine | `DefaultSaasPlanSeeder.java`, `TenantConfigProperties.java`, `TenantProvisioningService.java` | ✅ Completed |
 
 ---
 
-## 5. Phase 4 Completion & Transition to Phase 5
+## 5. Scope & Target Artifacts for Immediate Next Work: Story 4.7
 
-- **Phase 4 Summary:** All 6 stories across Phase 4 are 100% complete, verified with 82 automated unit and integration tests.
-  1. SaaS trial duration & configurations established.
-  2. Scoped JWT token engine with `TENANT_ACCOUNT` token typing and embedded zero-lookup `tenantDbName`.
-  3. Dynamic MySQL database provisioning with compensation rollback.
-  4. Central master user registration gateway (`POST /api/user` with `REGISTER_GYM`).
-  5. User multi-tenant directory (`POST /api/user` with `FETCH_MY_TENANTS`) and token exchange airlock (`POST /api/auth` with `SWITCH_TENANT`).
-  6. Tenant administrative subscription insights (`POST /api/tenant-admin` with `FETCH_TENANT_SUBSCRIPTION`).
-- **Immediate Next Scope (Phase 5):**
-  - Tenant-scoped member management (register member, list members, update member details).
-  - Tenant staff and trainer management.
-  - Equipment and operational asset management.
-  - Class scheduling and attendance tracking.
-  - Multi-tenant data isolation strictly enforced via `TenantContext` across all tenant operations.
+- **Active Story:** `Story 4.7: Default SaaS Trial Plan Seeding & Self-Bootstrapping Engine`
+- **Planning Artifact:** `_bmad-output/planning-artifacts/phase-4-tenant-onboarding-and-rbac/story-4.7-default-saas-trial-plan-seeding-and-onboarding-automation.md`
+- **Objectives:**
+  1. Externalize default trial plan specifications (name, description, catalog price, billing cycle, member/trainer limits, feature flags) into `application.yaml` under `gymverse.saas.trial.plan.*`.
+  2. Implement an idempotent startup seeder (`DefaultSaasPlanSeeder.java` implementing `ApplicationRunner`) that checks Central DB on startup and seeds Plan ID 1 if absent.
+  3. Enhance `TenantProvisioningService` with self-healing fallback to ensure clean database gym registrations never crash due to a missing SaaS plan.
+- **Invariants:**
+  - Multi-tenancy core untouched.
+  - No autonomous git commit/push (`RULES.md` Rule 1).
 
 ---
 

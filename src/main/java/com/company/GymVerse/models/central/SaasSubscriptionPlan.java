@@ -66,6 +66,10 @@ public class SaasSubscriptionPlan {
     private boolean customBrandingEnabled = false;
 
     @Builder.Default
+    @Column(name = "is_trial", nullable = false)
+    private boolean isTrial = false;
+
+    @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
 

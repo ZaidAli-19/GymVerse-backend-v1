@@ -1,5 +1,6 @@
 package com.company.GymVerse.user.service;
 
+import com.company.GymVerse.config.DefaultSaasPlanSeeder;
 import com.company.GymVerse.exceptions.common.BadRequestException;
 import com.company.GymVerse.models.central.GymSubscription;
 import com.company.GymVerse.models.central.GymTenant;
@@ -43,6 +44,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -75,6 +77,7 @@ public class TenantProvisioningService {
     private final TenantConfigProperties tenantConfigProperties;
     private final TenantProvisioningValidations tenantProvisioningValidations;
     private final PlatformTransactionManager centralTransactionManager;
+    private final DefaultSaasPlanSeeder defaultSaasPlanSeeder;
 
     /**
      * Provisions a new gym tenant with physical database, schema migrations, local seed, and central registry.
@@ -244,9 +247,8 @@ public class TenantProvisioningService {
                     .build();
             UserTenantRole savedRole = userTenantRoleRepository.save(userTenantRole);
 
-            Long defaultPlanId = tenantConfigProperties.getDefaultPlanId();
-            SaasSubscriptionPlan plan = saasSubscriptionPlanRepository.findById(defaultPlanId)
-                    .orElseThrow(() -> new IllegalStateException("Default SaaS subscription plan not found with ID: " + defaultPlanId));
+            SaasSubscriptionPlan plan = saasSubscriptionPlanRepository.findFirstByIsTrialTrueAndActiveTrue()
+                    .orElseGet(() -> defaultSaasPlanSeeder.seedDefaultTrialPlan());
 
             LocalDate startDate = LocalDate.now();
             LocalDate trialEndDate = SubscriptionDateUtil.calculateTrialEndDate(startDate, tenantConfigProperties.getDurationDays());

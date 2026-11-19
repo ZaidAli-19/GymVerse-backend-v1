@@ -19,4 +19,6 @@ public interface SaasSubscriptionPlanRepository extends JpaRepository<SaasSubscr
     boolean existsByNameIgnoreCase(String name);
 
     Optional<SaasSubscriptionPlan> findByNameIgnoreCase(String name);
+
+    Optional<SaasSubscriptionPlan> findFirstByIsTrialTrueAndActiveTrue();
 }
