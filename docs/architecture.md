@@ -118,6 +118,45 @@ graph TD
 - **No Mobile Tenant Activation or In-App Purchases:** The mobile application strictly omits gym registration, tenant activation, and in-app purchases. This simplifies app store distribution and aligns tenant provisioning with desktop administrative tooling.
 - **Server-Side Enforcement Independent of Client Interface:** Both clients interface with the identical central monolith backend. The backend independently enforces role, scope, and route authorization; mobile requests cannot access tenant provisioning endpoints, and direct API calls cannot circumvent client boundaries.
 
+### 2.2 Architectural Paradigm: Master-Scoped Domain vs. Tenant-Scoped Domains
+
+GymVerse strictly separates system capabilities into two distinct execution tiers. This separation preserves the Single Responsibility Principle, isolates security contexts, and prevents thread-local tenant leaks:
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ TIER 1: CENTRAL / MASTER DOMAIN LAYER                                        │
+│ • Database Target: Central Database (GymVerse)                               │
+│ • TenantContext: Unbound (null / empty)                                      │
+│ • Security Context: Master Token (tokenType: MASTER_ACCOUNT / CENTRAL_USER)  │
+│ • Responsibilities: Identity lifecycle, global profiles, cross-gym roster,  │
+│   facility onboarding & provisioning, SaaS plan management                   │
+│ • Modules: Common User Module, Auth / Identity Module, Platform Admin Module │
+└──────────────────────────────────────┬───────────────────────────────────────┘
+                                       │
+                      TOKEN EXCHANGE BRIDGE (/api/auth)
+            (Validates user_tenant_roles & issues TENANT_ACCOUNT token)
+                                       │
+                                       ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ TIER 2: TENANT-SCOPED OPERATIONAL LAYER                                      │
+│ • Database Target: Isolated Tenant Database (gymverse_tenant_<gymCode>)      │
+│ • TenantContext: Dynamically bound to tenantDbName by JwtFilter              │
+│ • Security Context: Tenant Token (tokenType: TENANT_ACCOUNT / TENANT)        │
+│   Carries: tenantId, dbName, gymCode, role (ADMIN / MEMBER / TRAINER / STAFF)│
+│ • Responsibilities: In-gym daily operations, staff rosters, class bookings, │
+│   facility settings, attendance, gym-specific subscriptions & metrics        │
+│ • Modules: tenantAdmin, member, trainer, staff, etc. (Modular domain packages)│
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Core Architectural Invariants:
+1. **Master-Scoped Operations Live in Common Central Modules**:
+   Any operation executed by a user before entering a gym or across all their gyms (such as registering a gym, viewing enrolled gyms, or updating global profile settings) belongs strictly to the **Central/Master layer** (e.g. the common `user` module). It never interacts with `TenantContext`.
+2. **Tenant-Scoped Operations Live in Dedicated In-Gym Modules**:
+   Once inside a gym workspace, all operations are governed by dedicated tenant-scoped modules (such as `tenantAdmin`, `member`, `trainer`, `staff`). These modules strictly require a `TENANT_ACCOUNT` token and execute exclusively against that gym's isolated database.
+3. **Zero Token Cross-Contamination**:
+   Master-scoped gateways reject tenant tokens, and tenant-scoped gateways reject master tokens. The only bridge between the two tiers is the central-to-tenant token exchange flow.
+
 ---
 
 ## 3. Unified Identity & Tenant Administration Model

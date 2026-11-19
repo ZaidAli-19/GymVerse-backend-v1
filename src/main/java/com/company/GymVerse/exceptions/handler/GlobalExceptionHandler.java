@@ -47,6 +47,12 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
     }
 
+    @ExceptionHandler(com.company.GymVerse.exceptions.common.ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbiddenException(com.company.GymVerse.exceptions.common.ForbiddenException ex, HttpServletRequest request) {
+        log.warn("Forbidden operation at [{}]: {}", request.getRequestURI(), ex.getMessage());
+        return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request.getRequestURI());
+    }
+
     @ExceptionHandler(OtpRateLimitException.class)
     public ResponseEntity<ErrorResponse> handleOtpRateLimitException(OtpRateLimitException ex, HttpServletRequest request) {
         log.warn("OTP rate limit exceeded at [{}]: {}", request.getRequestURI(), ex.getMessage());
@@ -95,8 +101,8 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
     }
 
-    @ExceptionHandler(com.company.GymVerse.tenantAdmin.exceptions.TenantProvisioningException.class)
-    public ResponseEntity<ErrorResponse> handleTenantProvisioningException(com.company.GymVerse.tenantAdmin.exceptions.TenantProvisioningException ex, HttpServletRequest request) {
+    @ExceptionHandler(com.company.GymVerse.user.exceptions.TenantProvisioningException.class)
+    public ResponseEntity<ErrorResponse> handleTenantProvisioningException(com.company.GymVerse.user.exceptions.TenantProvisioningException ex, HttpServletRequest request) {
         log.error("Tenant provisioning failure at [{}]: {}", request.getRequestURI(), ex.getMessage(), ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request.getRequestURI());
     }

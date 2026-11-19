@@ -1,0 +1,18 @@
+package com.company.GymVerse.user.request.enums;
+
+/**
+ * Discriminator enum defining all central master user operation types
+ * routed through the unified UserController gateway.
+ */
+public enum UserRequestType {
+
+    /**
+     * Operation to register a new gym franchise/center and provision its isolated tenant database.
+     */
+    REGISTER_GYM,
+
+    /**
+     * Operation to fetch all gym tenants where the authenticated master user has a role association.
+     */
+    FETCH_MY_TENANTS
+}

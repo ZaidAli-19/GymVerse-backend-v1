@@ -2,7 +2,7 @@
 id: "story-4.4"
 epic_id: "epic-phase-4-tenant-onboarding-and-rbac"
 title: "Gym Registration Gateway (REGISTER_GYM)"
-status: "planned"
+status: "completed"
 type: "gateway-operation"
 created_at: "2026-11-18"
 dependencies:

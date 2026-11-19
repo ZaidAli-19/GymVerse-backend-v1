@@ -5,25 +5,26 @@ title: "User Tenants Directory & Token Exchange Gateway"
 status: "planned"
 type: "gateway-operation"
 created_at: "2026-11-18"
+updated_at: "2026-11-19"
 dependencies:
   - "story-4.2"
-  - "story-4.4"
+  - "story-4.4r"
 files_to_modify:
   - "src/main/java/com/company/GymVerse/auth/request/enums/AuthRequestType.java"
   - "src/main/java/com/company/GymVerse/auth/request/AuthRequest.java"
   - "src/main/java/com/company/GymVerse/auth/response/AuthResponse.java"
-  - "src/main/java/com/company/GymVerse/tenantAdmin/request/enums/TenantAdminRequestType.java"
-  - "src/main/java/com/company/GymVerse/tenantAdmin/request/TenantAdminRequest.java"
-  - "src/main/java/com/company/GymVerse/tenantAdmin/response/TenantAdminResponse.java"
+  - "src/main/java/com/company/GymVerse/user/request/enums/UserRequestType.java"
+  - "src/main/java/com/company/GymVerse/user/request/UserRequest.java"
+  - "src/main/java/com/company/GymVerse/user/response/UserResponse.java"
 files_to_create:
-  - "src/main/java/com/company/GymVerse/tenantAdmin/request/FetchMyTenantsRequest.java"
-  - "src/main/java/com/company/GymVerse/tenantAdmin/response/FetchMyTenantsResponse.java"
-  - "src/main/java/com/company/GymVerse/tenantAdmin/response/UserTenantSummaryResponse.java"
-  - "src/main/java/com/company/GymVerse/tenantAdmin/service/FetchMyTenantsService.java"
+  - "src/main/java/com/company/GymVerse/user/request/FetchMyTenantsRequest.java"
+  - "src/main/java/com/company/GymVerse/user/response/FetchMyTenantsResponse.java"
+  - "src/main/java/com/company/GymVerse/user/response/UserTenantSummaryResponse.java"
+  - "src/main/java/com/company/GymVerse/user/service/FetchMyTenantsService.java"
   - "src/main/java/com/company/GymVerse/auth/request/SwitchTenantRequest.java"
   - "src/main/java/com/company/GymVerse/auth/response/SwitchTenantResponse.java"
   - "src/main/java/com/company/GymVerse/auth/service/SwitchTenantService.java"
-  - "src/test/java/com/company/GymVerse/tenantAdmin/FetchMyTenantsIntegrationTest.java"
+  - "src/test/java/com/company/GymVerse/user/FetchMyTenantsIntegrationTest.java"
   - "src/test/java/com/company/GymVerse/auth/SwitchTenantIntegrationTest.java"
 ---
 
@@ -32,17 +33,21 @@ files_to_create:
 ## ⚠️ MANDATORY DIRECTIVES FOR IMPLEMENTING AGENTS
 > 1. Strictly adhere to [`RULES.md`](file:///D:/projects/GymVerse-Backend-v2/RULES.md) and [`PROMPT.md`](file:///D:/projects/GymVerse-Backend-v2/PROMPT.md).
 > 2. **NEVER** run `git commit` or `git push` autonomously.
-> 3. Unified single-endpoint controller gateways: `@PostMapping("/api/tenant-admin")` and `@PostMapping("/api/auth")`.
-> 4. Factory pattern dispatching to operation beans.
-> 5. Use constructor injection with `@RequiredArgsConstructor` and `private final` fields. No `@Autowired`.
-> 6. Maintain task logging in `antigravity/story-4.5-user-tenants-directory-and-token-exchange-gateway.md`.
+> 3. **Master-Scoped vs Tenant-Scoped Invariant**:
+>    - `FETCH_MY_TENANTS` is a **master-scoped operation** and resides exclusively in the common **`user` module** (`@PostMapping("/api/user")`). It strictly requires `tokenType: "MASTER_ACCOUNT"` and queries the **Central Database** (`GymVerse`).
+>    - `SWITCH_TENANT` resides in the **`auth` module** (`@PostMapping("/api/auth")`) as the token exchange bridge trading a `MASTER_ACCOUNT` token for a `TENANT_ACCOUNT` token.
+>    - **Never** place `FETCH_MY_TENANTS` in `/api/tenant-admin`. `/api/tenant-admin` is strictly reserved for in-gym operations requiring `TENANT_ACCOUNT` tokens and `ROLE_TENANT_ADMIN`.
+> 4. Unified single-endpoint controller gateways: `@PostMapping("/api/user")` and `@PostMapping("/api/auth")`.
+> 5. Factory pattern dispatching to operation beans (`UserOperation` and `AuthOperation`).
+> 6. Use constructor injection with `@RequiredArgsConstructor` and `private final` fields. No `@Autowired`.
+> 7. Maintain task logging in `antigravity/story-4.5-user-tenants-directory-and-token-exchange-gateway.md`.
 
 ---
 
 ## 1. User Story
 
 **As an** authenticated user logging in at the master level,  
-**I want** to view all gym tenants where I am associated (`ADMIN`, `MEMBER`, `TRAINER`, `STAFF`) via `FETCH_MY_TENANTS` and select a gym to obtain tenant-scoped tokens via `SWITCH_TENANT`,  
+**I want** to view all gym tenants where I am associated (`ADMIN`, `MEMBER`, `TRAINER`, `STAFF`) via `@PostMapping("/api/user")` (`FETCH_MY_TENANTS`) and select a gym to obtain tenant-scoped tokens via `@PostMapping("/api/auth")` (`SWITCH_TENANT`),  
 **So that** I can seamlessly navigate between multiple gyms using my single Master Account identity and enter any gym's scoped operational dashboard.
 
 ---
@@ -50,7 +55,7 @@ files_to_create:
 ## 2. Technical Context & Requirements
 
 1. **User Tenant Directory (`FETCH_MY_TENANTS`)**:
-   - Dispatched via `@PostMapping("/api/tenant-admin")` with `TenantAdminRequestType.FETCH_MY_TENANTS`.
+   - Dispatched via `@PostMapping("/api/user")` with `UserRequestType.FETCH_MY_TENANTS`.
    - Caller identity extracted from `SecurityContextHolder`.
    - Queries `UserTenantRoleRepository.findByUserAccountId(userAccountId)`.
    - Joins with `GymTenant` and latest `GymSubscription` to provide:

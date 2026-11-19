@@ -1400,3 +1400,127 @@ curl -X POST "http://localhost:8080/api/auth" \
        }
      }'
 ```
+
+---
+
+# SECTION 3: USER MODULE API CONTRACTS (`/api/user`)
+
+## 3.1 Register Gym (`REGISTER_GYM`)
+
+1. **Operation Name:** Register Gym & Dynamic Database Provisioning
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `/api/user`
+4. **Purpose:** Central Master User single-endpoint command gateway operation for onboarding a new gym tenant. Dynamically provisions an isolated physical MySQL database, runs tenant Flyway schema migrations, seeds the initial tenant administrator profile (with `central_user_id` and zero passwords in tenant DB), activates a 14-day free SaaS trial subscription, and immediately issues tenant-scoped access and refresh tokens.
+5. **Authentication & Authorization:** Requires authenticated caller with `MASTER_ACCOUNT` JWT Bearer token.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <MASTER_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "userRequestType": "REGISTER_GYM",
+     "registerGymRequest": {
+       "gymName": "Olympus Fitness",
+       "contactEmail": "contact@olympus.com",
+       "phoneNumber": "+1555987654",
+       "address": "500 Pantheon Way",
+       "city": "Athens",
+       "logoUrl": "https://cdn.gymverse.com/logos/olympus.png",
+       "latitude": 37.9838,
+       "longitude": 23.7275,
+       "radius": 200.0,
+       "openingTime": "06:00:00",
+       "closingTime": "22:00:00",
+       "autoCheckoutTime": "22:30:00",
+       "timeZone": "Europe/Athens",
+       "customGymCode": "OLYMPUS-01"
+     }
+   }
+   ```
+   **Validation Rules:**
+   - `userRequestType`: Required enum string (`REGISTER_GYM`).
+   - `gymName`: Required string, non-blank, max 200 chars.
+   - `address`: Required string, non-blank.
+   - `city`: Required string, non-blank, max 100 chars.
+   - `customGymCode`: Optional string, 4 to 10 alphanumeric/hyphen characters, must be unique across all tenants if provided.
+   - `latitude`: Optional decimal, must be between -90 and 90.
+   - `longitude`: Optional decimal, must be between -180 and 180.
+10. **Success Response:**
+    - **HTTP Status:** `200 OK`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "Gym registered successfully and 14-day free trial activated",
+        "tenantId": 101,
+        "gymCode": "OLYMPUS-01",
+        "gymName": "Olympus Fitness",
+        "databaseName": "gymverse_tenant_olympus_fitness_100201",
+        "tenantAccessToken": "<TENANT_SCOPED_ACCESS_TOKEN>",
+        "tenantRefreshToken": "<TENANT_SCOPED_REFRESH_TOKEN>",
+        "trialEndDate": "2026-12-02",
+        "trialDaysRemaining": 14,
+        "registerGym": {
+          "tenantId": 101,
+          "gymCode": "OLYMPUS-01",
+          "gymName": "Olympus Fitness",
+          "databaseName": "gymverse_tenant_olympus_fitness_100201",
+          "tenantAccessToken": "<TENANT_SCOPED_ACCESS_TOKEN>",
+          "tenantRefreshToken": "<TENANT_SCOPED_REFRESH_TOKEN>",
+          "trialEndDate": "2026-12-02",
+          "trialDaysRemaining": 14,
+          "role": "TENANT_ADMIN",
+          "adminAuthority": "PRIMARY"
+        }
+      }
+      ```
+11. **Error Responses:**
+    - `400 Bad Request`: Missing required fields (gymName, address, city) or duplicate/invalid custom gym code.
+    - `401 Unauthorized`: Missing or invalid Bearer token.
+    - `500 Internal Server Error`: Tenant database provisioning or Flyway migration failure (triggers automatic compensation rollback to drop orphan database).
+12. **Implementation Reference:**
+    - **Controller:** `com.company.GymVerse.user.controller.UserController`
+    - **Factory Operation:** `com.company.GymVerse.user.service.RegisterGymService`
+    - **Orchestration Service:** `com.company.GymVerse.user.service.TenantProvisioningService`
+    - **Validation:** `com.company.GymVerse.user.validations.UserValidations`, `com.company.GymVerse.user.validations.TenantProvisioningValidations`
+    - **Mapper:** `com.company.GymVerse.user.mapper.UserMapper`
+13. **Business Rules:**
+    - **Master-Scoped Lifecycle:** Executed by authenticated master user identity against central catalog before any tenant context is bound.
+    - **Zero Passwords in Tenant Database:** Admin operational profile references master identity via `central_user_id`.
+    - **Automatic SaaS Trial:** Grants 14 days on default plan ID 1 with 0.00 price paid.
+    - **Zero-Lookup Token:** Returned JWT contains `tenantDbName`, enabling zero-central-DB-lookup dynamic routing on subsequent tenant API calls.
+    - **Client Neutrality:** The backend provides a single, uniform contract without enforcing client platform headers; client presentation is managed at the UI/frontend level.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/user" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <MASTER_ACCESS_TOKEN>" \
+     -d '{
+       "userRequestType": "REGISTER_GYM",
+       "registerGymRequest": {
+         "gymName": "Olympus Fitness",
+         "contactEmail": "contact@olympus.com",
+         "phoneNumber": "+1555987654",
+         "address": "500 Pantheon Way",
+         "city": "Athens",
+         "logoUrl": "https://cdn.gymverse.com/logos/olympus.png",
+         "latitude": 37.9838,
+         "longitude": 23.7275,
+         "radius": 200.0,
+         "openingTime": "06:00:00",
+         "closingTime": "22:00:00",
+         "timeZone": "Europe/Athens"
+       }
+     }'
+```
+
+---
+
+# SECTION 4: TENANT ADMINISTRATION API CONTRACTS (`/api/tenant-admin`)
+
+> **Note:** The Tenant Administration module handles In-Gym Operational management (Tier 2 Tenant-Scoped) requiring an authenticated caller with a `TENANT_ACCOUNT` token and `ROLE_TENANT_ADMIN`. Operational endpoints (e.g. Story 4.6 subscription insights and plan upgrades) are documented here.
+```

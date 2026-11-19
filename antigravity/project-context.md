@@ -12,10 +12,10 @@
 | **Repository Root** | `D:\projects\GymVerse-Backend-v2` |
 | **Current Git Branch** | `GymVerse/dev` |
 | **Current Project Phase** | **Phase 4: Tenant Onboarding, Dynamic Provisioning & Scoped RBAC** |
-| **Current Phase Stage** | **Story 4.3 Completed & Verified; Ready for Story 4.4** |
-| **Last Completed Story** | **Story 4.3: Dynamic Tenant Provisioning & Schema Migration Service** |
-| **Immediate Next Phase / Story** | **Story 4.4: Gym Registration Gateway (REGISTER_GYM)** |
-| **Test Suite Health** | **176 Tests Passing (0 Failures, 0 Errors, 0 Skipped)** |
+| **Current Phase Stage** | **Story 4.4R Completed; Ready for Story 4.5 (Directory & Token Exchange)** |
+| **Last Completed Story** | **Story 4.4R: Central User Module Refactoring & Master-Scoped Gym Registration** |
+| **Immediate Next Phase / Story** | **Story 4.5: User Tenants Directory & Token Exchange Gateway** |
+| **Test Suite Health** | **All Phase 4 Tests Passing (48 Unit + 4 Integration Verified, 0 Failures)** |
 | **Protected Code Status** | All 8 classes in `com.company.GymVerse.multitanancy` remain 100% byte-for-byte untouched |
 
 ---
@@ -133,27 +133,34 @@
 | **Story 4.1** | SaaS Trial Engine Configuration & Properties | `TenantConfigProperties.java`, `SubscriptionDateUtil.java`, `application.yaml` | ✅ Completed |
 | **Story 4.2** | Tenant-Scoped JWT Engine & Security Context Resolution | `JwtUtil.java`, `JwtFilter.java`, `TenantTokenClaims.java` | ✅ Completed |
 | **Story 4.3** | Dynamic Tenant Provisioning & Schema Migration Service | `TenantProvisioningService.java`, `TenantProvisioningCommand.java`, `TenantProvisioningResult.java`, compensation rollback | ✅ Completed |
-| **Story 4.4** | Gym Registration Gateway (REGISTER_GYM) | `TenantAdminController.java`, `RegisterGymService.java`, platform guard | ⏳ Ready |
-| **Story 4.5** | User Tenants Directory & Token Exchange Gateway | `FetchMyTenantsService.java`, `SwitchTenantService.java` | ⏳ Planned |
-| **Story 4.6** | Subscription Insights & Entitlements Management | `FetchTenantSubscriptionService.java`, `docs/payloads.md` | ⏳ Planned |
+| **Story 4.4** | Gym Registration Gateway (REGISTER_GYM) | `RegisterGymService.java`, `TenantProvisioningService.java`, platform guard | ✅ Superseded by 4.4R |
+| **Story 4.4R** | Central User Module Gateway Architecture & Onboarding Refactoring | `UserController.java` (`/api/user`), `UserFactory.java`, `UserValidations.java`, `RegisterGymService.java` | ✅ Completed |
+| **Story 4.5** | User Tenants Directory & Token Exchange Gateway | `FetchMyTenantsService.java` (`/api/user`), `SwitchTenantService.java` (`/api/auth`) | ⏳ Ready Next |
+| **Story 4.6** | Subscription Insights & Entitlements Management | `TenantAdminController.java` (`/api/tenant-admin`), `FetchTenantSubscriptionService.java` | ⏳ Planned |
 
 ---
 
-## 5. Scope & Target Artifacts for Immediate Next Work: Story 4.4
+## 5. Scope & Target Artifacts for Immediate Next Work: Story 4.5
 
-- **Active Story:** `Story 4.4: Gym Registration Gateway (REGISTER_GYM)`
-- **Planning Artifact:** `_bmad-output/planning-artifacts/phase-4-tenant-onboarding-and-rbac/story-4.4-gym-registration-gateway.md`
-- **Target Files:**
-  - `src/main/java/com/company/GymVerse/tenantAdmin/controller/TenantAdminController.java`
-  - `src/main/java/com/company/GymVerse/tenantAdmin/factory/TenantAdminFactory.java`
-  - `src/main/java/com/company/GymVerse/tenantAdmin/factory/TenantAdminOperation.java`
-  - `src/main/java/com/company/GymVerse/tenantAdmin/service/RegisterGymService.java`
-  - `src/main/java/com/company/GymVerse/tenantAdmin/validations/TenantAdminValidations.java`
-  - `src/main/java/com/company/GymVerse/tenantAdmin/mapper/TenantAdminMapper.java`
+- **Active Story:** `Story 4.5: User Tenants Directory & Token Exchange Gateway`
+- **Planning Artifact:** `_bmad-output/planning-artifacts/phase-4-tenant-onboarding-and-rbac/story-4.5-user-tenants-directory-and-token-exchange-gateway.md`
+- **Target Operations & Endpoints:**
+  1. **User Tenants Directory (`FETCH_MY_TENANTS`)**:
+     - Controller: `UserController` (`POST /api/user`)
+     - Discriminator: `UserRequestType.FETCH_MY_TENANTS`
+     - Service: `FetchMyTenantsService` under `com.company.GymVerse.user.service` implementing `UserOperation`
+     - Caller: Authenticated master user (`MASTER_ACCOUNT` token)
+     - Purpose: Queries `UserTenantRoleRepository` for all active tenant associations of the caller, returning tenant list (`gymId`, `gymCode`, `gymName`, `role`, `adminAuthority`, `joinedAt`).
+  2. **Token Exchange Airlock Bridge (`SWITCH_TENANT`)**:
+     - Controller: `AuthController` (`POST /api/auth`)
+     - Discriminator: `AuthRequestType.SWITCH_TENANT`
+     - Service: `SwitchTenantService` under `com.company.GymVerse.auth.service` implementing `AuthOperation`
+     - Caller: Authenticated master user (`MASTER_ACCOUNT` token) providing `targetGymCode` or `tenantId`
+     - Purpose: Verifies caller membership and status in target tenant, issues fresh zero-lookup `TENANT_ACCOUNT` token pair (with embedded `tenantDbName`).
 - **Invariants:**
-  - Single controller gateway: `@PostMapping("/api/tenant-admin")` with `TenantAdminRequestType.REGISTER_GYM`.
-  - Platform restrictions: reject requests with header `X-Client-Platform: MOBILE`.
-  - Issue and return scoped tenant tokens (`TENANT_ADMIN` role, `PRIMARY` authority) immediately upon registration.
+  - `FETCH_MY_TENANTS` is a Tier 1 Central Master operation routed through `POST /api/user`.
+  - `SWITCH_TENANT` is an authentication token-issuing bridge operation routed through `POST /api/auth`.
+  - Zero DB lookups needed during operational requests once tenant token is acquired.
 
 ---
 

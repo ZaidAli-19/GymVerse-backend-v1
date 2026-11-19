@@ -129,7 +129,40 @@ sequenceDiagram
 
 ## 5. Module Structure & Component Architecture
 
-### 5.1 Package Hierarchy (`com.company.GymVerse.tenantAdmin`)
+### 5.1 Central User Module Hierarchy (`com.company.GymVerse.user`)
+Central master user operations (gym onboarding, tenant discovery, gym enrollment) reside in the `user` module:
+
+```
+src/main/java/com/company/GymVerse/user/
+├── controller/
+│   └── UserController.java                 # Single @PostMapping("/api/user")
+├── factory/
+│   ├── UserFactory.java                    # Spring Map-based bean lookup
+│   └── UserOperation.java                  # Contract interface for operations
+├── request/
+│   ├── UserRequest.java                    # Shared master request envelope
+│   ├── RegisterGymRequest.java             # Gym registration payload (name, address, coordinates, hours)
+│   ├── FetchMyTenantsRequest.java          # Pagination / filtering parameters
+│   └── enums/
+│       └── UserRequestType.java            # REGISTER_GYM, FETCH_MY_TENANTS
+├── response/
+│   ├── UserResponse.java                   # Shared master response envelope
+│   ├── RegisterGymResponse.java            # Provisioning details + tenant tokens
+│   ├── UserTenantSummaryResponse.java      # Single gym association item
+│   └── FetchMyTenantsResponse.java         # Paginated tenant associations list
+├── mapper/
+│   ├── UserMapper.java                     # Handwritten mapping interface
+│   └── UserMapperImpl.java                 # DTO conversion implementations
+├── validations/
+│   ├── UserValidations.java                # Validation interface
+│   └── UserValidationsImpl.java            # Platform header check (X-Client-Platform), uniqueness
+└── service/
+    ├── RegisterGymService.java             # Implements UserOperation (REGISTER_GYM)
+    └── FetchMyTenantsService.java          # Implements UserOperation (FETCH_MY_TENANTS)
+```
+
+### 5.2 In-Gym Tenant Admin Module Hierarchy (`com.company.GymVerse.tenantAdmin`)
+In-gym operations strictly require `TENANT_ACCOUNT` Bearer tokens with `ROLE_TENANT_ADMIN`:
 
 ```
 src/main/java/com/company/GymVerse/tenantAdmin/
@@ -141,33 +174,26 @@ src/main/java/com/company/GymVerse/tenantAdmin/
 │   ├── TenantAdminFactory.java             # Spring Map-based bean lookup
 │   └── TenantAdminOperation.java           # Contract interface for operations
 ├── request/
-│   ├── TenantAdminRequest.java             # Shared master request envelope
-│   ├── RegisterGymRequest.java             # Gym registration payload (name, address, coordinates, hours)
-│   ├── FetchMyTenantsRequest.java          # Pagination / filtering parameters
+│   ├── TenantAdminRequest.java             # Scoped tenant admin request envelope
 │   ├── FetchTenantSubscriptionRequest.java # Tenant subscription query parameters
 │   └── enums/
-│       └── TenantAdminRequestType.java     # REGISTER_GYM, FETCH_MY_TENANTS, FETCH_TENANT_SUBSCRIPTION, EXTEND_SUBSCRIPTION
+│       └── TenantAdminRequestType.java     # FETCH_TENANT_SUBSCRIPTION, EXTEND_SUBSCRIPTION
 ├── response/
-│   ├── TenantAdminResponse.java            # Shared master response envelope
-│   ├── RegisterGymResponse.java            # Provisioning details + tenant tokens
-│   ├── UserTenantSummaryResponse.java      # Single gym association item
-│   ├── FetchMyTenantsResponse.java         # Paginated tenant associations list
+│   ├── TenantAdminResponse.java            # Scoped tenant admin response envelope
 │   └── TenantSubscriptionDetailsResponse.java # Plan name, trial days remaining, entitlements
 ├── mapper/
 │   ├── TenantAdminMapper.java              # Handwritten mapping interface
 │   └── TenantAdminMapperImpl.java          # DTO conversion implementations
 ├── validations/
-│   ├── TenantAdminValidations.java         # Validation interface
-│   └── TenantAdminValidationsImpl.java     # Platform header check, uniqueness, coordinates
+│   ├── TenantAdminValidations.java         # Scoped validation interface
+│   └── TenantAdminValidationsImpl.java     # Tenant-scoped invariant checks
 └── service/
     ├── TenantProvisioningService.java      # Orchestrates DB creation, Flyway, seed, rollback
-    ├── RegisterGymService.java             # Implements TenantAdminOperation (REGISTER_GYM)
-    ├── FetchMyTenantsService.java          # Implements TenantAdminOperation (FETCH_MY_TENANTS)
     ├── FetchTenantSubscriptionService.java # Implements TenantAdminOperation (FETCH_TENANT_SUBSCRIPTION)
     └── ExtendTenantSubscriptionService.java# Implements TenantAdminOperation (EXTEND_SUBSCRIPTION)
 ```
 
-### 5.2 Auth Module Extensions (`com.company.GymVerse.auth`)
+### 5.3 Auth Module Extensions (`com.company.GymVerse.auth`)
 To support the token exchange lifecycle:
 * `AuthRequestType.SWITCH_TENANT`: Operation accepting `gymTenantId` / `gymCode`, validating caller membership, and issuing `TENANT_ACCOUNT` tokens.
 * `SwitchTenantService`: Implements `AuthOperation` for `SWITCH_TENANT`.
@@ -204,28 +230,36 @@ To support the token exchange lifecycle:
                                     │
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│ STORY 4.4: Gym Registration Gateway (REGISTER_GYM)                     │
-│ - Single-endpoint gateway: @PostMapping("/api/tenant-admin")           │
-│ - TenantAdminValidations with X-Client-Platform restriction (reject    │
-│   MOBILE with 403 Forbidden; permit WEB / DESKTOP_ELECTRON)           │
+│ STORY 4.4: Initial Gym Registration Implementation                     │
+│ - TenantProvisioningService integration with RegisterGymService        │
 │ - Free trial activation in gym_subscriptions (status: TRIAL)           │
 │ - Immediate issuance and return of TENANT_ACCOUNT tokens               │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
+│ STORY 4.4R: Central User Module Refactoring (/api/user)                │
+│ - Establish com.company.GymVerse.user module & UserController          │
+│ - Single-endpoint gateway: @PostMapping("/api/user")                   │
+│ - Migrate RegisterGymService to user module (UserRequestType)          │
+│ - UserValidations with X-Client-Platform restriction                   │
+│ - Reserve /api/tenant-admin strictly for in-gym scoped operations     │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
 │ STORY 4.5: User Tenants Directory & Token Exchange Gateway             │
-│ - FETCH_MY_TENANTS operation (list gyms where user is Admin or Member) │
+│ - FETCH_MY_TENANTS operation in /api/user (list gyms user belongs to) │
 │ - SWITCH_TENANT operation in /api/auth (exchange Master for Tenant)    │
 │ - Verification of active status and role in user_tenant_roles          │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│ STORY 4.6: Subscription Insights & Entitlements Management             │
+│ STORY 4.6: In-Gym Tenant Admin & Subscription Insights                 │
+│ - Single-endpoint gateway: @PostMapping("/api/tenant-admin")           │
 │ - FETCH_TENANT_SUBSCRIPTION operation (active plan, trial countdown)   │
 │ - Feature entitlements verification (max_members, analytics_enabled)   │
-│ - EXTEND_SUBSCRIPTION operation placeholder for SaaS payment flow      │
 │ - Full integration test suite & docs/payloads.md documentation update  │
 └────────────────────────────────────────────────────────────────────────┘
 ```
