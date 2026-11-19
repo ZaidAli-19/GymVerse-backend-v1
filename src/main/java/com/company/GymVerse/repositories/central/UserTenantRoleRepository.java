@@ -2,6 +2,7 @@ package com.company.GymVerse.repositories.central;
 
 import com.company.GymVerse.models.central.UserTenantRole;
 import com.company.GymVerse.models.central.enums.TenantRole;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,11 +15,14 @@ import java.util.Optional;
 @Repository
 public interface UserTenantRoleRepository extends JpaRepository<UserTenantRole, Long> {
 
+    @EntityGraph(attributePaths = {"gymTenant"})
     List<UserTenantRole> findByUserAccountId(Long userAccountId);
 
     List<UserTenantRole> findByGymTenantId(Long gymTenantId);
 
     Optional<UserTenantRole> findByUserAccountIdAndGymTenantId(Long userAccountId, Long gymTenantId);
+
+    List<UserTenantRole> findAllByUserAccountIdAndGymTenantId(Long userAccountId, Long gymTenantId);
 
     Optional<UserTenantRole> findByUserAccountIdAndGymTenantIdAndRole(Long userAccountId, Long gymTenantId, TenantRole role);
 

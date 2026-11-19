@@ -1401,6 +1401,79 @@ curl -X POST "http://localhost:8080/api/auth" \
      }'
 ```
 
+### 2.11 Tenant Switching & Token Exchange (`SWITCH_TENANT`)
+
+1. **Feature / Module:** Authentication & Core Security (`auth`)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/auth`
+4. **Purpose:** Authenticated token exchange airlock bridge trading an active `MASTER_ACCOUNT` token for a scoped `TENANT_ACCOUNT` token pair bound to an isolated tenant database.
+5. **Authentication & Authorization:** Requires authenticated caller with `MASTER_ACCOUNT` JWT Bearer token.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <MASTER_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "authRequestType": "SWITCH_TENANT",
+     "switchTenantRequest": {
+       "gymTenantId": 101,
+       "gymCode": "OLYMPUS-01",
+       "role": "TENANT_ADMIN"
+     }
+   }
+   ```
+   *Note: Either `gymTenantId` or `gymCode` must be provided. `role` is optional if user holds only one role in the gym, but required if user holds multiple roles.*
+   **Validation Rules:**
+   - `authRequestType`: Required enum string (`SWITCH_TENANT`).
+   - `gymTenantId` or `gymCode`: At least one target identifier must be non-null and non-blank.
+   - `role`: Optional enum (`TENANT_ADMIN`, `MEMBER`, `TRAINER`, `STAFF`). Required if user holds multiple associations in the gym.
+10. **Success Response:**
+    - **HTTP Status:** `200 OK`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "Tenant switch successful. Scoped tokens issued for gym: Olympus Fitness",
+        "accessToken": "<TENANT_SCOPED_ACCESS_TOKEN>",
+        "refreshToken": "<TENANT_SCOPED_REFRESH_TOKEN>",
+        "switchTenantResponse": {
+          "tenantAccessToken": "<TENANT_SCOPED_ACCESS_TOKEN>",
+          "tenantRefreshToken": "<TENANT_SCOPED_REFRESH_TOKEN>",
+          "tenantId": 101,
+          "gymCode": "OLYMPUS-01",
+          "gymName": "Olympus Fitness",
+          "tenantDbName": "gymverse_tenant_olympus_fitness_100201",
+          "role": "TENANT_ADMIN",
+          "adminAuthority": "PRIMARY"
+        }
+      }
+      ```
+11. **Error Responses:**
+    - `400 Bad Request`: Missing both `gymTenantId` and `gymCode`, conflicting `gymTenantId` and `gymCode`, or user holds multiple roles in gym and `role` parameter was omitted.
+    - `401 Unauthorized`: Missing or invalid Master Bearer token, or tenant-scoped token used.
+    - `403 Forbidden`: Gym tenant is not active (`SUSPENDED`/`INACTIVE`) or user's gym membership is not active (`SUSPENDED`/`PENDING`/`REVOKED`).
+    - `404 Not Found`: Gym tenant does not exist or user has no association with the target gym / does not hold requested role.
+12. **Implementation Reference:**
+    - **Controller:** `com.company.GymVerse.auth.controller.AuthController`
+    - **Operation Bean:** `com.company.GymVerse.auth.service.SwitchTenantService`
+    - **Token Engine:** `com.company.GymVerse.security.jwt.JwtUtil`
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/auth" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <MASTER_ACCESS_TOKEN>" \
+     -d '{
+       "authRequestType": "SWITCH_TENANT",
+       "switchTenantRequest": {
+         "gymCode": "OLYMPUS-01"
+       }
+     }'
+```
+
 ---
 
 # SECTION 3: USER MODULE API CONTRACTS (`/api/user`)
@@ -1518,9 +1591,163 @@ curl -X POST "http://localhost:8080/api/user" \
      }'
 ```
 
+## 3.2 Fetch My Tenants Directory (`FETCH_MY_TENANTS`)
+
+1. **Operation Name:** Fetch User Tenant Directory
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `/api/user`
+4. **Purpose:** Central Master User single-endpoint query operation that returns all gym franchises/centers where the authenticated user holds an association (Admin, Member, Trainer, Staff), complete with operational status, authority level, and active SaaS subscription status.
+5. **Authentication & Authorization:** Requires authenticated caller with `MASTER_ACCOUNT` JWT Bearer token.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <MASTER_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "userRequestType": "FETCH_MY_TENANTS",
+     "fetchMyTenantsRequest": {
+       "role": "TENANT_ADMIN",
+       "gymStatus": "ACTIVE"
+     }
+   }
+   ```
+   *Note: `fetchMyTenantsRequest` is optional. An empty body `{ "userRequestType": "FETCH_MY_TENANTS" }` returns all associated tenants without filters.*
+   **Validation Rules:**
+   - `userRequestType`: Required enum string (`FETCH_MY_TENANTS`).
+   - `role`: Optional enum string (`TENANT_ADMIN`, `MEMBER`, `TRAINER`, `STAFF`).
+   - `gymStatus`: Optional enum string (`ACTIVE`, `SUSPENDED`).
+10. **Success Response:**
+    - **HTTP Status:** `200 OK`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "User tenant directory retrieved successfully",
+        "status": 200,
+        "fetchMyTenantsResponse": {
+          "totalTenants": 1,
+          "tenants": [
+            {
+              "tenantId": 101,
+              "gymCode": "OLYMPUS-01",
+              "gymName": "Olympus Fitness",
+              "logoUrl": "https://cdn.gymverse.com/logos/olympus.png",
+              "city": "Athens",
+              "address": "500 Pantheon Way",
+              "userRole": "TENANT_ADMIN",
+              "adminAuthority": "PRIMARY",
+              "roleStatus": "ACTIVE",
+              "gymStatus": "ACTIVE",
+              "subscriptionStatus": "TRIAL",
+              "joinedAt": "2026-11-19T06:00:00Z"
+            }
+          ]
+        }
+      }
+      ```
+11. **Error Responses:**
+    - `401 Unauthorized`: Missing or invalid Bearer token.
+12. **Implementation Reference:**
+    - **Controller:** `com.company.GymVerse.user.controller.UserController`
+    - **Operation Bean:** `com.company.GymVerse.user.service.FetchMyTenantsService`
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/user" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <MASTER_ACCESS_TOKEN>" \
+     -d '{
+       "userRequestType": "FETCH_MY_TENANTS"
+     }'
+```
+
 ---
 
 # SECTION 4: TENANT ADMINISTRATION API CONTRACTS (`/api/tenant-admin`)
+
+### 4.1 Fetch Tenant SaaS Subscription & Entitlements (`FETCH_TENANT_SUBSCRIPTION`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin`)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Retrieves real-time SaaS subscription tier status, trial/billing countdown, plan pricing, and feature entitlement limits for the operational gym tenant.
+5. **Authentication & Authorization:** Requires authenticated caller with `TENANT_ACCOUNT` token and `ROLE_TENANT_ADMIN` authority. Master tokens (`MASTER_ACCOUNT`) or non-admin roles (`MEMBER`, `TRAINER`, `STAFF`) are strictly rejected with 403 Forbidden.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "FETCH_TENANT_SUBSCRIPTION",
+     "fetchTenantSubscriptionRequest": {
+       "includeHistory": false
+     }
+   }
+   ```
+   *Note: `fetchTenantSubscriptionRequest` is optional. Tenant identity is resolved securely from caller JWT token claims.*
+   **Validation Rules:**
+   - `tenantAdminRequestType`: Required enum string (`FETCH_TENANT_SUBSCRIPTION`).
+10. **Success Response:**
+    - **HTTP Status:** `200 OK`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "Tenant subscription details retrieved successfully",
+        "status": 200,
+        "timestamp": "2026-11-19T14:45:00Z",
+        "tenantSubscriptionDetailsResponse": {
+          "subscriptionId": 901,
+          "tenantId": 101,
+          "gymCode": "GOLD-01",
+          "gymName": "Gold Standard Gym",
+          "planId": 1,
+          "planName": "Growth Tier",
+          "planDescription": "All-inclusive growth plan for expanding clubs",
+          "planPrice": 149.99,
+          "pricePaid": 0.00,
+          "billingCycle": "MONTHLY",
+          "status": "TRIAL",
+          "startDate": "2026-11-14",
+          "endDate": "2026-11-28",
+          "daysRemaining": 9,
+          "isTrial": true,
+          "maxMembers": 500,
+          "maxTrainers": 15,
+          "analyticsEnabled": true,
+          "multiTrainerEnabled": true,
+          "customBrandingEnabled": true
+        }
+      }
+      ```
+11. **Error Responses:**
+    - `400 Bad Request`: Missing or null `tenantAdminRequestType`.
+    - `401 Unauthorized`: Missing or invalid Bearer token.
+    - `403 Forbidden`: Master account token used instead of tenant-scoped token, or caller lacks `ROLE_TENANT_ADMIN`.
+    - `404 Not Found`: No subscription record found for the tenant ID in Central DB.
+12. **Implementation Reference:**
+    - **Controller:** `com.company.GymVerse.tenantAdmin.controller.TenantAdminController`
+    - **Factory:** `com.company.GymVerse.tenantAdmin.factory.TenantAdminFactory`
+    - **Operation Bean:** `com.company.GymVerse.tenantAdmin.service.FetchTenantSubscriptionService`
+    - **Validator:** `com.company.GymVerse.tenantAdmin.validations.TenantAdminValidations`
+    - **Mapper:** `com.company.GymVerse.tenantAdmin.mapper.TenantAdminMapper`
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "FETCH_TENANT_SUBSCRIPTION"
+     }'
+```
+
 
 > **Note:** The Tenant Administration module handles In-Gym Operational management (Tier 2 Tenant-Scoped) requiring an authenticated caller with a `TENANT_ACCOUNT` token and `ROLE_TENANT_ADMIN`. Operational endpoints (e.g. Story 4.6 subscription insights and plan upgrades) are documented here.
 ```

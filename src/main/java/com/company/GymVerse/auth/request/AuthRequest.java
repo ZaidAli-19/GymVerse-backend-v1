@@ -30,6 +30,9 @@ public class AuthRequest {
     @JsonAlias({"forgotPassword", "forgotPasswordRequest"})
     private ForgotPasswordRequest forgotPasswordRequest;
 
+    @JsonAlias({"switchTenant", "switchTenantRequest"})
+    private SwitchTenantRequest switchTenantRequest;
+
     public AuthRequestType getRequestType() {
         return authRequestType;
     }

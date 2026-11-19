@@ -2,6 +2,7 @@ package com.company.GymVerse.repositories.central;
 
 import com.company.GymVerse.models.central.GymSubscription;
 import com.company.GymVerse.models.central.enums.GymSubscriptionStatus;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,4 +18,7 @@ public interface GymSubscriptionRepository extends JpaRepository<GymSubscription
     Optional<GymSubscription> findTopByGymTenantIdAndStatusOrderByEndDateDesc(Long gymTenantId, GymSubscriptionStatus status);
 
     List<GymSubscription> findByGymTenantIdOrderBySubscribedAtDesc(Long gymTenantId);
+
+    @EntityGraph(attributePaths = {"plan", "gymTenant"})
+    Optional<GymSubscription> findFirstByGymTenantIdOrderBySubscribedAtDesc(Long gymTenantId);
 }

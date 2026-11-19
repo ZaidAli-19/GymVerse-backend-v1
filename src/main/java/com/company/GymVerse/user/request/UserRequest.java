@@ -1,6 +1,7 @@
 package com.company.GymVerse.user.request;
 
 import com.company.GymVerse.user.request.enums.UserRequestType;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserRequest {
 
+    @JsonAlias({"userRequestType", "requestType"})
     private UserRequestType requestType;
+
+    @JsonAlias({"registerGym", "registerGymRequest"})
     private RegisterGymRequest registerGymRequest;
+
+    @JsonAlias({"fetchMyTenants", "fetchMyTenantsRequest"})
+    private FetchMyTenantsRequest fetchMyTenantsRequest;
 }

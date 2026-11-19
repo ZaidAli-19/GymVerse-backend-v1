@@ -20,4 +20,10 @@ public interface UserValidations {
      * @param customGymCode the custom gym code to evaluate
      */
     void validateCustomGymCode(String customGymCode);
+
+    /**
+     * Validates that the active request context is a fully authenticated master user account,
+     * rejecting any tenant-scoped tokens or unauthenticated callers.
+     */
+    void validateMasterContext();
 }

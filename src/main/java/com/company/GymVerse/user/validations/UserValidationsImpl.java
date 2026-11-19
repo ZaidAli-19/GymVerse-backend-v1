@@ -1,11 +1,15 @@
 package com.company.GymVerse.user.validations;
 
 import com.company.GymVerse.exceptions.common.BadRequestException;
+import com.company.GymVerse.multitanancy.TenantContext;
 import com.company.GymVerse.repositories.central.GymTenantRepository;
 import com.company.GymVerse.user.request.RegisterGymRequest;
 import com.company.GymVerse.user.request.UserRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -69,6 +73,20 @@ public class UserValidationsImpl implements UserValidations {
         }
         if (gymTenantRepository.findByGymCode(trimmed).isPresent()) {
             throw new BadRequestException("Gym code '" + trimmed + "' is already registered");
+        }
+    }
+
+    @Override
+    public void validateMasterContext() {
+        if (TenantContext.getCurrentTenant() != null) {
+            throw new BadCredentialsException("Operation requires a Master Account token; tenant-scoped tokens cannot access this endpoint");
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getName() == null || authentication.getName().isBlank()
+                || "anonymousUser".equalsIgnoreCase(String.valueOf(authentication.getPrincipal()))) {
+            throw new BadCredentialsException("Full authentication is required to access this resource");
         }
     }
 }

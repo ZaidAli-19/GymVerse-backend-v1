@@ -3,9 +3,22 @@ package com.company.GymVerse.auth.validations;
 import com.company.GymVerse.auth.request.ForgotPasswordRequest;
 import com.company.GymVerse.auth.request.LoginRequest;
 import com.company.GymVerse.auth.request.SignupRequest;
+import com.company.GymVerse.auth.request.SwitchTenantRequest;
 import com.company.GymVerse.exceptions.common.BadRequestException;
+import com.company.GymVerse.exceptions.common.ForbiddenException;
+import com.company.GymVerse.exceptions.common.ResourceNotFoundException;
+import com.company.GymVerse.models.central.GymTenant;
+import com.company.GymVerse.models.central.UserTenantRole;
+import com.company.GymVerse.models.central.enums.GymStatus;
+import com.company.GymVerse.models.central.enums.TenantMembershipStatus;
+import com.company.GymVerse.models.central.enums.TenantRole;
+import com.company.GymVerse.multitanancy.TenantContext;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -190,5 +203,87 @@ public class AuthValidationsImpl implements AuthValidations {
         }
         validateEmail(request.getEmail());
         validatePasswordStrength(request.getNewPassword());
+    }
+
+    @Override
+    public void validateMasterContext() {
+        if (TenantContext.getCurrentTenant() != null) {
+            throw new BadCredentialsException("Operation requires a Master Account token; tenant-scoped tokens cannot switch tenants");
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getName() == null || authentication.getName().isBlank()
+                || "anonymousUser".equalsIgnoreCase(String.valueOf(authentication.getPrincipal()))) {
+            throw new BadCredentialsException("Full authentication with Master Account is required to switch tenants");
+        }
+    }
+
+    @Override
+    public void validateSwitchTenantRequest(final SwitchTenantRequest request) {
+        if (request == null) {
+            throw new BadRequestException("SwitchTenantRequest payload must not be null");
+        }
+        if (request.getGymTenantId() == null && (request.getGymCode() == null || request.getGymCode().isBlank())) {
+            throw new BadRequestException("Either gymTenantId or gymCode must be provided to switch tenants");
+        }
+    }
+
+    @Override
+    public void validateGymTargetConsistency(final GymTenant gymTenant, final String gymCode) {
+        if (gymTenant == null || gymCode == null || gymCode.isBlank()) {
+            return;
+        }
+        if (!gymTenant.getGymCode().equalsIgnoreCase(gymCode.trim())) {
+            throw new BadRequestException("Conflicting gymTenantId and gymCode provided");
+        }
+    }
+
+    @Override
+    public void validateGymActiveStatus(final GymTenant gymTenant) {
+        if (gymTenant == null) {
+            return;
+        }
+        if (gymTenant.getStatus() != GymStatus.ACTIVE) {
+            throw new ForbiddenException("This gym tenant is not active: " + gymTenant.getStatus());
+        }
+    }
+
+    @Override
+    public UserTenantRole resolveUserTenantRole(
+            final List<UserTenantRole> userRoles,
+            final TenantRole requestedRole,
+            final String gymName
+    ) {
+        if (userRoles == null || userRoles.isEmpty()) {
+            throw new ResourceNotFoundException("Tenant association not found for user in gym: " + gymName);
+        }
+
+        if (userRoles.size() == 1) {
+            UserTenantRole singleRole = userRoles.get(0);
+            if (requestedRole != null && singleRole.getRole() != requestedRole) {
+                throw new ResourceNotFoundException("User does not have requested role " + requestedRole + " in gym: " + gymName);
+            }
+            return singleRole;
+        }
+
+        if (requestedRole == null) {
+            throw new BadRequestException("User holds multiple roles in this gym. Please specify the 'role' parameter to switch tenants.");
+        }
+
+        return userRoles.stream()
+                .filter(r -> r.getRole() == requestedRole)
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("User does not have requested role " + requestedRole + " in gym: " + gymName));
+    }
+
+    @Override
+    public void validateMembershipActiveStatus(final UserTenantRole userTenantRole) {
+        if (userTenantRole == null) {
+            return;
+        }
+        if (userTenantRole.getStatus() != TenantMembershipStatus.ACTIVE) {
+            throw new ForbiddenException("Your access to this gym is not active: " + userTenantRole.getStatus());
+        }
     }
 }

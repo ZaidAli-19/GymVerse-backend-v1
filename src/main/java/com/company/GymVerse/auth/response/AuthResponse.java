@@ -25,4 +25,6 @@ public class AuthResponse {
     private String refreshToken;
 
     private UserSummaryResponse user;
+
+    private SwitchTenantResponse switchTenantResponse;
 }

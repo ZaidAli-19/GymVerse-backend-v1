@@ -25,4 +25,5 @@ public class UserResponse {
     private Instant timestamp = Instant.now();
 
     private RegisterGymResponse registerGymResponse;
+    private FetchMyTenantsResponse fetchMyTenantsResponse;
 }
