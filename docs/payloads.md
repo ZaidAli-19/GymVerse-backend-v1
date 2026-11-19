@@ -4,8 +4,25 @@
 
 ---
 
-## 1. Platform Administration Module
+## 📑 Quick Navigation Index
 
+Click on any module or operation to jump directly to its API specification and cURL example:
+
+| # | Module Gateway | Endpoint URL | Auth Scope | Available Operations |
+|---|---|---|---|---|
+| **1** | [**Platform Administration**](#section-1) | `POST /api/platform-admin` | Platform Admin (`ROLE_PLATFORM_ADMIN`) | • [1.1 Create SaaS Plan](#op-1-1)<br>• [1.2 Catalog Query & Pagination](#op-1-2)<br>• [1.3 Fetch Plan by ID](#op-1-3)<br>• [1.4 Update Plan Availability](#op-1-4)<br>• [1.5 Gym Tenants Directory](#op-1-5) |
+| **2** | [**Authentication & Security**](#section-2) | `POST /api/auth` | Public & Master Account | • [2.1 Signup Initiate](#op-2-1)<br>• [2.2 Signup Verify OTP](#op-2-2)<br>• [2.3 Signup Complete](#op-2-3)<br>• [2.4 Password Login](#op-2-4)<br>• [2.5 Login OTP Initiate](#op-2-5)<br>• [2.6 Login OTP Verify](#op-2-6)<br>• [2.7 Token Refresh](#op-2-7)<br>• [2.8 Forgot Password Initiate](#op-2-8)<br>• [2.9 Forgot Password Verify OTP](#op-2-9)<br>• [2.10 Forgot Password Reset](#op-2-10)<br>• [2.11 Switch Tenant & Token Exchange](#op-2-11) |
+| **3** | [**Central User Gateway**](#section-3) | `POST /api/user` | Master User (`MASTER_ACCOUNT`) | • [3.1 Register Gym & Dynamic Provisioning](#op-3-1)<br>• [3.2 Fetch My Tenants Directory](#op-3-2) |
+| **4** | [**Tenant Administration**](#section-4) | `POST /api/tenant-admin` | Tenant Admin (`TENANT_ACCOUNT` + `ROLE_TENANT_ADMIN`) | • [4.1 Fetch SaaS Subscription & Entitlements](#op-4-1) |
+
+---
+
+<a id="section-1"></a>
+<a id="platform-admin-module"></a>
+## 1. Platform Administration Module (`POST /api/platform-admin`)
+
+<a id="op-1-1"></a>
+<a id="create-saas-plan"></a>
 ### 1.1 Create SaaS Subscription Plan
 
 1. **Feature / Module:** Platform Administration (`platformAdmin`)
@@ -138,6 +155,8 @@ curl -X POST "http://localhost:8080/api/platform-admin" \
 
 ---
 
+<a id="op-1-2"></a>
+<a id="fetch-all-saas-plans"></a>
 ### 1.2 Fetch SaaS Subscription Plans Catalog (Dynamic Query & Pagination)
 
 1. **Feature / Module:** Platform Administration (`platformAdmin`)
@@ -321,6 +340,8 @@ curl -X POST "http://localhost:8080/api/platform-admin" \
 
 ---
 
+<a id="op-1-3"></a>
+<a id="fetch-saas-plan-by-id"></a>
 ### 1.3 Fetch Single SaaS Subscription Plan by ID
 
 1. **Feature / Module:** Platform Administration (`platformAdmin`)
@@ -438,6 +459,8 @@ curl -X POST "http://localhost:8080/api/platform-admin" \
 
 ---
 
+<a id="op-1-4"></a>
+<a id="update-plan-availability"></a>
 ### 1.4 Update SaaS Subscription Plan Availability (Activation / Deactivation)
 
 1. **Feature / Module:** Platform Administration (`platformAdmin`)
@@ -570,6 +593,8 @@ curl -X POST "http://localhost:8080/api/platform-admin" \
 
 ---
 
+<a id="op-1-5"></a>
+<a id="fetch-all-gym-tenants"></a>
 ### 1.5 Registered Gym Tenants Directory Retrieval
 
 1. **Feature / Module:** Platform Administration (`platformAdmin`)
@@ -752,8 +777,12 @@ curl -X POST "http://localhost:8080/api/platform-admin" \
 
 ---
 
+<a id="section-2"></a>
+<a id="auth-module"></a>
 ## 2. Authentication & Security Module (`POST /api/auth`)
 
+<a id="op-2-1"></a>
+<a id="signup-initiate"></a>
 ### 2.1 Signup Initiate (`SIGNUP_INITIATE`)
 
 1. **Feature / Module:** Authentication & Core Security (`auth`)
@@ -824,6 +853,8 @@ curl -X POST "http://localhost:8080/api/auth" \
 
 ---
 
+<a id="op-2-2"></a>
+<a id="signup-verify"></a>
 ### 2.2 Signup Verify OTP (`SIGNUP_VERIFY`)
 
 1. **Feature / Module:** Authentication & Core Security (`auth`)
@@ -884,6 +915,8 @@ curl -X POST "http://localhost:8080/api/auth" \
 
 ---
 
+<a id="op-2-3"></a>
+<a id="signup-complete"></a>
 ### 2.3 Signup Complete (`SIGNUP_COMPLETE`)
 
 1. **Feature / Module:** Authentication & Core Security (`auth`)
@@ -962,6 +995,8 @@ curl -X POST "http://localhost:8080/api/auth" \
 
 ---
 
+<a id="op-2-4"></a>
+<a id="login-password"></a>
 ### 2.4 Password Login (`LOGIN_PASSWORD`)
 
 1. **Feature / Module:** Authentication & Core Security (`auth`)
@@ -1033,6 +1068,8 @@ curl -X POST "http://localhost:8080/api/auth" \
 
 ---
 
+<a id="op-2-5"></a>
+<a id="login-otp-initiate"></a>
 ### 2.5 Passwordless Login OTP Initiate (`LOGIN_OTP_INITIATE`)
 
 1. **Feature / Module:** Authentication & Core Security (`auth`)
@@ -1090,6 +1127,8 @@ curl -X POST "http://localhost:8080/api/auth" \
 
 ---
 
+<a id="op-2-6"></a>
+<a id="login-otp-verify"></a>
 ### 2.6 Passwordless Login OTP Verify (`LOGIN_OTP_VERIFY`)
 
 1. **Feature / Module:** Authentication & Core Security (`auth`)
@@ -1159,6 +1198,8 @@ curl -X POST "http://localhost:8080/api/auth" \
 
 ---
 
+<a id="op-2-7"></a>
+<a id="refresh-token"></a>
 ### 2.7 Token Refresh (`REFRESH_TOKEN`)
 
 1. **Feature / Module:** Authentication & Core Security (`auth`)
@@ -1227,6 +1268,8 @@ curl -X POST "http://localhost:8080/api/auth" \
 
 ---
 
+<a id="op-2-8"></a>
+<a id="forgot-password-initiate"></a>
 ### 2.8 Forgot Password Initiate (`FORGOT_PASSWORD_INITIATE`)
 
 1. **Feature / Module:** Authentication & Core Security (`auth`)
@@ -1284,6 +1327,8 @@ curl -X POST "http://localhost:8080/api/auth" \
 
 ---
 
+<a id="op-2-9"></a>
+<a id="forgot-password-verify"></a>
 ### 2.9 Forgot Password Verify OTP (`FORGOT_PASSWORD_VERIFY`)
 
 1. **Feature / Module:** Authentication & Core Security (`auth`)
@@ -1342,6 +1387,8 @@ curl -X POST "http://localhost:8080/api/auth" \
 
 ---
 
+<a id="op-2-10"></a>
+<a id="forgot-password-reset"></a>
 ### 2.10 Forgot Password Reset (`FORGOT_PASSWORD_RESET`)
 
 1. **Feature / Module:** Authentication & Core Security (`auth`)
@@ -1401,6 +1448,8 @@ curl -X POST "http://localhost:8080/api/auth" \
      }'
 ```
 
+<a id="op-2-11"></a>
+<a id="switch-tenant"></a>
 ### 2.11 Tenant Switching & Token Exchange (`SWITCH_TENANT`)
 
 1. **Feature / Module:** Authentication & Core Security (`auth`)
@@ -1476,9 +1525,13 @@ curl -X POST "http://localhost:8080/api/auth" \
 
 ---
 
-# SECTION 3: USER MODULE API CONTRACTS (`/api/user`)
+<a id="section-3"></a>
+<a id="user-module"></a>
+## 3. Central User Gateway Module (`POST /api/user`)
 
-## 3.1 Register Gym (`REGISTER_GYM`)
+<a id="op-3-1"></a>
+<a id="register-gym"></a>
+### 3.1 Register Gym (`REGISTER_GYM`)
 
 1. **Operation Name:** Register Gym & Dynamic Database Provisioning
 2. **HTTP Method:** `POST`
@@ -1591,7 +1644,9 @@ curl -X POST "http://localhost:8080/api/user" \
      }'
 ```
 
-## 3.2 Fetch My Tenants Directory (`FETCH_MY_TENANTS`)
+<a id="op-3-2"></a>
+<a id="fetch-my-tenants"></a>
+### 3.2 Fetch My Tenants Directory (`FETCH_MY_TENANTS`)
 
 1. **Operation Name:** Fetch User Tenant Directory
 2. **HTTP Method:** `POST`
@@ -1666,8 +1721,12 @@ curl -X POST "http://localhost:8080/api/user" \
 
 ---
 
-# SECTION 4: TENANT ADMINISTRATION API CONTRACTS (`/api/tenant-admin`)
+<a id="section-4"></a>
+<a id="tenant-admin-module"></a>
+## 4. Tenant Administration Module (`POST /api/tenant-admin`)
 
+<a id="op-4-1"></a>
+<a id="fetch-tenant-subscription"></a>
 ### 4.1 Fetch Tenant SaaS Subscription & Entitlements (`FETCH_TENANT_SUBSCRIPTION`)
 
 1. **Feature / Module:** Tenant Administration (`tenantAdmin`)

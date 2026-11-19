@@ -248,7 +248,7 @@ public class TenantProvisioningService {
             UserTenantRole savedRole = userTenantRoleRepository.save(userTenantRole);
 
             SaasSubscriptionPlan plan = saasSubscriptionPlanRepository.findFirstByIsTrialTrueAndActiveTrue()
-                    .orElseGet(() -> defaultSaasPlanSeeder.seedDefaultTrialPlan());
+                    .orElseGet(defaultSaasPlanSeeder::seedDefaultTrialPlan);
 
             LocalDate startDate = LocalDate.now();
             LocalDate trialEndDate = SubscriptionDateUtil.calculateTrialEndDate(startDate, tenantConfigProperties.getDurationDays());
