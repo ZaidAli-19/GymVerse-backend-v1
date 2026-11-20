@@ -15,4 +15,6 @@ public interface JoinRequestRepository extends JpaRepository<JoinRequest, Long> 
     List<JoinRequest> findByCentralUserId(Long centralUserId);
 
     List<JoinRequest> findByStatus(String status);
+
+    boolean existsByCentralUserIdAndStatus(Long centralUserId, String status);
 }

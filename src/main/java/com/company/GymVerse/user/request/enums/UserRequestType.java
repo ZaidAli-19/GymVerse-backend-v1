@@ -19,5 +19,10 @@ public enum UserRequestType {
     /**
      * Operation to discover and retrieve gym profile metadata by its gym code.
      */
-    FETCH_GYM_BY_CODE
+    FETCH_GYM_BY_CODE,
+
+    /**
+     * Operation for a central user to submit a membership join request to a gym tenant.
+     */
+    SUBMIT_JOIN_REQUEST
 }

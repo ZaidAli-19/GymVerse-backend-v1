@@ -12,7 +12,7 @@ Click on any module or operation to jump directly to its API specification and c
 |---|---|---|---|---|
 | **1** | [**Platform Administration**](#section-1) | `POST /api/platform-admin` | Platform Admin (`ROLE_PLATFORM_ADMIN`) | • [1.1 Create SaaS Plan](#op-1-1)<br>• [1.2 Catalog Query & Pagination](#op-1-2)<br>• [1.3 Fetch Plan by ID](#op-1-3)<br>• [1.4 Update Plan Availability](#op-1-4)<br>• [1.5 Gym Tenants Directory](#op-1-5) |
 | **2** | [**Authentication & Security**](#section-2) | `POST /api/auth` | Public & Master Account | • [2.1 Signup Initiate](#op-2-1)<br>• [2.2 Signup Verify OTP](#op-2-2)<br>• [2.3 Signup Complete](#op-2-3)<br>• [2.4 Password Login](#op-2-4)<br>• [2.5 Login OTP Initiate](#op-2-5)<br>• [2.6 Login OTP Verify](#op-2-6)<br>• [2.7 Token Refresh](#op-2-7)<br>• [2.8 Forgot Password Initiate](#op-2-8)<br>• [2.9 Forgot Password Verify OTP](#op-2-9)<br>• [2.10 Forgot Password Reset](#op-2-10)<br>• [2.11 Switch Tenant & Token Exchange](#op-2-11) |
-| **3** | [**Central User Gateway**](#section-3) | `POST /api/user` | Master User (`MASTER_ACCOUNT`) | • [3.1 Register Gym & Dynamic Provisioning](#op-3-1)<br>• [3.2 Fetch My Tenants Directory](#op-3-2)<br>• [3.3 Fetch Gym by Code (Discovery)](#op-3-3) |
+| **3** | [**Central User Gateway**](#section-3) | `POST /api/user` | Master User (`MASTER_ACCOUNT`) | • [3.1 Register Gym & Dynamic Provisioning](#op-3-1)<br>• [3.2 Fetch My Tenants Directory](#op-3-2)<br>• [3.3 Fetch Gym by Code (Discovery)](#op-3-3)<br>• [3.4 Submit Join Request](#op-3-4) |
 | **4** | [**Tenant Administration**](#section-4) | `POST /api/tenant-admin` | Tenant Admin (`TENANT_ACCOUNT` + `ROLE_TENANT_ADMIN`) | • [4.1 Fetch SaaS Subscription & Entitlements](#op-4-1) |
 
 ---
@@ -1791,6 +1791,86 @@ curl -X POST "http://localhost:8080/api/user" \
        "requestType": "FETCH_GYM_BY_CODE",
        "fetchGymByCodeRequest": {
          "gymCode": "FIT-101"
+       }
+     }'
+```
+
+<a id="op-3-4"></a>
+<a id="submit-join-request"></a>
+### 3.4 Submit Gym Join Request (`SUBMIT_JOIN_REQUEST`)
+
+1. **Operation Name:** Submit Gym Join Request
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `/api/user`
+4. **Purpose:** Allows an authenticated central master user (`MASTER_ACCOUNT` token) to submit a membership application to an active gym tenant. Validates that the caller is not already associated with the gym and does not have an open pending application. Crosses into the isolated tenant database transaction via `TenantRoutingBridge.callInTenantTx`, creates a snapshot of the applicant's central profile, and inserts a new pending request into `join_requests`.
+5. **Authentication & Authorization:** Requires authenticated caller with `MASTER_ACCOUNT` JWT Bearer token.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <MASTER_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "requestType": "SUBMIT_JOIN_REQUEST",
+     "submitJoinRequest": {
+       "gymCode": "FIT-101",
+       "requestNotes": "Looking forward to morning weightlifting classes!"
+     }
+   }
+   ```
+   **Validation Rules:**
+   - `requestType` (or `userRequestType`): String enum, required (`SUBMIT_JOIN_REQUEST`).
+   - `submitJoinRequest`: Object, required.
+   - `gymCode`: String, required, non-blank, 4 to 10 alphanumeric characters.
+   - `requestNotes`: String, optional, max 1000 characters.
+10. **Success Response (`201 Created`):**
+    ```json
+    {
+      "message": "Join request submitted successfully. Awaiting gym administrator review.",
+      "status": 201,
+      "timestamp": "2026-11-20T15:54:22Z",
+      "submitJoinRequestResponse": {
+        "requestId": 1,
+        "gymTenantId": 101,
+        "gymCode": "FIT-101",
+        "gymName": "Iron Paradise Gym",
+        "status": "PENDING",
+        "requestNotes": "Looking forward to morning weightlifting classes!",
+        "createdAt": "2026-11-20T15:54:22Z"
+      }
+    }
+    ```
+11. **Error Responses:**
+    - `400 Bad Request`:
+      - Missing or blank `gymCode`.
+      - `requestNotes` exceeds 1000 characters.
+      - User is already an active member or has a pending role assignment in central `user_tenant_roles` (`User is already an active MEMBER in gym tenant 101`).
+      - An open pending request already exists in the gym's database (`A pending join request already exists for this user in this gym`).
+      - Gym is `SUSPENDED` or `INACTIVE`.
+      - Gym SaaS subscription is `EXPIRED` or `CANCELLED`.
+    - `401 Unauthorized`: Missing or invalid Master Account Bearer token.
+    - `404 Not Found`: No gym exists with the requested `gymCode` (`Gym not found with code: XYZ`).
+12. **Implementation Reference:**
+    - **Controller:** `com.company.GymVerse.user.controller.UserController`
+    - **Operation Bean:** `com.company.GymVerse.user.service.SubmitJoinRequestService`
+    - **Validations Component:** `com.company.GymVerse.user.validations.UserValidationsImpl`
+    - **Helper Component:** `com.company.GymVerse.user.util.UserHelper`
+    - **Mapper:** `com.company.GymVerse.user.mapper.UserMapperImpl`
+    - **Routing Bridge:** `com.company.GymVerse.multitanancy.TenantRoutingBridge`
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/user" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <MASTER_ACCESS_TOKEN>" \
+     -d '{
+       "requestType": "SUBMIT_JOIN_REQUEST",
+       "submitJoinRequest": {
+         "gymCode": "FIT-101",
+         "requestNotes": "Looking forward to morning weightlifting classes!"
        }
      }'
 ```

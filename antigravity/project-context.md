@@ -12,9 +12,9 @@
 | **Repository Root** | `D:\projects\GymVerse-Backend-v2` |
 | **Current Git Branch** | `GymVerse/dev` |
 | **Current Project Phase** | **Phase 4: Tenant Onboarding, Dynamic Provisioning & Scoped RBAC (Extended)** |
-| **Current Phase Stage** | **Story 4.8 Completed & Verified (Story 4.9 Ready for Implementation)** |
-| **Last Completed Story** | **Story 4.8: Member Gym Discovery Gateway (FETCH_GYM_BY_CODE)** |
-| **Immediate Next Story** | **Story 4.9: Member Join Request Gateway (SUBMIT_JOIN_REQUEST)** |
+| **Current Phase Stage** | **Phase 4 Extended 100% Completed (Stories 4.1 through 4.9 Verified)** |
+| **Last Completed Story** | **Story 4.9: Member Join Request Gateway (SUBMIT_JOIN_REQUEST)** |
+| **Immediate Next Phase / Story** | **Phase 5: In-Gym Administration & Tenant Core Operations** |
 | **Test Suite Health** | **94 Unit & Integration Tests Passing (0 Failures, 0 Errors)** |
 | **Protected Code Status** | All 8 classes in `com.company.GymVerse.multitanancy` remain 100% byte-for-byte untouched |
 
@@ -141,25 +141,22 @@
 | **Story 4.6** | Subscription Insights & Entitlements Management | `TenantAdminController.java` (`/api/tenant-admin`), `FetchTenantSubscriptionService.java`, `TenantAdminMapper` | ✅ Completed |
 | **Story 4.7** | Default SaaS Trial Plan Seeding & Self-Bootstrapping Engine | `DefaultSaasPlanSeeder.java`, `TenantConfigProperties.java`, `TenantProvisioningService.java` | ✅ Completed |
 | **Story 4.8** | Member Gym Discovery Gateway (FETCH_GYM_BY_CODE) | `FetchGymByCodeService.java` (`/api/user`), `UserHelper`, `UserValidations`, `docs/payloads.md` | ✅ Completed |
-| **Story 4.9** | Member Join Request Gateway (SUBMIT_JOIN_REQUEST) | `SubmitJoinRequestService.java` (`/api/user`), `TenantRoutingBridge`, `join_requests` | 📋 Ready for Implementation |
+| **Story 4.9** | Member Join Request Gateway (SUBMIT_JOIN_REQUEST) | `SubmitJoinRequestService.java` (`/api/user`), `TenantRoutingBridge`, `join_requests`, `docs/payloads.md` | ✅ Completed |
 
 ---
 
-## 5. Scope & Target Artifacts for Immediate Next Work: Story 4.9
+## 5. Scope & Target Artifacts for Immediate Next Work: Phase 5 Planning
 
-- **Active Stage:** `Story 4.9: Member Join Request Gateway Implementation`
-- **Story Planning Artifact:** [`_bmad-output/planning-artifacts/phase-4-tenant-onboarding-and-rbac/story-4.9-member-join-request-gateway.md`](file:///D:/projects/GymVerse-Backend-v2/_bmad-output/planning-artifacts/phase-4-tenant-onboarding-and-rbac/story-4.9-member-join-request-gateway.md)
-- **Key Deliverables:**
-  - `SUBMIT_JOIN_REQUEST` operation on `@PostMapping("/api/user")`.
-  - Validate master caller token (`MASTER_ACCOUNT`), ensure gym is active and subscription is active/trial.
-  - Invariant: caller must not already hold an active or pending role in `user_tenant_roles`.
-  - Safely cross into tenant database via `TenantRoutingBridge.callInTenantTx(gymTenant.getDbName(), ...)`:
-    - Check no open `PENDING` request exists in tenant `join_requests`.
-    - Insert snapshot record into tenant `join_requests` with status `PENDING`.
-  - Return 201 Created confirmation payload.
+- **Active Stage:** `Phase 5 Planning & Story Breakdown`
+- **Next Phase:** `Phase 5: In-Gym Administration, Join Request Review & Tenant Core Operations`
+- **Upcoming Key Objectives:**
+  1. Break down Phase 5 requirements into formal epics and user stories.
+  2. Tenant administrator join request review workflow (`FETCH_JOIN_REQUESTS`, `APPROVE_JOIN_REQUEST`, `REJECT_JOIN_REQUEST`) inside `/api/tenant-admin`.
+  3. Approval action execution: Transitioning `join_requests` status to `APPROVED`, inserting tenant-local profile `TenantUser` / `users`, creating `Member` profile, and establishing active `user_tenant_roles` in central DB.
+  4. Tenant-scoped token exchange validation across all tenant operations.
 - **Invariants:**
   - Multi-tenancy core untouched (8 protected classes).
-  - Single `@PostMapping("/api/user")` gateway per module.
+  - Single `@PostMapping` controller gateway per module.
   - No autonomous git commit/push (`RULES.md` Rule 1).
 
 ---

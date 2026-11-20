@@ -172,4 +172,36 @@ public class UserMapperImpl implements UserMapper {
                 .fetchGymByCodeResponse(response)
                 .build();
     }
+
+    @Override
+    public com.company.GymVerse.user.response.SubmitJoinRequestResponse toSubmitJoinRequestResponse(
+            final com.company.GymVerse.models.tenant.JoinRequest joinRequest,
+            final String gymCode,
+            final String gymName
+    ) {
+        if (joinRequest == null) {
+            return null;
+        }
+        return com.company.GymVerse.user.response.SubmitJoinRequestResponse.builder()
+                .requestId(joinRequest.getId())
+                .gymCode(gymCode)
+                .gymName(gymName)
+                .status(joinRequest.getStatus())
+                .requestNotes(joinRequest.getRequestNotes())
+                .createdAt(joinRequest.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    public UserResponse toSubmitJoinRequestUserResponse(
+            final String message,
+            final com.company.GymVerse.user.response.SubmitJoinRequestResponse response
+    ) {
+        return UserResponse.builder()
+                .message(message)
+                .status(201)
+                .timestamp(Instant.now())
+                .submitJoinRequestResponse(response)
+                .build();
+    }
 }

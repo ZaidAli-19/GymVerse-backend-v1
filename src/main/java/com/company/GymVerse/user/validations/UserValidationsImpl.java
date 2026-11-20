@@ -2,12 +2,17 @@ package com.company.GymVerse.user.validations;
 
 import com.company.GymVerse.exceptions.common.BadRequestException;
 import com.company.GymVerse.models.central.GymTenant;
+import com.company.GymVerse.models.central.UserTenantRole;
 import com.company.GymVerse.models.central.enums.GymStatus;
 import com.company.GymVerse.models.central.enums.GymSubscriptionStatus;
+import com.company.GymVerse.models.central.enums.TenantMembershipStatus;
 import com.company.GymVerse.multitanancy.TenantContext;
 import com.company.GymVerse.repositories.central.GymTenantRepository;
+import com.company.GymVerse.repositories.central.UserTenantRoleRepository;
+import com.company.GymVerse.repositories.tenant.JoinRequestRepository;
 import com.company.GymVerse.user.request.FetchGymByCodeRequest;
 import com.company.GymVerse.user.request.RegisterGymRequest;
+import com.company.GymVerse.user.request.SubmitJoinRequest;
 import com.company.GymVerse.user.request.UserRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -29,6 +35,7 @@ public class UserValidationsImpl implements UserValidations {
 
     private static final Pattern GYM_CODE_PATTERN = Pattern.compile("^[A-Za-z0-9-]{4,10}$");
     private final GymTenantRepository gymTenantRepository;
+    private final UserTenantRoleRepository userTenantRoleRepository;
 
     @Override
     public void validateRegisterGym(final UserRequest request) {
@@ -109,6 +116,23 @@ public class UserValidationsImpl implements UserValidations {
     }
 
     @Override
+    public void validateSubmitJoinRequest(final UserRequest request) {
+        if (request == null) {
+            throw new BadRequestException("User request must not be null");
+        }
+        SubmitJoinRequest join = request.getSubmitJoinRequest();
+        if (join == null) {
+            throw new BadRequestException("Submit join request payload must not be null");
+        }
+        if (join.getGymCode() == null || join.getGymCode().isBlank()) {
+            throw new BadRequestException("Gym code must not be null or blank");
+        }
+        if (join.getRequestNotes() != null && join.getRequestNotes().length() > 1000) {
+            throw new BadRequestException("Request notes cannot exceed 1000 characters");
+        }
+    }
+
+    @Override
     public void validateGymActiveForJoin(final GymTenant gymTenant, final GymSubscriptionStatus subscriptionStatus) {
         if (gymTenant == null) {
             throw new BadRequestException("Gym tenant must not be null");
@@ -118,6 +142,33 @@ public class UserValidationsImpl implements UserValidations {
         }
         if (subscriptionStatus == GymSubscriptionStatus.EXPIRED || subscriptionStatus == GymSubscriptionStatus.CANCELLED) {
             throw new BadRequestException("Gym '" + gymTenant.getGymCode() + "' subscription is inactive and cannot accept new members");
+        }
+    }
+
+    @Override
+    public void validateUserNotAlreadyAssociated(final Long userAccountId, final Long gymTenantId) {
+        if (userAccountId == null || gymTenantId == null) {
+            throw new BadRequestException("User account ID and Gym tenant ID must not be null");
+        }
+        Optional<UserTenantRole> roleOpt = userTenantRoleRepository.findByUserAccountIdAndGymTenantId(userAccountId, gymTenantId);
+        if (roleOpt.isPresent()) {
+            UserTenantRole role = roleOpt.get();
+            if (role.getStatus() == TenantMembershipStatus.ACTIVE) {
+                throw new BadRequestException("User is already an active " + role.getRole() + " in gym tenant " + gymTenantId);
+            }
+            if (role.getStatus() == TenantMembershipStatus.PENDING) {
+                throw new BadRequestException("User already has a pending role assignment in this gym");
+            }
+        }
+    }
+
+    @Override
+    public void validateNoPendingJoinRequest(final Long userAccountId, final JoinRequestRepository joinRequestRepository) {
+        if (userAccountId == null || joinRequestRepository == null) {
+            throw new BadRequestException("User account ID and join request repository must not be null");
+        }
+        if (joinRequestRepository.existsByCentralUserIdAndStatus(userAccountId, "PENDING")) {
+            throw new BadRequestException("A pending join request already exists for this user in this gym");
         }
     }
 }

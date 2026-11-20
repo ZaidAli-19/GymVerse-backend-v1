@@ -42,6 +42,7 @@ class FetchGymByCodeServiceTest {
     private GymTenantRepository gymTenantRepository;
     private GymSubscriptionRepository gymSubscriptionRepository;
     private UserAccountRepository userAccountRepository;
+    private com.company.GymVerse.repositories.central.UserTenantRoleRepository userTenantRoleRepository;
     private UserValidations userValidations;
     private UserHelper userHelper;
     private UserMapper userMapper;
@@ -82,7 +83,13 @@ class FetchGymByCodeServiceTest {
                 (proxy, method, args) -> null
         );
 
-        userValidations = new UserValidationsImpl(gymTenantRepository);
+        userTenantRoleRepository = (com.company.GymVerse.repositories.central.UserTenantRoleRepository) Proxy.newProxyInstance(
+                com.company.GymVerse.repositories.central.UserTenantRoleRepository.class.getClassLoader(),
+                new Class<?>[]{com.company.GymVerse.repositories.central.UserTenantRoleRepository.class},
+                (proxy, method, args) -> Optional.empty()
+        );
+
+        userValidations = new UserValidationsImpl(gymTenantRepository, userTenantRoleRepository);
         userHelper = new UserHelper(userAccountRepository, gymSubscriptionRepository);
         userMapper = new UserMapperImpl();
 

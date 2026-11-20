@@ -82,4 +82,23 @@ public interface UserMapper {
      * @return populated {@link UserResponse}
      */
     UserResponse toFetchGymByCodeUserResponse(String message, com.company.GymVerse.user.response.FetchGymByCodeResponse response);
+
+    /**
+     * Converts a tenant-scoped {@link com.company.GymVerse.models.tenant.JoinRequest} into a {@link com.company.GymVerse.user.response.SubmitJoinRequestResponse}.
+     *
+     * @param joinRequest the saved join request
+     * @param gymCode     gym discovery code
+     * @param gymName     gym display name
+     * @return populated {@link com.company.GymVerse.user.response.SubmitJoinRequestResponse}
+     */
+    com.company.GymVerse.user.response.SubmitJoinRequestResponse toSubmitJoinRequestResponse(com.company.GymVerse.models.tenant.JoinRequest joinRequest, String gymCode, String gymName);
+
+    /**
+     * Wraps a {@link com.company.GymVerse.user.response.SubmitJoinRequestResponse} into a unified {@link UserResponse}.
+     *
+     * @param message  confirmation message
+     * @param response the submit join request response
+     * @return populated {@link UserResponse}
+     */
+    UserResponse toSubmitJoinRequestUserResponse(String message, com.company.GymVerse.user.response.SubmitJoinRequestResponse response);
 }

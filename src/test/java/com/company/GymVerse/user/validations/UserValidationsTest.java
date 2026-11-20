@@ -2,11 +2,17 @@ package com.company.GymVerse.user.validations;
 
 import com.company.GymVerse.exceptions.common.BadRequestException;
 import com.company.GymVerse.models.central.GymTenant;
+import com.company.GymVerse.models.central.UserTenantRole;
 import com.company.GymVerse.models.central.enums.GymStatus;
 import com.company.GymVerse.models.central.enums.GymSubscriptionStatus;
+import com.company.GymVerse.models.central.enums.TenantMembershipStatus;
+import com.company.GymVerse.models.central.enums.TenantRole;
 import com.company.GymVerse.repositories.central.GymTenantRepository;
+import com.company.GymVerse.repositories.central.UserTenantRoleRepository;
+import com.company.GymVerse.repositories.tenant.JoinRequestRepository;
 import com.company.GymVerse.user.request.FetchGymByCodeRequest;
 import com.company.GymVerse.user.request.RegisterGymRequest;
+import com.company.GymVerse.user.request.SubmitJoinRequest;
 import com.company.GymVerse.user.request.UserRequest;
 import com.company.GymVerse.user.request.enums.UserRequestType;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,7 +21,9 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -26,12 +34,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class UserValidationsTest {
 
     private Set<String> existingGymCodes;
+    private Map<String, UserTenantRole> userRoles;
     private GymTenantRepository gymTenantRepository;
+    private UserTenantRoleRepository userTenantRoleRepository;
+    private JoinRequestRepository joinRequestRepository;
     private UserValidations userValidations;
 
     @BeforeEach
     void setUp() {
         existingGymCodes = new HashSet<>();
+        userRoles = new HashMap<>();
 
         gymTenantRepository = (GymTenantRepository) Proxy.newProxyInstance(
                 GymTenantRepository.class.getClassLoader(),
@@ -48,7 +60,34 @@ class UserValidationsTest {
                 }
         );
 
-        userValidations = new UserValidationsImpl(gymTenantRepository);
+        userTenantRoleRepository = (UserTenantRoleRepository) Proxy.newProxyInstance(
+                UserTenantRoleRepository.class.getClassLoader(),
+                new Class<?>[]{UserTenantRoleRepository.class},
+                (proxy, method, args) -> {
+                    if ("findByUserAccountIdAndGymTenantId".equals(method.getName())) {
+                        Long uid = (Long) args[0];
+                        Long gid = (Long) args[1];
+                        String key = uid + "-" + gid;
+                        return Optional.ofNullable(userRoles.get(key));
+                    }
+                    return null;
+                }
+        );
+
+        joinRequestRepository = (JoinRequestRepository) Proxy.newProxyInstance(
+                JoinRequestRepository.class.getClassLoader(),
+                new Class<?>[]{JoinRequestRepository.class},
+                (proxy, method, args) -> {
+                    if ("existsByCentralUserIdAndStatus".equals(method.getName())) {
+                        Long uid = (Long) args[0];
+                        String st = (String) args[1];
+                        return uid != null && uid == 999L && "PENDING".equals(st);
+                    }
+                    return null;
+                }
+        );
+
+        userValidations = new UserValidationsImpl(gymTenantRepository, userTenantRoleRepository);
     }
 
     private UserRequest buildValidRegisterRequest() {
@@ -166,6 +205,37 @@ class UserValidationsTest {
     }
 
     @Test
+    @DisplayName("validateSubmitJoinRequest validates null, blank codes, and note lengths")
+    void validateSubmitJoinRequest_Checks() {
+        assertThatThrownBy(() -> userValidations.validateSubmitJoinRequest(null))
+                .isInstanceOf(BadRequestException.class);
+
+        UserRequest blankCodeReq = UserRequest.builder()
+                .requestType(UserRequestType.SUBMIT_JOIN_REQUEST)
+                .submitJoinRequest(SubmitJoinRequest.builder().gymCode("").build())
+                .build();
+        assertThatThrownBy(() -> userValidations.validateSubmitJoinRequest(blankCodeReq))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Gym code must not be null or blank");
+
+        String longNotes = "A".repeat(1005);
+        UserRequest longNoteReq = UserRequest.builder()
+                .requestType(UserRequestType.SUBMIT_JOIN_REQUEST)
+                .submitJoinRequest(SubmitJoinRequest.builder().gymCode("FIT-101").requestNotes(longNotes).build())
+                .build();
+        assertThatThrownBy(() -> userValidations.validateSubmitJoinRequest(longNoteReq))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Request notes cannot exceed 1000 characters");
+
+        UserRequest validReq = UserRequest.builder()
+                .requestType(UserRequestType.SUBMIT_JOIN_REQUEST)
+                .submitJoinRequest(SubmitJoinRequest.builder().gymCode("FIT-101").requestNotes("Hello!").build())
+                .build();
+        assertThatCode(() -> userValidations.validateSubmitJoinRequest(validReq))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
     @DisplayName("validateGymActiveForJoin validates gym status and subscription health")
     void validateGymActiveForJoin_Checks() {
         GymTenant suspendedGym = GymTenant.builder().gymCode("GYM-99").status(GymStatus.SUSPENDED).build();
@@ -182,6 +252,42 @@ class UserValidationsTest {
                 .doesNotThrowAnyException();
 
         assertThatCode(() -> userValidations.validateGymActiveForJoin(activeGym, GymSubscriptionStatus.TRIAL))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("validateUserNotAlreadyAssociated rejects already associated or pending users")
+    void validateUserNotAlreadyAssociated_Checks() {
+        userRoles.put("10-1", UserTenantRole.builder()
+                .role(TenantRole.MEMBER)
+                .status(TenantMembershipStatus.ACTIVE)
+                .build());
+
+        assertThatThrownBy(() -> userValidations.validateUserNotAlreadyAssociated(10L, 1L))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("User is already an active MEMBER");
+
+        userRoles.put("11-1", UserTenantRole.builder()
+                .role(TenantRole.MEMBER)
+                .status(TenantMembershipStatus.PENDING)
+                .build());
+
+        assertThatThrownBy(() -> userValidations.validateUserNotAlreadyAssociated(11L, 1L))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("pending role assignment");
+
+        assertThatCode(() -> userValidations.validateUserNotAlreadyAssociated(12L, 1L))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("validateNoPendingJoinRequest rejects users with open pending requests")
+    void validateNoPendingJoinRequest_Checks() {
+        assertThatThrownBy(() -> userValidations.validateNoPendingJoinRequest(999L, joinRequestRepository))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("A pending join request already exists");
+
+        assertThatCode(() -> userValidations.validateNoPendingJoinRequest(888L, joinRequestRepository))
                 .doesNotThrowAnyException();
     }
 }

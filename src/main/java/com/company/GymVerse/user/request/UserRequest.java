@@ -28,4 +28,7 @@ public class UserRequest {
 
     @JsonAlias({"fetchGymByCode", "fetchGymByCodeRequest", "discoverGym"})
     private FetchGymByCodeRequest fetchGymByCodeRequest;
+
+    @JsonAlias({"submitJoinRequest", "joinRequest", "joinGym", "joinGymRequest"})
+    private SubmitJoinRequest submitJoinRequest;
 }
