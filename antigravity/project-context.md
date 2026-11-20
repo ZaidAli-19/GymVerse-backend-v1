@@ -11,10 +11,10 @@
 | **Project Name** | `GymVerse-Backend-v2` |
 | **Repository Root** | `D:\projects\GymVerse-Backend-v2` |
 | **Current Git Branch** | `GymVerse/dev` |
-| **Current Project Phase** | **Phase 4: Tenant Onboarding, Dynamic Provisioning & Scoped RBAC** |
-| **Current Phase Stage** | **Phase 4 100% Completed (Story 4.1 through 4.7 Verified)** |
-| **Last Completed Story** | **Story 4.7: Default SaaS Trial Plan Seeding & Self-Bootstrapping Engine** |
-| **Immediate Next Phase / Story** | **Phase 5: Tenant-Level Core Operations & Domain Modules** |
+| **Current Project Phase** | **Phase 4: Tenant Onboarding, Dynamic Provisioning & Scoped RBAC (Extended)** |
+| **Current Phase Stage** | **Story 4.8 Completed & Verified (Story 4.9 Ready for Implementation)** |
+| **Last Completed Story** | **Story 4.8: Member Gym Discovery Gateway (FETCH_GYM_BY_CODE)** |
+| **Immediate Next Story** | **Story 4.9: Member Join Request Gateway (SUBMIT_JOIN_REQUEST)** |
 | **Test Suite Health** | **94 Unit & Integration Tests Passing (0 Failures, 0 Errors)** |
 | **Protected Code Status** | All 8 classes in `com.company.GymVerse.multitanancy` remain 100% byte-for-byte untouched |
 
@@ -129,7 +129,7 @@
 | **Story 3.7** | Master User Password Recovery Lifecycle (FORGOT_PASSWORD_INITIATE, FORGOT_PASSWORD_VERIFY, FORGOT_PASSWORD_RESET) | `ForgotPasswordInitiateService`, `ForgotPasswordVerifyService`, `ForgotPasswordResetService` | ✅ Completed |
 | **Story 3.8** | Unified Controller Gateway Integration (/api/auth), Exception Translation & API Payload Docs | `AuthController.java`, `AuthMapper.java`, `AuthMapperImpl.java`, `AuthUnifiedGatewayIntegrationTest.java`, `docs/payloads.md` | ✅ Completed |
 
-### 4.2 Phase 4 Story Status (In Progress)
+### 4.2 Phase 4 Story Status (Extended)
 | Story ID | Description | Core Artifacts | Status |
 | :--- | :--- | :--- | :--- |
 | **Story 4.1** | SaaS Trial Engine Configuration & Properties | `TenantConfigProperties.java`, `SubscriptionDateUtil.java`, `application.yaml` | ✅ Completed |
@@ -140,19 +140,26 @@
 | **Story 4.5** | User Tenants Directory & Token Exchange Gateway | `FetchMyTenantsService.java` (`/api/user`), `SwitchTenantService.java` (`/api/auth`), `AuthMapper`, `UserMapper` | ✅ Completed |
 | **Story 4.6** | Subscription Insights & Entitlements Management | `TenantAdminController.java` (`/api/tenant-admin`), `FetchTenantSubscriptionService.java`, `TenantAdminMapper` | ✅ Completed |
 | **Story 4.7** | Default SaaS Trial Plan Seeding & Self-Bootstrapping Engine | `DefaultSaasPlanSeeder.java`, `TenantConfigProperties.java`, `TenantProvisioningService.java` | ✅ Completed |
+| **Story 4.8** | Member Gym Discovery Gateway (FETCH_GYM_BY_CODE) | `FetchGymByCodeService.java` (`/api/user`), `UserHelper`, `UserValidations`, `docs/payloads.md` | ✅ Completed |
+| **Story 4.9** | Member Join Request Gateway (SUBMIT_JOIN_REQUEST) | `SubmitJoinRequestService.java` (`/api/user`), `TenantRoutingBridge`, `join_requests` | 📋 Ready for Implementation |
 
 ---
 
-## 5. Scope & Target Artifacts for Immediate Next Work: Story 4.7
+## 5. Scope & Target Artifacts for Immediate Next Work: Story 4.9
 
-- **Active Story:** `Story 4.7: Default SaaS Trial Plan Seeding & Self-Bootstrapping Engine`
-- **Planning Artifact:** `_bmad-output/planning-artifacts/phase-4-tenant-onboarding-and-rbac/story-4.7-default-saas-trial-plan-seeding-and-onboarding-automation.md`
-- **Objectives:**
-  1. Externalize default trial plan specifications (name, description, catalog price, billing cycle, member/trainer limits, feature flags) into `application.yaml` under `gymverse.saas.trial.plan.*`.
-  2. Implement an idempotent startup seeder (`DefaultSaasPlanSeeder.java` implementing `ApplicationRunner`) that checks Central DB on startup and seeds Plan ID 1 if absent.
-  3. Enhance `TenantProvisioningService` with self-healing fallback to ensure clean database gym registrations never crash due to a missing SaaS plan.
+- **Active Stage:** `Story 4.9: Member Join Request Gateway Implementation`
+- **Story Planning Artifact:** [`_bmad-output/planning-artifacts/phase-4-tenant-onboarding-and-rbac/story-4.9-member-join-request-gateway.md`](file:///D:/projects/GymVerse-Backend-v2/_bmad-output/planning-artifacts/phase-4-tenant-onboarding-and-rbac/story-4.9-member-join-request-gateway.md)
+- **Key Deliverables:**
+  - `SUBMIT_JOIN_REQUEST` operation on `@PostMapping("/api/user")`.
+  - Validate master caller token (`MASTER_ACCOUNT`), ensure gym is active and subscription is active/trial.
+  - Invariant: caller must not already hold an active or pending role in `user_tenant_roles`.
+  - Safely cross into tenant database via `TenantRoutingBridge.callInTenantTx(gymTenant.getDbName(), ...)`:
+    - Check no open `PENDING` request exists in tenant `join_requests`.
+    - Insert snapshot record into tenant `join_requests` with status `PENDING`.
+  - Return 201 Created confirmation payload.
 - **Invariants:**
-  - Multi-tenancy core untouched.
+  - Multi-tenancy core untouched (8 protected classes).
+  - Single `@PostMapping("/api/user")` gateway per module.
   - No autonomous git commit/push (`RULES.md` Rule 1).
 
 ---

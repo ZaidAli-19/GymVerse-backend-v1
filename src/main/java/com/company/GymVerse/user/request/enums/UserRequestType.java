@@ -14,5 +14,10 @@ public enum UserRequestType {
     /**
      * Operation to fetch all gym tenants where the authenticated master user has a role association.
      */
-    FETCH_MY_TENANTS
+    FETCH_MY_TENANTS,
+
+    /**
+     * Operation to discover and retrieve gym profile metadata by its gym code.
+     */
+    FETCH_GYM_BY_CODE
 }

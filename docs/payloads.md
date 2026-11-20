@@ -12,7 +12,7 @@ Click on any module or operation to jump directly to its API specification and c
 |---|---|---|---|---|
 | **1** | [**Platform Administration**](#section-1) | `POST /api/platform-admin` | Platform Admin (`ROLE_PLATFORM_ADMIN`) | • [1.1 Create SaaS Plan](#op-1-1)<br>• [1.2 Catalog Query & Pagination](#op-1-2)<br>• [1.3 Fetch Plan by ID](#op-1-3)<br>• [1.4 Update Plan Availability](#op-1-4)<br>• [1.5 Gym Tenants Directory](#op-1-5) |
 | **2** | [**Authentication & Security**](#section-2) | `POST /api/auth` | Public & Master Account | • [2.1 Signup Initiate](#op-2-1)<br>• [2.2 Signup Verify OTP](#op-2-2)<br>• [2.3 Signup Complete](#op-2-3)<br>• [2.4 Password Login](#op-2-4)<br>• [2.5 Login OTP Initiate](#op-2-5)<br>• [2.6 Login OTP Verify](#op-2-6)<br>• [2.7 Token Refresh](#op-2-7)<br>• [2.8 Forgot Password Initiate](#op-2-8)<br>• [2.9 Forgot Password Verify OTP](#op-2-9)<br>• [2.10 Forgot Password Reset](#op-2-10)<br>• [2.11 Switch Tenant & Token Exchange](#op-2-11) |
-| **3** | [**Central User Gateway**](#section-3) | `POST /api/user` | Master User (`MASTER_ACCOUNT`) | • [3.1 Register Gym & Dynamic Provisioning](#op-3-1)<br>• [3.2 Fetch My Tenants Directory](#op-3-2) |
+| **3** | [**Central User Gateway**](#section-3) | `POST /api/user` | Master User (`MASTER_ACCOUNT`) | • [3.1 Register Gym & Dynamic Provisioning](#op-3-1)<br>• [3.2 Fetch My Tenants Directory](#op-3-2)<br>• [3.3 Fetch Gym by Code (Discovery)](#op-3-3) |
 | **4** | [**Tenant Administration**](#section-4) | `POST /api/tenant-admin` | Tenant Admin (`TENANT_ACCOUNT` + `ROLE_TENANT_ADMIN`) | • [4.1 Fetch SaaS Subscription & Entitlements](#op-4-1) |
 
 ---
@@ -1716,6 +1716,82 @@ curl -X POST "http://localhost:8080/api/user" \
      -H "Authorization: Bearer <MASTER_ACCESS_TOKEN>" \
      -d '{
        "userRequestType": "FETCH_MY_TENANTS"
+     }'
+```
+
+<a id="op-3-3"></a>
+<a id="fetch-gym-by-code"></a>
+### 3.3 Fetch Gym Details by Code (`FETCH_GYM_BY_CODE`)
+
+1. **Operation Name:** Fetch Gym Details by Code (Discovery Gateway)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `/api/user`
+4. **Purpose:** Allows an authenticated central master user to look up and inspect verified gym profile details using a unique discovery `gymCode` (scanned from a QR code or entered manually). Validates that the gym exists, is currently `ACTIVE`, and has an active or trial SaaS subscription before displaying the gym card on the client UI.
+5. **Authentication & Authorization:** Requires authenticated caller with `MASTER_ACCOUNT` JWT Bearer token. Tenant tokens (`TENANT_ACCOUNT`) or anonymous requests are rejected with 401 Unauthorized.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <MASTER_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "requestType": "FETCH_GYM_BY_CODE",
+     "fetchGymByCodeRequest": {
+       "gymCode": "FIT-101"
+     }
+   }
+   ```
+   **Validation Rules:**
+   - `requestType` (or `userRequestType`): String enum, required (`FETCH_GYM_BY_CODE`).
+   - `fetchGymByCodeRequest`: Object, required.
+   - `gymCode`: String, required, non-blank, 4 to 10 alphanumeric characters.
+10. **Success Response (`200 OK`):**
+    ```json
+    {
+      "message": "Gym details retrieved successfully",
+      "status": 200,
+      "timestamp": "2026-11-20T15:37:12Z",
+      "fetchGymByCodeResponse": {
+        "tenantId": 101,
+        "gymCode": "FIT-101",
+        "gymName": "Iron Paradise Gym",
+        "address": "77 Muscle Beach",
+        "city": "Venice",
+        "phoneNumber": "+1-555-0199",
+        "contactEmail": "info@ironparadise.com",
+        "logoUrl": "https://cdn.gymverse.com/logos/iron-paradise.png",
+        "status": "ACTIVE",
+        "subscriptionStatus": "ACTIVE"
+      }
+    }
+    ```
+11. **Error Responses:**
+    - `400 Bad Request`:
+      - Missing or blank `gymCode`.
+      - Target gym is `SUSPENDED` or `INACTIVE` (`Gym 'XYZ' is currently SUSPENDED and not accepting new members`).
+      - Target gym SaaS subscription is `EXPIRED` or `CANCELLED`.
+    - `401 Unauthorized`: Missing, expired, or invalid Master Account Bearer token.
+    - `404 Not Found`: No gym exists with the requested `gymCode` (`Gym not found with code: XYZ`).
+12. **Implementation Reference:**
+    - **Controller:** `com.company.GymVerse.user.controller.UserController`
+    - **Operation Bean:** `com.company.GymVerse.user.service.FetchGymByCodeService`
+    - **Validations Component:** `com.company.GymVerse.user.validations.UserValidationsImpl`
+    - **Helper Component:** `com.company.GymVerse.user.util.UserHelper`
+    - **Mapper:** `com.company.GymVerse.user.mapper.UserMapperImpl`
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/user" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <MASTER_ACCESS_TOKEN>" \
+     -d '{
+       "requestType": "FETCH_GYM_BY_CODE",
+       "fetchGymByCodeRequest": {
+         "gymCode": "FIT-101"
+       }
      }'
 ```
 

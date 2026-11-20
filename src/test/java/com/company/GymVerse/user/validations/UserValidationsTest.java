@@ -2,7 +2,10 @@ package com.company.GymVerse.user.validations;
 
 import com.company.GymVerse.exceptions.common.BadRequestException;
 import com.company.GymVerse.models.central.GymTenant;
+import com.company.GymVerse.models.central.enums.GymStatus;
+import com.company.GymVerse.models.central.enums.GymSubscriptionStatus;
 import com.company.GymVerse.repositories.central.GymTenantRepository;
+import com.company.GymVerse.user.request.FetchGymByCodeRequest;
 import com.company.GymVerse.user.request.RegisterGymRequest;
 import com.company.GymVerse.user.request.UserRequest;
 import com.company.GymVerse.user.request.enums.UserRequestType;
@@ -48,7 +51,7 @@ class UserValidationsTest {
         userValidations = new UserValidationsImpl(gymTenantRepository);
     }
 
-    private UserRequest buildValidRequest() {
+    private UserRequest buildValidRegisterRequest() {
         return UserRequest.builder()
                 .requestType(UserRequestType.REGISTER_GYM)
                 .registerGymRequest(RegisterGymRequest.builder()
@@ -62,7 +65,7 @@ class UserValidationsTest {
     @Test
     @DisplayName("validateRegisterGym succeeds for valid request")
     void validateRegisterGym_Success() {
-        UserRequest request = buildValidRequest();
+        UserRequest request = buildValidRegisterRequest();
         assertThatCode(() -> userValidations.validateRegisterGym(request))
                 .doesNotThrowAnyException();
     }
@@ -83,19 +86,19 @@ class UserValidationsTest {
     @Test
     @DisplayName("validateRegisterGym throws BadRequestException on missing required fields")
     void validateRegisterGym_MissingFields() {
-        UserRequest reqNoName = buildValidRequest();
+        UserRequest reqNoName = buildValidRegisterRequest();
         reqNoName.getRegisterGymRequest().setGymName("  ");
         assertThatThrownBy(() -> userValidations.validateRegisterGym(reqNoName))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Gym name is required");
 
-        UserRequest reqNoAddress = buildValidRequest();
+        UserRequest reqNoAddress = buildValidRegisterRequest();
         reqNoAddress.getRegisterGymRequest().setAddress("");
         assertThatThrownBy(() -> userValidations.validateRegisterGym(reqNoAddress))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Gym address is required");
 
-        UserRequest reqNoCity = buildValidRequest();
+        UserRequest reqNoCity = buildValidRegisterRequest();
         reqNoCity.getRegisterGymRequest().setCity(null);
         assertThatThrownBy(() -> userValidations.validateRegisterGym(reqNoCity))
                 .isInstanceOf(BadRequestException.class)
@@ -105,13 +108,13 @@ class UserValidationsTest {
     @Test
     @DisplayName("validateRegisterGym validates latitude and longitude boundaries")
     void validateRegisterGym_CoordinateBoundaries() {
-        UserRequest reqBadLat = buildValidRequest();
+        UserRequest reqBadLat = buildValidRegisterRequest();
         reqBadLat.getRegisterGymRequest().setLatitude(BigDecimal.valueOf(95));
         assertThatThrownBy(() -> userValidations.validateRegisterGym(reqBadLat))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Latitude must be between -90 and 90");
 
-        UserRequest reqBadLng = buildValidRequest();
+        UserRequest reqBadLng = buildValidRegisterRequest();
         reqBadLng.getRegisterGymRequest().setLongitude(BigDecimal.valueOf(-190));
         assertThatThrownBy(() -> userValidations.validateRegisterGym(reqBadLng))
                 .isInstanceOf(BadRequestException.class)
@@ -132,5 +135,53 @@ class UserValidationsTest {
         assertThatThrownBy(() -> userValidations.validateCustomGymCode("TAKEN"))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("already registered");
+    }
+
+    @Test
+    @DisplayName("validateFetchGymByCode validates null and blank codes")
+    void validateFetchGymByCode_Checks() {
+        assertThatThrownBy(() -> userValidations.validateFetchGymByCode(null))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("User request must not be null");
+
+        UserRequest emptyEnvelope = UserRequest.builder().requestType(UserRequestType.FETCH_GYM_BY_CODE).build();
+        assertThatThrownBy(() -> userValidations.validateFetchGymByCode(emptyEnvelope))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Fetch gym by code request payload must not be null");
+
+        UserRequest blankCodeReq = UserRequest.builder()
+                .requestType(UserRequestType.FETCH_GYM_BY_CODE)
+                .fetchGymByCodeRequest(FetchGymByCodeRequest.builder().gymCode("   ").build())
+                .build();
+        assertThatThrownBy(() -> userValidations.validateFetchGymByCode(blankCodeReq))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Gym code must not be null or blank");
+
+        UserRequest validReq = UserRequest.builder()
+                .requestType(UserRequestType.FETCH_GYM_BY_CODE)
+                .fetchGymByCodeRequest(FetchGymByCodeRequest.builder().gymCode("FIT-101").build())
+                .build();
+        assertThatCode(() -> userValidations.validateFetchGymByCode(validReq))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("validateGymActiveForJoin validates gym status and subscription health")
+    void validateGymActiveForJoin_Checks() {
+        GymTenant suspendedGym = GymTenant.builder().gymCode("GYM-99").status(GymStatus.SUSPENDED).build();
+        assertThatThrownBy(() -> userValidations.validateGymActiveForJoin(suspendedGym, GymSubscriptionStatus.ACTIVE))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("is currently SUSPENDED");
+
+        GymTenant activeGym = GymTenant.builder().gymCode("GYM-10").status(GymStatus.ACTIVE).build();
+        assertThatThrownBy(() -> userValidations.validateGymActiveForJoin(activeGym, GymSubscriptionStatus.EXPIRED))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("subscription is inactive");
+
+        assertThatCode(() -> userValidations.validateGymActiveForJoin(activeGym, GymSubscriptionStatus.ACTIVE))
+                .doesNotThrowAnyException();
+
+        assertThatCode(() -> userValidations.validateGymActiveForJoin(activeGym, GymSubscriptionStatus.TRIAL))
+                .doesNotThrowAnyException();
     }
 }

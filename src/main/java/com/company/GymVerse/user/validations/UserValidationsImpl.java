@@ -1,8 +1,12 @@
 package com.company.GymVerse.user.validations;
 
 import com.company.GymVerse.exceptions.common.BadRequestException;
+import com.company.GymVerse.models.central.GymTenant;
+import com.company.GymVerse.models.central.enums.GymStatus;
+import com.company.GymVerse.models.central.enums.GymSubscriptionStatus;
 import com.company.GymVerse.multitanancy.TenantContext;
 import com.company.GymVerse.repositories.central.GymTenantRepository;
+import com.company.GymVerse.user.request.FetchGymByCodeRequest;
 import com.company.GymVerse.user.request.RegisterGymRequest;
 import com.company.GymVerse.user.request.UserRequest;
 import lombok.RequiredArgsConstructor;
@@ -87,6 +91,33 @@ public class UserValidationsImpl implements UserValidations {
                 || authentication.getName() == null || authentication.getName().isBlank()
                 || "anonymousUser".equalsIgnoreCase(String.valueOf(authentication.getPrincipal()))) {
             throw new BadCredentialsException("Full authentication is required to access this resource");
+        }
+    }
+
+    @Override
+    public void validateFetchGymByCode(final UserRequest request) {
+        if (request == null) {
+            throw new BadRequestException("User request must not be null");
+        }
+        FetchGymByCodeRequest fetch = request.getFetchGymByCodeRequest();
+        if (fetch == null) {
+            throw new BadRequestException("Fetch gym by code request payload must not be null");
+        }
+        if (fetch.getGymCode() == null || fetch.getGymCode().isBlank()) {
+            throw new BadRequestException("Gym code must not be null or blank");
+        }
+    }
+
+    @Override
+    public void validateGymActiveForJoin(final GymTenant gymTenant, final GymSubscriptionStatus subscriptionStatus) {
+        if (gymTenant == null) {
+            throw new BadRequestException("Gym tenant must not be null");
+        }
+        if (gymTenant.getStatus() != GymStatus.ACTIVE) {
+            throw new BadRequestException("Gym '" + gymTenant.getGymCode() + "' is currently " + gymTenant.getStatus() + " and not accepting new members");
+        }
+        if (subscriptionStatus == GymSubscriptionStatus.EXPIRED || subscriptionStatus == GymSubscriptionStatus.CANCELLED) {
+            throw new BadRequestException("Gym '" + gymTenant.getGymCode() + "' subscription is inactive and cannot accept new members");
         }
     }
 }

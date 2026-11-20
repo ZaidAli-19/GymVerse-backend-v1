@@ -1,5 +1,7 @@
 package com.company.GymVerse.user.validations;
 
+import com.company.GymVerse.models.central.GymTenant;
+import com.company.GymVerse.models.central.enums.GymSubscriptionStatus;
 import com.company.GymVerse.user.request.UserRequest;
 
 /**
@@ -26,4 +28,19 @@ public interface UserValidations {
      * rejecting any tenant-scoped tokens or unauthenticated callers.
      */
     void validateMasterContext();
+
+    /**
+     * Validates domain invariants and required fields for a FETCH_GYM_BY_CODE request payload.
+     *
+     * @param request the user request containing the gym discovery payload
+     */
+    void validateFetchGymByCode(UserRequest request);
+
+    /**
+     * Validates that a gym tenant is ACTIVE and in good standing with its SaaS subscription to accept discovery.
+     *
+     * @param gymTenant          the target gym tenant
+     * @param subscriptionStatus current SaaS subscription status
+     */
+    void validateGymActiveForJoin(GymTenant gymTenant, GymSubscriptionStatus subscriptionStatus);
 }

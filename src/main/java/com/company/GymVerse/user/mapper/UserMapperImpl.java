@@ -137,4 +137,39 @@ public class UserMapperImpl implements UserMapper {
                 .fetchMyTenantsResponse(payload)
                 .build();
     }
+
+    @Override
+    public com.company.GymVerse.user.response.FetchGymByCodeResponse toFetchGymByCodeResponse(
+            final GymTenant gymTenant,
+            final GymSubscriptionStatus subscriptionStatus
+    ) {
+        if (gymTenant == null) {
+            return null;
+        }
+        return com.company.GymVerse.user.response.FetchGymByCodeResponse.builder()
+                .tenantId(gymTenant.getId())
+                .gymCode(gymTenant.getGymCode())
+                .gymName(gymTenant.getGymName())
+                .address(gymTenant.getAddress())
+                .city(gymTenant.getCity())
+                .phoneNumber(gymTenant.getPhoneNumber())
+                .contactEmail(gymTenant.getContactEmail())
+                .logoUrl(gymTenant.getLogoUrl())
+                .status(gymTenant.getStatus())
+                .subscriptionStatus(subscriptionStatus)
+                .build();
+    }
+
+    @Override
+    public UserResponse toFetchGymByCodeUserResponse(
+            final String message,
+            final com.company.GymVerse.user.response.FetchGymByCodeResponse response
+    ) {
+        return UserResponse.builder()
+                .message(message)
+                .status(200)
+                .timestamp(Instant.now())
+                .fetchGymByCodeResponse(response)
+                .build();
+    }
 }

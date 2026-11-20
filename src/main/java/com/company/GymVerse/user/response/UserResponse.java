@@ -26,4 +26,5 @@ public class UserResponse {
 
     private RegisterGymResponse registerGymResponse;
     private FetchMyTenantsResponse fetchMyTenantsResponse;
+    private FetchGymByCodeResponse fetchGymByCodeResponse;
 }

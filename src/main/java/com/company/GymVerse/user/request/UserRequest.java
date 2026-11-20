@@ -25,4 +25,7 @@ public class UserRequest {
 
     @JsonAlias({"fetchMyTenants", "fetchMyTenantsRequest"})
     private FetchMyTenantsRequest fetchMyTenantsRequest;
+
+    @JsonAlias({"fetchGymByCode", "fetchGymByCodeRequest", "discoverGym"})
+    private FetchGymByCodeRequest fetchGymByCodeRequest;
 }

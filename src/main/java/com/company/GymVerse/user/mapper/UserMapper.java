@@ -1,5 +1,6 @@
 package com.company.GymVerse.user.mapper;
 
+import com.company.GymVerse.models.central.GymTenant;
 import com.company.GymVerse.models.central.UserAccount;
 import com.company.GymVerse.models.central.UserTenantRole;
 import com.company.GymVerse.models.central.enums.GymSubscriptionStatus;
@@ -63,4 +64,22 @@ public interface UserMapper {
      * @return populated {@link UserResponse}
      */
     UserResponse toFetchMyTenantsUserResponse(String message, List<UserTenantSummaryResponse> tenants);
+
+    /**
+     * Converts a {@link GymTenant} and subscription status into a {@link com.company.GymVerse.user.response.FetchGymByCodeResponse}.
+     *
+     * @param gymTenant          the target gym tenant
+     * @param subscriptionStatus current subscription status
+     * @return populated {@link com.company.GymVerse.user.response.FetchGymByCodeResponse}
+     */
+    com.company.GymVerse.user.response.FetchGymByCodeResponse toFetchGymByCodeResponse(GymTenant gymTenant, GymSubscriptionStatus subscriptionStatus);
+
+    /**
+     * Wraps a {@link com.company.GymVerse.user.response.FetchGymByCodeResponse} into a unified {@link UserResponse}.
+     *
+     * @param message  confirmation message
+     * @param response the gym discovery response
+     * @return populated {@link UserResponse}
+     */
+    UserResponse toFetchGymByCodeUserResponse(String message, com.company.GymVerse.user.response.FetchGymByCodeResponse response);
 }
