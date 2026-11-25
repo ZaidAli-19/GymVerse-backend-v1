@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -37,4 +38,21 @@ public interface MemberMembershipRepository extends JpaRepository<MemberMembersh
             ORDER BY mm.active DESC, mm.endDate DESC, mm.startDate DESC, mm.id DESC
             """)
     List<MemberMembership> findAllWithPlanAndFacilitiesByMemberId(@Param("memberId") Long memberId);
+
+    @Query("""
+            SELECT pt.name, pt.themeKey, COUNT(DISTINCT mm.member.id)
+            FROM MemberMembership mm
+            JOIN mm.plan p
+            LEFT JOIN p.planTier pt
+            WHERE mm.active = true AND mm.endDate >= :today
+            GROUP BY pt.id, pt.name, pt.themeKey
+            """)
+    List<Object[]> countActiveMembersGroupedByTier(@Param("today") LocalDate today);
+
+    @Query("""
+            SELECT COUNT(DISTINCT mm.member.id)
+            FROM MemberMembership mm
+            WHERE mm.active = true AND mm.endDate BETWEEN :today AND :cutoff
+            """)
+    long countExpiringSoonMembers(@Param("today") LocalDate today, @Param("cutoff") LocalDate cutoff);
 }

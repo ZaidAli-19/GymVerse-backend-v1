@@ -1,5 +1,7 @@
 package com.company.GymVerse.tenantAdmin.mapper;
 
+import com.company.GymVerse.attendance.dto.LiveAttendanceSummary;
+import com.company.GymVerse.attendance.dto.LiveRosterEntry;
 import com.company.GymVerse.attendance.dto.MemberAttendanceSnapshot;
 import com.company.GymVerse.models.central.GymSubscription;
 import com.company.GymVerse.models.tenant.Expense;
@@ -12,8 +14,10 @@ import com.company.GymVerse.models.tenant.Trainer;
 import com.company.GymVerse.models.tenant.enums.PaymentMode;
 import com.company.GymVerse.tenantAdmin.response.PagedResponse;
 import com.company.GymVerse.tenantAdmin.response.TenantAdminResponse;
+import com.company.GymVerse.tenantAdmin.response.dashboard.AdminDashboardResponse;
 import com.company.GymVerse.tenantAdmin.response.finance.ExpenseTransactionResponse;
 import com.company.GymVerse.tenantAdmin.response.finance.FinanceOverviewResponse;
+import com.company.GymVerse.tenantAdmin.response.liveRoster.LiveRosterMemberResponse;
 import com.company.GymVerse.tenantAdmin.response.members.ApproveJoinRequestResponse;
 import com.company.GymVerse.tenantAdmin.response.members.JoinRequestItemResponse;
 import com.company.GymVerse.tenantAdmin.response.members.MemberDetailsResponse;
@@ -126,6 +130,16 @@ public interface TenantAdminMapper {
             String message,
             int httpStatus,
             ExpenseTransactionResponse item
+    );
+
+    TenantAdminResponse toAdminDashboardAdminResponse(String message, AdminDashboardResponse dashboard);
+
+    LiveRosterMemberResponse toLiveRosterMember(LiveRosterEntry entry);
+
+    TenantAdminResponse toLiveRosterAdminResponse(
+            String message,
+            LiveAttendanceSummary summary,
+            Page<LiveRosterEntry> rosterPage
     );
 
     default TrainersSummaryResponse buildTrainersSummary(

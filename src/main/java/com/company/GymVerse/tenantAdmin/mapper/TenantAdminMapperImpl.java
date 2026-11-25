@@ -1,5 +1,7 @@
 package com.company.GymVerse.tenantAdmin.mapper;
 
+import com.company.GymVerse.attendance.dto.LiveAttendanceSummary;
+import com.company.GymVerse.attendance.dto.LiveRosterEntry;
 import com.company.GymVerse.attendance.dto.MemberAttendanceSnapshot;
 import com.company.GymVerse.models.central.GymSubscription;
 import com.company.GymVerse.models.central.GymTenant;
@@ -17,9 +19,12 @@ import com.company.GymVerse.models.tenant.enums.PaymentMode;
 import com.company.GymVerse.tenantAdmin.helper.MembershipCalculationHelper;
 import com.company.GymVerse.tenantAdmin.response.PagedResponse;
 import com.company.GymVerse.tenantAdmin.response.TenantAdminResponse;
+import com.company.GymVerse.tenantAdmin.response.dashboard.AdminDashboardResponse;
 import com.company.GymVerse.tenantAdmin.response.enums.MemberMembershipStatus;
 import com.company.GymVerse.tenantAdmin.response.finance.ExpenseTransactionResponse;
 import com.company.GymVerse.tenantAdmin.response.finance.FinanceOverviewResponse;
+import com.company.GymVerse.tenantAdmin.response.liveRoster.LiveRosterMemberResponse;
+import com.company.GymVerse.tenantAdmin.response.liveRoster.LiveRosterResponse;
 import com.company.GymVerse.tenantAdmin.response.members.ApproveJoinRequestResponse;
 import com.company.GymVerse.tenantAdmin.response.members.JoinRequestItemResponse;
 import com.company.GymVerse.tenantAdmin.response.members.MemberDetailsResponse;
@@ -588,6 +593,65 @@ public class TenantAdminMapperImpl implements TenantAdminMapper {
                 .status(httpStatus)
                 .timestamp(Instant.now())
                 .expenseTransactionResponse(item)
+                .build();
+    }
+
+    @Override
+    public TenantAdminResponse toAdminDashboardAdminResponse(
+            final String message,
+            final AdminDashboardResponse dashboard
+    ) {
+        return TenantAdminResponse.builder()
+                .message(message)
+                .status(200)
+                .timestamp(Instant.now())
+                .adminDashboardResponse(dashboard)
+                .build();
+    }
+
+    @Override
+    public LiveRosterMemberResponse toLiveRosterMember(final LiveRosterEntry entry) {
+        if (entry == null) {
+            return null;
+        }
+        return LiveRosterMemberResponse.builder()
+                .memberId(entry.getMemberId())
+                .gymId(entry.getGymId())
+                .fullName(entry.getFullName())
+                .email(entry.getEmail())
+                .phoneNumber(entry.getPhoneNumber())
+                .membershipStatus(entry.getMembershipStatus())
+                .tierName(entry.getTierName())
+                .themeKey(entry.getThemeKey())
+                .checkInTime(entry.getCheckInTime())
+                .elapsedMinutes(entry.getElapsedMinutes())
+                .build();
+    }
+
+    @Override
+    public TenantAdminResponse toLiveRosterAdminResponse(
+            final String message,
+            final LiveAttendanceSummary summary,
+            final Page<LiveRosterEntry> rosterPage
+    ) {
+        List<LiveRosterMemberResponse> content = rosterPage.getContent().stream()
+                .map(this::toLiveRosterMember)
+                .toList();
+        PagedResponse<LiveRosterMemberResponse> paged = toPagedResponse(rosterPage, content);
+
+        LiveRosterResponse liveRoster = LiveRosterResponse.builder()
+                .totalLiveCount(summary != null ? summary.getLiveMembersCount() : 0L)
+                .avgTimeSpentMinutes(summary != null ? summary.getAvgTimeSpentMinutes() : 0.0)
+                .liveExpiredCount(summary != null ? summary.getLiveExpiredCount() : 0L)
+                .liveTrialCount(summary != null ? summary.getLiveTrialCount() : 0L)
+                .roster(paged)
+                .build();
+
+        return TenantAdminResponse.builder()
+                .message(message)
+                .status(200)
+                .timestamp(Instant.now())
+                .liveRosterResponse(liveRoster)
                 .build();
     }
 

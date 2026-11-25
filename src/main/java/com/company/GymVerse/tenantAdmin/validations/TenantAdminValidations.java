@@ -7,6 +7,7 @@ import com.company.GymVerse.models.tenant.enums.PaymentStatus;
 import com.company.GymVerse.tenantAdmin.request.TenantAdminRequest;
 import com.company.GymVerse.tenantAdmin.request.finance.CreateExpenseRequest;
 import com.company.GymVerse.tenantAdmin.request.finance.FetchExpenseTransactionsRequest;
+import com.company.GymVerse.tenantAdmin.request.liveRoster.FetchLiveRosterRequest;
 import com.company.GymVerse.tenantAdmin.request.members.ApproveJoinRequest;
 import com.company.GymVerse.tenantAdmin.request.members.FetchJoinRequestsRequest;
 import com.company.GymVerse.tenantAdmin.request.members.FetchMemberDetailsRequest;
@@ -121,4 +122,14 @@ public interface TenantAdminValidations {
      * Validates CreateExpenseRequest fields and resolves standard or custom OTHER ExpenseCategory.
      */
     ExpenseCategory validateAndResolveCreateExpense(CreateExpenseRequest request);
+
+    /**
+     * Validates pagination and whitelisted sorting fields for FETCH_LIVE_ROSTER queries.
+     */
+    Pageable validateFetchLiveRoster(FetchLiveRosterRequest request);
+
+    /**
+     * Validates and normalizes live roster membershipFilter (ALL, EXPIRED, TRIAL).
+     */
+    String parseLiveRosterMembershipFilter(String membershipFilter);
 }

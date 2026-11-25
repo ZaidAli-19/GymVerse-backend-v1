@@ -15,6 +15,7 @@ import com.company.GymVerse.repositories.tenant.PlanTierRepository;
 import com.company.GymVerse.tenantAdmin.request.TenantAdminRequest;
 import com.company.GymVerse.tenantAdmin.request.finance.CreateExpenseRequest;
 import com.company.GymVerse.tenantAdmin.request.finance.FetchExpenseTransactionsRequest;
+import com.company.GymVerse.tenantAdmin.request.liveRoster.FetchLiveRosterRequest;
 import com.company.GymVerse.tenantAdmin.request.members.ApproveJoinRequest;
 import com.company.GymVerse.tenantAdmin.request.members.FetchJoinRequestsRequest;
 import com.company.GymVerse.tenantAdmin.request.members.FetchMemberDetailsRequest;
@@ -58,6 +59,12 @@ public class TenantAdminValidationsImpl implements TenantAdminValidations {
     );
     private static final Set<String> ALLOWED_EXPENSE_SORT_FIELDS = Set.of(
             "id", "expenseDate", "amount", "category", "title"
+    );
+    private static final Set<String> ALLOWED_LIVE_ROSTER_SORT_FIELDS = Set.of(
+            "checkInTime", "memberName", "elapsedMinutes"
+    );
+    private static final Set<String> ALLOWED_LIVE_ROSTER_FILTERS = Set.of(
+            "ALL", "EXPIRED", "TRIAL"
     );
     private static final BigDecimal ONE_HUNDRED = new BigDecimal("100");
 
@@ -386,6 +393,37 @@ public class TenantAdminValidationsImpl implements TenantAdminValidations {
             }
         }
         return ExpenseCategory.OTHER;
+    }
+
+    @Override
+    public Pageable validateFetchLiveRoster(final FetchLiveRosterRequest request) {
+        if (request == null) {
+            return validateAndBuildPageable(null, null, "checkInTime", "desc", "checkInTime", ALLOWED_LIVE_ROSTER_SORT_FIELDS);
+        }
+        String sortDir = (request.getSortDirection() == null || request.getSortDirection().isBlank())
+                ? "desc"
+                : request.getSortDirection();
+        return validateAndBuildPageable(
+                request.getPage(),
+                request.getSize(),
+                request.getSortBy(),
+                sortDir,
+                "checkInTime",
+                ALLOWED_LIVE_ROSTER_SORT_FIELDS
+        );
+    }
+
+    @Override
+    public String parseLiveRosterMembershipFilter(final String membershipFilter) {
+        if (membershipFilter == null || membershipFilter.trim().isBlank()) {
+            return "ALL";
+        }
+        String normalized = membershipFilter.trim().toUpperCase();
+        if (!ALLOWED_LIVE_ROSTER_FILTERS.contains(normalized)) {
+            throw new BadRequestException("Invalid live roster membershipFilter: '" + membershipFilter
+                    + "'. Allowed values: ALL, EXPIRED, TRIAL");
+        }
+        return normalized;
     }
 
     private void validatePlanName(final String name) {

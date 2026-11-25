@@ -13,7 +13,7 @@ Click on any module or operation to jump directly to its API specification and c
 | **1** | [**Platform Administration**](#section-1) | `POST /api/platform-admin` | Platform Admin (`ROLE_PLATFORM_ADMIN`) | • [1.1 Create SaaS Plan](#op-1-1)<br>• [1.2 Catalog Query & Pagination](#op-1-2)<br>• [1.3 Fetch Plan by ID](#op-1-3)<br>• [1.4 Update Plan Availability](#op-1-4)<br>• [1.5 Gym Tenants Directory](#op-1-5) |
 | **2** | [**Authentication & Security**](#section-2) | `POST /api/auth` | Public & Master Account | • [2.1 Signup Initiate](#op-2-1)<br>• [2.2 Signup Verify OTP](#op-2-2)<br>• [2.3 Signup Complete](#op-2-3)<br>• [2.4 Password Login](#op-2-4)<br>• [2.5 Login OTP Initiate](#op-2-5)<br>• [2.6 Login OTP Verify](#op-2-6)<br>• [2.7 Token Refresh](#op-2-7)<br>• [2.8 Forgot Password Initiate](#op-2-8)<br>• [2.9 Forgot Password Verify OTP](#op-2-9)<br>• [2.10 Forgot Password Reset](#op-2-10)<br>• [2.11 Switch Tenant & Token Exchange](#op-2-11) |
 | **3** | [**Central User Gateway**](#section-3) | `POST /api/user` | Master User (`MASTER_ACCOUNT`) | • [3.1 Register Gym & Dynamic Provisioning](#op-3-1)<br>• [3.2 Fetch My Tenants Directory](#op-3-2)<br>• [3.3 Fetch Gym by Code (Discovery)](#op-3-3)<br>• [3.4 Submit Join Request](#op-3-4) |
-| **4** | [**Tenant Administration**](#section-4) | `POST /api/tenant-admin` | Tenant Admin (`TENANT_ACCOUNT` + `ROLE_TENANT_ADMIN`) | • [4.1 Fetch SaaS Subscription & Entitlements](#op-4-1)<br>• [4.2 Fetch Members Summary](#op-4-2)<br>• [4.3 Fetch Members Directory](#op-4-3)<br>• [4.4 Fetch Member Details](#op-4-4)<br>• [4.5 Fetch Trainers Summary](#op-4-5)<br>• [4.6 Fetch Trainers Address Book](#op-4-6)<br>• [4.7 Fetch Finance Overview](#op-4-7)<br>• [4.8 Fetch Expense Transactions](#op-4-8)<br>• [4.9 Create Expense](#op-4-9) |
+| **4** | [**Tenant Administration**](#section-4) | `POST /api/tenant-admin` | Tenant Admin (`TENANT_ACCOUNT` + `ROLE_TENANT_ADMIN`) | • [4.1 Fetch SaaS Subscription & Entitlements](#op-4-1)<br>• [4.2 Fetch Members Summary](#op-4-2)<br>• [4.3 Fetch Members Directory](#op-4-3)<br>• [4.4 Fetch Member Details](#op-4-4)<br>• [4.5 Fetch Trainers Summary](#op-4-5)<br>• [4.6 Fetch Trainers Address Book](#op-4-6)<br>• [4.7 Fetch Finance Overview](#op-4-7)<br>• [4.8 Fetch Expense Transactions](#op-4-8)<br>• [4.9 Create Expense](#op-4-9)<br>• [4.10 Fetch Plans Summary](#op-4-10)<br>• [4.11 Fetch Plan Filter Options](#op-4-11)<br>• [4.12 Fetch Plans Catalog](#op-4-12)<br>• [4.13 Create Membership Plan](#op-4-13)<br>• [4.14 Update Plan Availability](#op-4-14)<br>• [4.15 Fetch Join Requests](#op-4-15)<br>• [4.16 Approve Join Request](#op-4-16)<br>• [4.17 Reject Join Request](#op-4-17)<br>• [4.18 Fetch Admin Dashboard](#op-4-18)<br>• [4.19 Fetch Live Roster](#op-4-19) |
 
 ---
 
@@ -2696,6 +2696,596 @@ curl -X POST "http://localhost:8080/api/tenant-admin" \
          "category": "RENT",
          "amount": 1200.00,
          "description": "Gym facility lease"
+       }
+     }'
+```
+
+---
+
+<a id="op-4-10"></a>
+<a id="fetch-plans-summary"></a>
+### 4.10 Fetch Plans Summary (`FETCH_PLANS_SUMMARY`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Plans)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Retrieves the Plans mini-dashboard metrics: total active plans, total plans, and per-tier breakdown with theme keys.
+5. **Authentication & Authorization:** `TENANT_ACCOUNT` token with `ROLE_TENANT_ADMIN`.
+6. **Request Headers:** `Content-Type: application/json`, `Accept: application/json`, `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "FETCH_PLANS_SUMMARY"
+   }
+   ```
+10. **Success Response (`200 OK`):**
+    ```json
+    {
+      "message": "Plans summary retrieved successfully",
+      "status": 200,
+      "timestamp": "2026-11-25T16:40:00Z",
+      "plansSummaryResponse": {
+        "totalActivePlans": 4,
+        "totalPlans": 5,
+        "tierBreakdown": [
+          { "tierName": "ELITE", "themeKey": "GOLDEN", "totalPlanCount": 3, "activePlanCount": 2 },
+          { "tierName": "LEGENDARY", "themeKey": "PURPLE", "totalPlanCount": 2, "activePlanCount": 2 }
+        ]
+      }
+    }
+    ```
+11. **Error Responses:** `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`.
+12. **Implementation References:** `TenantAdminController`, `TenantAdminFactory`, `FetchPlansSummaryService`, `PlansSummaryResponse`.
+13. **Business Rules:** Default tiers (`ELITE` -> `GOLDEN`, `LEGENDARY` -> `PURPLE`) appear before custom tiers ordered alphabetically.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{ "tenantAdminRequestType": "FETCH_PLANS_SUMMARY" }'
+```
+
+---
+
+<a id="op-4-11"></a>
+<a id="fetch-plan-filter-options"></a>
+### 4.11 Fetch Plan Filter Options (`FETCH_PLAN_FILTER_OPTIONS`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Plans)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Returns persisted plan tiers, saved gym facilities, and the 20 canonical custom themes for Plans filters and Create Plan dropdowns.
+5. **Authentication & Authorization:** `TENANT_ACCOUNT` token with `ROLE_TENANT_ADMIN`.
+6. **Request Headers:** `Content-Type: application/json`, `Accept: application/json`, `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "FETCH_PLAN_FILTER_OPTIONS"
+   }
+   ```
+10. **Success Response (`200 OK`):**
+    ```json
+    {
+      "message": "Plan filter options retrieved successfully",
+      "status": 200,
+      "timestamp": "2026-11-25T16:40:00Z",
+      "planFilterOptionsResponse": {
+        "tiers": [
+          { "id": 1, "name": "ELITE", "themeKey": "GOLDEN", "defaultTier": true }
+        ],
+        "facilities": ["Cardio", "Sauna", "Weightlifting"],
+        "customThemes": ["OCEAN_BLUE", "EMERALD_GREEN", "CRIMSON_RED"]
+      }
+    }
+    ```
+11. **Error Responses:** `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`.
+12. **Implementation References:** `TenantAdminController`, `FetchPlanFilterOptionsService`, `PlanFilterOptionsResponse`.
+13. **Business Rules:** `customThemes` excludes `GOLDEN` and `PURPLE` (reserved for `ELITE` and `LEGENDARY`).
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{ "tenantAdminRequestType": "FETCH_PLAN_FILTER_OPTIONS" }'
+```
+
+---
+
+<a id="op-4-12"></a>
+<a id="fetch-plans"></a>
+### 4.12 Fetch Plans Catalog (`FETCH_PLANS`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Plans)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Retrieves a paginated, sorted, and JPA Specification-filtered list of gym membership plans.
+5. **Authentication & Authorization:** `TENANT_ACCOUNT` token with `ROLE_TENANT_ADMIN`.
+6. **Request Headers:** `Content-Type: application/json`, `Accept: application/json`, `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "FETCH_PLANS",
+     "fetchPlansRequest": {
+       "tier": "ELITE",
+       "hasOffer": true,
+       "active": true,
+       "isTrial": false,
+       "search": "summer",
+       "page": 0,
+       "size": 10,
+       "sortBy": "tier",
+       "sortDirection": "asc"
+     }
+   }
+   ```
+10. **Success Response (`200 OK`):**
+    ```json
+    {
+      "message": "Membership plans retrieved successfully",
+      "status": 200,
+      "timestamp": "2026-11-25T16:40:00Z",
+      "plansPageResponse": {
+        "content": [
+          {
+            "id": 1,
+            "name": "Elite Summer Offer",
+            "description": "Full gym & sauna access",
+            "tierId": 1,
+            "tierName": "ELITE",
+            "themeKey": "GOLDEN",
+            "facilities": ["Cardio", "Weightlifting"],
+            "basePrice": 100.00,
+            "discountType": "PERCENTAGE",
+            "discountValue": 15.00,
+            "finalPrice": 85.00,
+            "hasOffer": true,
+            "durationDays": 30,
+            "isTrial": false,
+            "active": true
+          }
+        ],
+        "page": 0,
+        "size": 10,
+        "totalElements": 1,
+        "totalPages": 1,
+        "last": true
+      }
+    }
+    ```
+11. **Error Responses:** `400 Bad Request` (invalid pagination/sortBy), `401 Unauthorized`, `403 Forbidden`.
+12. **Implementation References:** `FetchPlansService`, `MembershipPlanSpecification`, `FetchPlansRequest`, `PlanItemResponse`.
+13. **Business Rules:** Whitelisted sort fields: `id`, `name`, `basePrice`, `finalPrice`, `durationDays`, `active`, `tier` (mapped to `planTier.name`).
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "FETCH_PLANS",
+       "fetchPlansRequest": { "tier": "ALL", "page": 0, "size": 10 }
+     }'
+```
+
+---
+
+<a id="op-4-13"></a>
+<a id="create-plan"></a>
+### 4.13 Create Membership Plan (`CREATE_PLAN`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Plans)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Creates a membership plan with default or custom tier + theme, reusable facilities, and optional discount pricing, returning `201 Created`.
+5. **Authentication & Authorization:** `TENANT_ACCOUNT` token with `ROLE_TENANT_ADMIN`.
+6. **Request Headers:** `Content-Type: application/json`, `Accept: application/json`, `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "CREATE_PLAN",
+     "createPlanRequest": {
+       "name": "Spartan Trial Pass",
+       "description": "7-day introductory pass",
+       "tier": "SPARTAN",
+       "customTheme": "EMERALD_GREEN",
+       "facilities": ["Cardio", "CrossFit"],
+       "basePrice": 25.00,
+       "durationDays": 7,
+       "isTrial": true
+     }
+   }
+   ```
+10. **Success Response (`201 Created`):**
+    ```json
+    {
+      "message": "Membership plan created successfully",
+      "status": 201,
+      "timestamp": "2026-11-25T16:40:00Z",
+      "planItemResponse": {
+        "id": 2,
+        "name": "Spartan Trial Pass",
+        "description": "7-day introductory pass",
+        "tierId": 3,
+        "tierName": "SPARTAN",
+        "themeKey": "EMERALD_GREEN",
+        "facilities": ["Cardio", "CrossFit"],
+        "basePrice": 25.00,
+        "finalPrice": 25.00,
+        "hasOffer": false,
+        "durationDays": 7,
+        "isTrial": true,
+        "active": true
+      }
+    }
+    ```
+11. **Error Responses:** `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `409 Conflict` (duplicate plan name).
+12. **Implementation References:** `CreatePlanService`, `PlanHelper`, `MembershipCalculationHelper`, `CreatePlanRequest`.
+13. **Business Rules:** Auto-persists new custom tiers and facility names for reuse in filter dropdowns.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "CREATE_PLAN",
+       "createPlanRequest": {
+         "name": "Elite Monthly",
+         "tier": "ELITE",
+         "facilities": ["Weightlifting", "Cardio"],
+         "basePrice": 100.00,
+         "durationDays": 30
+       }
+     }'
+```
+
+---
+
+<a id="op-4-14"></a>
+<a id="update-plan-availability"></a>
+### 4.14 Update Plan Availability (`UPDATE_PLAN_AVAILABILITY`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Plans)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Toggles a membership plan's `active` status.
+5. **Authentication & Authorization:** `TENANT_ACCOUNT` token with `ROLE_TENANT_ADMIN`.
+6. **Request Headers:** `Content-Type: application/json`, `Accept: application/json`, `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "UPDATE_PLAN_AVAILABILITY",
+     "updatePlanAvailabilityRequest": {
+       "planId": 1,
+       "active": false
+     }
+   }
+   ```
+10. **Success Response (`200 OK`):** Returns updated `planItemResponse`.
+11. **Error Responses:** `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `404 Not Found`.
+12. **Implementation References:** `UpdatePlanAvailabilityService`, `UpdatePlanAvailabilityRequest`.
+13. **Business Rules:** Inactive plans cannot be assigned when approving new join requests.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "UPDATE_PLAN_AVAILABILITY",
+       "updatePlanAvailabilityRequest": { "planId": 1, "active": false }
+     }'
+```
+
+---
+
+<a id="op-4-15"></a>
+<a id="fetch-join-requests"></a>
+### 4.15 Fetch Join Requests (`FETCH_JOIN_REQUESTS`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Join Requests)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Retrieves a paginated, sorted, and filtered list of prospective member join requests.
+5. **Authentication & Authorization:** `TENANT_ACCOUNT` token with `ROLE_TENANT_ADMIN`.
+6. **Request Headers:** `Content-Type: application/json`, `Accept: application/json`, `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "FETCH_JOIN_REQUESTS",
+     "fetchJoinRequestsRequest": {
+       "status": "PENDING",
+       "search": "rivera",
+       "page": 0,
+       "size": 10,
+       "sortBy": "createdAt",
+       "sortDirection": "desc"
+     }
+   }
+   ```
+10. **Success Response (`200 OK`):** Returns `joinRequestsPageResponse` (`PagedResponse<JoinRequestItemResponse>`).
+11. **Error Responses:** `400 Bad Request` (invalid status filter or sortBy), `401 Unauthorized`, `403 Forbidden`.
+12. **Implementation References:** `FetchJoinRequestsService`, `JoinRequestSpecification`, `FetchJoinRequestsRequest`.
+13. **Business Rules:** `status` supports `ALL`, `PENDING`, `APPROVED`, `REJECTED`.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "FETCH_JOIN_REQUESTS",
+       "fetchJoinRequestsRequest": { "status": "PENDING", "page": 0, "size": 10 }
+     }'
+```
+
+---
+
+<a id="op-4-16"></a>
+<a id="approve-join-request"></a>
+### 4.16 Approve Join Request (`APPROVE_JOIN_REQUEST`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Join Requests)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Approves a `PENDING` join request, records `PAID` or `PARTIALLY_PAID` payment, provisions `TenantUser`, `Member` (`MEM-XXXXXXXX`), `MemberMembership`, `Revenue`, and Central `UserTenantRole` (`MEMBER`, `ACTIVE`).
+5. **Authentication & Authorization:** `TENANT_ACCOUNT` token with `ROLE_TENANT_ADMIN`.
+6. **Request Headers:** `Content-Type: application/json`, `Accept: application/json`, `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "APPROVE_JOIN_REQUEST",
+     "approveJoinRequest": {
+       "joinRequestId": 1,
+       "planId": 1,
+       "paymentStatus": "PARTIALLY_PAID",
+       "paidAmount": 40.00,
+       "paymentMode": "CASH",
+       "transactionReference": "CASH-001",
+       "adminNotes": "Remaining balance due next week",
+       "independent": true
+     }
+   }
+   ```
+10. **Success Response (`200 OK`):** Returns `approveJoinRequestResponse` (`joinRequestId`, `memberId`, `membershipId`, `gymId`, `status`, `paymentStatus`, `paymentMode`, `paidAmount`, `finalPrice`, `remainingDue`, `startDate`, `endDate`).
+11. **Error Responses:** `400 Bad Request` (invalid payment invariant), `403 Forbidden` (SaaS `maxMembers` quota exceeded), `404 Not Found`, `409 Conflict`.
+12. **Implementation References:** `ApproveJoinRequestService`, `JoinRequestHelper`, `ApproveJoinRequest`, `ApproveJoinRequestResponse`.
+13. **Business Rules:** Executes Tenant and Central transactions cleanly with tenant compensation rollback if Central `UserTenantRole` write fails.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "APPROVE_JOIN_REQUEST",
+       "approveJoinRequest": {
+         "joinRequestId": 1,
+         "planId": 1,
+         "paymentStatus": "PAID",
+         "paidAmount": 100.00,
+         "paymentMode": "ONLINE"
+       }
+     }'
+```
+
+---
+
+<a id="op-4-17"></a>
+<a id="reject-join-request"></a>
+### 4.17 Reject Join Request (`REJECT_JOIN_REQUEST`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Join Requests)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Marks a `PENDING` join request as `REJECTED` with optional `adminNotes`.
+5. **Authentication & Authorization:** `TENANT_ACCOUNT` token with `ROLE_TENANT_ADMIN`.
+6. **Request Headers:** `Content-Type: application/json`, `Accept: application/json`, `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "REJECT_JOIN_REQUEST",
+     "rejectJoinRequest": {
+       "joinRequestId": 1,
+       "adminNotes": "Evening capacity currently full"
+     }
+   }
+   ```
+10. **Success Response (`200 OK`):** Returns updated `joinRequestItemResponse`.
+11. **Error Responses:** `400 Bad Request` (request is not `PENDING`), `404 Not Found`.
+12. **Implementation References:** `RejectJoinRequestService`, `RejectJoinRequest`.
+13. **Business Rules:** Re-reviewing an already `APPROVED` or `REJECTED` request is strictly rejected.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "REJECT_JOIN_REQUEST",
+       "rejectJoinRequest": { "joinRequestId": 1, "adminNotes": "Incomplete documents" }
+     }'
+```
+
+---
+
+<a id="op-4-18"></a>
+<a id="fetch-admin-dashboard"></a>
+### 4.18 Fetch Admin Dashboard (`FETCH_ADMIN_DASHBOARD`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Dashboard)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Retrieves the executive Admin Dashboard snapshot: KPIs (`totalMembers`, `liveMembers`, `totalRevenue`, `activeRate`), active tier breakdowns, membership card, revenue card (`NEW_MEMBERSHIP`, `RENEWAL`, `OTHER`), and expiring-soon card (`expiringSoonWindowDays`, `expiringSoonCount`, `liveExpiringSoonCount`).
+5. **Authentication & Authorization:** Requires authenticated caller with `TENANT_ACCOUNT` token and `ROLE_TENANT_ADMIN` authority.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "FETCH_ADMIN_DASHBOARD",
+     "fetchAdminDashboardRequest": {
+       "referenceDate": "2026-11-25"
+     }
+   }
+   ```
+   **Validation Rules:**
+   - `tenantAdminRequestType`: Required enum string (`FETCH_ADMIN_DASHBOARD`).
+   - `fetchAdminDashboardRequest`: Optional (`referenceDate` defaults to today).
+10. **Success Response (`200 OK`):**
+    ```json
+    {
+      "message": "Admin dashboard retrieved successfully",
+      "status": 200,
+      "timestamp": "2026-11-25T16:40:00Z",
+      "adminDashboardResponse": {
+        "totalMembers": 10,
+        "liveMembers": 0,
+        "totalRevenue": 950.00,
+        "activeRate": 80.00,
+        "activeByTier": [
+          { "tierName": "ELITE", "themeKey": "GOLDEN", "count": 5 },
+          { "tierName": "LEGENDARY", "themeKey": "PURPLE", "count": 3 }
+        ],
+        "membershipCard": {
+          "totalMembers": 10,
+          "tierBreakdown": [
+            { "tierName": "ELITE", "themeKey": "GOLDEN", "count": 5 },
+            { "tierName": "LEGENDARY", "themeKey": "PURPLE", "count": 3 }
+          ]
+        },
+        "revenueCard": {
+          "totalRevenue": 950.00,
+          "newMembershipRevenue": 500.00,
+          "renewalRevenue": 300.00,
+          "otherRevenue": 150.00
+        },
+        "membershipExpiryCard": {
+          "expiringSoonCount": 3,
+          "expiringSoonWindowDays": 7,
+          "liveExpiringSoonCount": 0
+        }
+      }
+    }
+    ```
+11. **Error Responses:** `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`.
+12. **Implementation References:** `TenantAdminController`, `FetchAdminDashboardService`, `AdminDashboardResponse`.
+13. **Business Rules:** `liveMembers` and `liveExpiringSoonCount` delegate to `AttendanceQueryPort` (stubbed to `0`). `activeRate` returns `0.00` safely when `totalMembers == 0`.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "FETCH_ADMIN_DASHBOARD"
+     }'
+```
+
+---
+
+<a id="op-4-19"></a>
+<a id="fetch-live-roster"></a>
+### 4.19 Fetch Live Roster (`FETCH_LIVE_ROSTER`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Live Roster)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Queries live occupancy metrics (`totalLiveCount`, `avgTimeSpentMinutes`, `liveExpiredCount`, `liveTrialCount`) and a paginated list of members currently checked into the gym via `AttendanceQueryPort`.
+5. **Authentication & Authorization:** Requires authenticated caller with `TENANT_ACCOUNT` token and `ROLE_TENANT_ADMIN` authority.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "FETCH_LIVE_ROSTER",
+     "fetchLiveRosterRequest": {
+       "search": "alex",
+       "membershipFilter": "ALL",
+       "page": 0,
+       "size": 10,
+       "sortBy": "checkInTime",
+       "sortDirection": "desc"
+     }
+   }
+   ```
+   **Validation Rules:**
+   - `tenantAdminRequestType`: Required enum string (`FETCH_LIVE_ROSTER`).
+   - `membershipFilter`: Optional (`ALL`, `EXPIRED`, `TRIAL`, defaults to `ALL`).
+   - `sortBy`: Whitelisted fields only (`checkInTime`, `memberName`, `elapsedMinutes`).
+10. **Success Response (`200 OK`):**
+    ```json
+    {
+      "message": "Live roster retrieved successfully",
+      "status": 200,
+      "timestamp": "2026-11-25T16:40:00Z",
+      "liveRosterResponse": {
+        "totalLiveCount": 0,
+        "avgTimeSpentMinutes": 0.0,
+        "liveExpiredCount": 0,
+        "liveTrialCount": 0,
+        "roster": {
+          "content": [],
+          "page": 0,
+          "size": 10,
+          "totalElements": 0,
+          "totalPages": 0,
+          "last": true
+        }
+      }
+    }
+    ```
+11. **Error Responses:** `400 Bad Request` (invalid `membershipFilter`, pagination, or `sortBy`), `401 Unauthorized`, `403 Forbidden`.
+12. **Implementation References:** `TenantAdminController`, `FetchLiveRosterService`, `AttendanceQueryPort`, `LiveRosterResponse`.
+13. **Business Rules:** Delegates all live traffic queries to `AttendanceQueryPort` until the Attendance module arrives.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "FETCH_LIVE_ROSTER",
+       "fetchLiveRosterRequest": {
+         "membershipFilter": "ALL",
+         "page": 0,
+         "size": 10
        }
      }'
 ```

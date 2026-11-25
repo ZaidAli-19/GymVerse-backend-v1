@@ -41,4 +41,11 @@ public interface RevenueRepository extends JpaRepository<Revenue, Long> {
             GROUP BY r.revenueType
             """)
     List<Object[]> sumAmountGroupedByRevenueTypeBetween(@Param("start") Instant start, @Param("end") Instant end);
+
+    @Query("""
+            SELECT r.revenueType, COALESCE(SUM(r.amount), 0)
+            FROM Revenue r
+            GROUP BY r.revenueType
+            """)
+    List<Object[]> sumAmountGroupedByRevenueType();
 }

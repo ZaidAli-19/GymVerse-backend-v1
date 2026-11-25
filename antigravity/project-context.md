@@ -11,11 +11,11 @@
 | **Project Name** | `GymVerse-Backend-v2` |
 | **Repository Root** | `D:\projects\GymVerse-Backend-v2` |
 | **Current Git Branch** | `GymVerse/dev` |
-| **Current Project Phase** | **Phase 5: In-Gym Tenant Administration Module (7-Page Operational Suite)** |
-| **Current Phase Stage** | **Phase 5 Active Implementation (Story 5.6 Completed)** |
-| **Last Completed Story** | **Story 5.6: Finance Analytics Suite & Expense Ledger** |
-| **Immediate Next Phase / Story** | **Story 5.7: Admin Dashboard, Live Roster Gateway & API Payloads Documentation** |
-| **Test Suite Health** | **Phase 5 `tenantAdmin` Unit & MySQL Integration Verification: 47/47 Passing (0 Failures, 0 Errors)** |
+| **Current Project Phase** | **Phase 5: In-Gym Tenant Administration Module [✅ 100% COMPLETED]** |
+| **Current Phase Stage** | **Phase 5 Completed (Stories 5.1 – 5.7 Verified; Ready for Review & Commit)** |
+| **Last Completed Story** | **Story 5.7: Admin Dashboard, Live Roster Gateway & API Payloads Documentation** |
+| **Immediate Next Phase / Story** | **Phase 6: Tenant Member & Reusable Geofence Attendance / Live Traffic Module** *(awaiting planning/kickoff)* |
+| **Test Suite Health** | **Phase 5 `tenantAdmin` Unit & MySQL Integration Verification: 50/50 Passing (0 Failures, 0 Errors)** |
 | **Protected Code Status** | All 8 classes in `com.company.GymVerse.multitanancy` remain 100% byte-for-byte untouched |
 
 ---
@@ -152,21 +152,18 @@
 | **Story 5.4** | Members Directory, Mini-Dashboard & Member Details View | `service/members/`, `MemberSpecification`, `FETCH_MEMBERS_SUMMARY`, `FETCH_MEMBERS`, `FETCH_MEMBER_DETAILS`, `docs/payloads.md` | ✅ Completed |
 | **Story 5.5** | Trainers & Staff Summary & Address Book | `service/trainers/`, `TrainerSpecification`, `FETCH_TRAINERS_SUMMARY`, `FETCH_TRAINERS`, `docs/payloads.md` | ✅ Completed |
 | **Story 5.6** | Finance Analytics Suite & Expense Ledger | `service/finance/`, `ExpenseSpecification`, `FETCH_FINANCE_OVERVIEW`, `FETCH_EXPENSE_TRANSACTIONS`, `CREATE_EXPENSE`, `docs/payloads.md` | ✅ Completed |
-| **Story 5.7** | Admin Dashboard, Live Roster Gateway & API Docs | `service/dashboard/`, `service/liveRoster/`, `FETCH_ADMIN_DASHBOARD`, `FETCH_LIVE_ROSTER`, `docs/payloads.md` | ⏳ Next |
+| **Story 5.7** | Admin Dashboard, Live Roster Gateway & API Docs | `service/dashboard/`, `service/liveRoster/`, `FETCH_ADMIN_DASHBOARD`, `FETCH_LIVE_ROSTER`, `docs/payloads.md` (`4.1`–`4.19`) | ✅ Completed |
 
 ---
 
-## 5. Scope & Target Artifacts for Immediate Next Work: Story 5.7 (Admin Dashboard, Live Roster Gateway & API Payloads Documentation)
+## 5. Scope & Target Artifacts for Immediate Next Work: Phase 6 Kickoff (Tenant Member & Live Attendance Module)
 
-- **Active Stage:** `Phase 5 Implementation — Story 5.7 (Final Story of Phase 5)`
-- **Next Story:** [`story-5.7-admin-dashboard-and-live-roster.md`](file:///D:/projects/GymVerse-Backend-v2/_bmad-output/planning-artifacts/phase-5-tenant-admin/story-5.7-admin-dashboard-and-live-roster.md)
-- **Target Operations (`/api/tenant-admin`):**
-  1. `FETCH_ADMIN_DASHBOARD` (top KPIs: `totalMembers`, `liveMembers` via `AttendanceQueryPort`, `totalRevenue`, `activeRate`; `activeByTier`, `membershipCard`, `revenueCard`, `membershipExpiryCard` using `TenantOperationsProperties.getExpiringSoonDays()`).
-  2. `FETCH_LIVE_ROSTER` (paginated/filtered live roster via `AttendanceQueryPort`, whitelisted sorts: `checkInTime`, `memberName`, `elapsedMinutes`, returning `0` / empty page safely while stubbed).
+- **Active Stage:** `Phase 5 Completed (100% of Stories 5.1–5.7 Done & Verified)`
+- **Ready for Review:** Stories 5.3 – 5.7 implementation changes are staged locally in the working tree (zero autonomous commits per `RULES.md` Rule 1).
+- **Next Integration Hooks (`// TODO [ATTENDANCE-MODULE]`):**
+  - Replace `AttendanceQueryStubImpl` with the real geofence Attendance & Live Traffic implementation of [`AttendanceQueryPort.java`](file:///D:/projects/GymVerse-Backend-v2/src/main/java/com/company/GymVerse/attendance/service/AttendanceQueryPort.java).
+  - Plugs directly into `FETCH_ADMIN_DASHBOARD`, `FETCH_LIVE_ROSTER`, `FETCH_MEMBERS_SUMMARY`, `FETCH_MEMBERS`, `FETCH_MEMBER_DETAILS`, and `FETCH_TRAINERS_SUMMARY` without modifying any Tenant Admin controller or service contract.
 - **Invariants:**
-  - Subfolder classification under `dashboard/` and `liveRoster/` in `service/`, `request/`, and `response/`.
-  - Live attendance calls strictly via `AttendanceQueryPort` with `// TODO [ATTENDANCE-MODULE]` hooks.
-  - Document `FETCH_ADMIN_DASHBOARD` and `FETCH_LIVE_ROSTER` (plus verify any remaining Phase 5 operations) in `docs/payloads.md`.
   - Multi-tenancy core untouched (8 protected classes); no autonomous git commit/push (`RULES.md` Rule 1).
 
 ---
