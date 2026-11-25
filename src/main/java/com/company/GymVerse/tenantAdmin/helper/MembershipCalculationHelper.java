@@ -1,7 +1,9 @@
 package com.company.GymVerse.tenantAdmin.helper;
 
 import com.company.GymVerse.exceptions.common.BadRequestException;
+import com.company.GymVerse.models.tenant.MemberMembership;
 import com.company.GymVerse.models.tenant.enums.DiscountType;
+import com.company.GymVerse.tenantAdmin.response.enums.MemberMembershipStatus;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -77,6 +79,59 @@ public final class MembershipCalculationHelper {
         boolean flagTrialActive = membershipTrialFlag && membershipActive
                 && membershipEndDate != null && !membershipEndDate.isBefore(today);
         return dateTrialActive || flagTrialActive;
+    }
+
+    /**
+     * Evaluates dual trial classification (members.trial_end_date or active trial membership/plan flag).
+     */
+    public static boolean isTrialActive(
+            final LocalDate memberTrialEndDate,
+            final MemberMembership membership,
+            final LocalDate today
+    ) {
+        boolean membershipTrialFlag = membership != null
+                && (membership.isTrial() || (membership.getPlan() != null && membership.getPlan().isTrial()));
+        LocalDate membershipEndDate = membership != null ? membership.getEndDate() : null;
+        boolean membershipActive = membership != null && membership.isActive();
+        return isTrialActive(memberTrialEndDate, membershipTrialFlag, membershipEndDate, membershipActive, today);
+    }
+
+    /**
+     * Resolves a member's operational status (TRIAL, ACTIVE, or EXPIRED) consistently across directory and details views.
+     */
+    public static MemberMembershipStatus resolveMemberStatus(
+            final LocalDate memberTrialEndDate,
+            final MemberMembership membership,
+            final LocalDate today
+    ) {
+        if (isTrialActive(memberTrialEndDate, membership, today)) {
+            return MemberMembershipStatus.TRIAL;
+        }
+        boolean hasActiveMembership = membership != null
+                && membership.isActive()
+                && membership.getEndDate() != null
+                && !membership.getEndDate().isBefore(today);
+        return hasActiveMembership ? MemberMembershipStatus.ACTIVE : MemberMembershipStatus.EXPIRED;
+    }
+
+    /**
+     * Resolves non-negative days remaining until active membership expiry or trial end date.
+     */
+    public static long resolveMemberDaysRemaining(
+            final LocalDate memberTrialEndDate,
+            final MemberMembership membership,
+            final LocalDate today
+    ) {
+        if (membership != null
+                && membership.isActive()
+                && membership.getEndDate() != null
+                && !membership.getEndDate().isBefore(today)) {
+            return calculateDaysRemaining(membership.getEndDate(), today);
+        }
+        if (memberTrialEndDate != null && !memberTrialEndDate.isBefore(today)) {
+            return calculateDaysRemaining(memberTrialEndDate, today);
+        }
+        return 0L;
     }
 
     /**

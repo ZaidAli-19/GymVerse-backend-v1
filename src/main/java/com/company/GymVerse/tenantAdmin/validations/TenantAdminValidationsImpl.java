@@ -14,6 +14,8 @@ import com.company.GymVerse.repositories.tenant.PlanTierRepository;
 import com.company.GymVerse.tenantAdmin.request.TenantAdminRequest;
 import com.company.GymVerse.tenantAdmin.request.members.ApproveJoinRequest;
 import com.company.GymVerse.tenantAdmin.request.members.FetchJoinRequestsRequest;
+import com.company.GymVerse.tenantAdmin.request.members.FetchMemberDetailsRequest;
+import com.company.GymVerse.tenantAdmin.request.members.FetchMembersRequest;
 import com.company.GymVerse.tenantAdmin.request.members.RejectJoinRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.CreatePlanRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.FetchPlansRequest;
@@ -43,6 +45,9 @@ public class TenantAdminValidationsImpl implements TenantAdminValidations {
     );
     private static final Set<String> ALLOWED_JOIN_REQUEST_SORT_FIELDS = Set.of(
             "id", "createdAt", "reviewedAt", "status", "firstName", "lastName", "email"
+    );
+    private static final Set<String> ALLOWED_MEMBER_SORT_FIELDS = Set.of(
+            "id", "joinDate", "gymId", "user.firstName"
     );
     private static final BigDecimal ONE_HUNDRED = new BigDecimal("100");
 
@@ -258,6 +263,31 @@ public class TenantAdminValidationsImpl implements TenantAdminValidations {
         }
         if (request.getAdminNotes() != null && request.getAdminNotes().length() > 1000) {
             throw new BadRequestException("adminNotes must not exceed 1000 characters");
+        }
+    }
+
+    @Override
+    public Pageable validateFetchMembers(final FetchMembersRequest request) {
+        if (request == null) {
+            return validateAndBuildPageable(null, null, "id", "asc", "id", ALLOWED_MEMBER_SORT_FIELDS);
+        }
+        return validateAndBuildPageable(
+                request.getPage(),
+                request.getSize(),
+                request.getSortBy(),
+                request.getSortDirection(),
+                "id",
+                ALLOWED_MEMBER_SORT_FIELDS
+        );
+    }
+
+    @Override
+    public void validateFetchMemberDetails(final FetchMemberDetailsRequest request) {
+        if (request == null) {
+            throw new BadRequestException("fetchMemberDetailsRequest payload must not be null");
+        }
+        if (request.getMemberId() == null || request.getMemberId() <= 0) {
+            throw new BadRequestException("memberId must be a positive identifier");
         }
     }
 

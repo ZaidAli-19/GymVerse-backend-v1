@@ -13,7 +13,7 @@ Click on any module or operation to jump directly to its API specification and c
 | **1** | [**Platform Administration**](#section-1) | `POST /api/platform-admin` | Platform Admin (`ROLE_PLATFORM_ADMIN`) | • [1.1 Create SaaS Plan](#op-1-1)<br>• [1.2 Catalog Query & Pagination](#op-1-2)<br>• [1.3 Fetch Plan by ID](#op-1-3)<br>• [1.4 Update Plan Availability](#op-1-4)<br>• [1.5 Gym Tenants Directory](#op-1-5) |
 | **2** | [**Authentication & Security**](#section-2) | `POST /api/auth` | Public & Master Account | • [2.1 Signup Initiate](#op-2-1)<br>• [2.2 Signup Verify OTP](#op-2-2)<br>• [2.3 Signup Complete](#op-2-3)<br>• [2.4 Password Login](#op-2-4)<br>• [2.5 Login OTP Initiate](#op-2-5)<br>• [2.6 Login OTP Verify](#op-2-6)<br>• [2.7 Token Refresh](#op-2-7)<br>• [2.8 Forgot Password Initiate](#op-2-8)<br>• [2.9 Forgot Password Verify OTP](#op-2-9)<br>• [2.10 Forgot Password Reset](#op-2-10)<br>• [2.11 Switch Tenant & Token Exchange](#op-2-11) |
 | **3** | [**Central User Gateway**](#section-3) | `POST /api/user` | Master User (`MASTER_ACCOUNT`) | • [3.1 Register Gym & Dynamic Provisioning](#op-3-1)<br>• [3.2 Fetch My Tenants Directory](#op-3-2)<br>• [3.3 Fetch Gym by Code (Discovery)](#op-3-3)<br>• [3.4 Submit Join Request](#op-3-4) |
-| **4** | [**Tenant Administration**](#section-4) | `POST /api/tenant-admin` | Tenant Admin (`TENANT_ACCOUNT` + `ROLE_TENANT_ADMIN`) | • [4.1 Fetch SaaS Subscription & Entitlements](#op-4-1) |
+| **4** | [**Tenant Administration**](#section-4) | `POST /api/tenant-admin` | Tenant Admin (`TENANT_ACCOUNT` + `ROLE_TENANT_ADMIN`) | • [4.1 Fetch SaaS Subscription & Entitlements](#op-4-1)<br>• [4.2 Fetch Members Summary](#op-4-2)<br>• [4.3 Fetch Members Directory](#op-4-3)<br>• [4.4 Fetch Member Details](#op-4-4) |
 
 ---
 
@@ -1960,6 +1960,286 @@ curl -X POST "http://localhost:8080/api/tenant-admin" \
      -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
      -d '{
        "tenantAdminRequestType": "FETCH_TENANT_SUBSCRIPTION"
+     }'
+```
+
+---
+
+<a id="op-4-2"></a>
+<a id="fetch-members-summary"></a>
+### 4.2 Fetch Members Summary (`FETCH_MEMBERS_SUMMARY`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Members)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Retrieves the Members mini-dashboard counters: total members, currently live checked-in members (delegated to `AttendanceQueryPort`), expired members, and active trial members (supporting both `members.trial_end_date >= today` and active `is_trial = true` memberships/plans).
+5. **Authentication & Authorization:** Requires authenticated caller with `TENANT_ACCOUNT` token and `ROLE_TENANT_ADMIN` authority.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "FETCH_MEMBERS_SUMMARY"
+   }
+   ```
+   **Validation Rules:**
+   - `tenantAdminRequestType`: Required enum string (`FETCH_MEMBERS_SUMMARY`).
+10. **Success Response:**
+    - **HTTP Status:** `200 OK`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "Members summary retrieved successfully",
+        "status": 200,
+        "timestamp": "2026-11-25T16:10:00Z",
+        "membersSummaryResponse": {
+          "totalMembersCount": 42,
+          "liveCount": 0,
+          "expiredCount": 5,
+          "trialCount": 7
+        }
+      }
+      ```
+11. **Error Responses:**
+    - `400 Bad Request`: Missing or null `tenantAdminRequestType`.
+    - `401 Unauthorized`: Missing or invalid Bearer token.
+    - `403 Forbidden`: Master account token used instead of tenant-scoped token, or caller lacks `ROLE_TENANT_ADMIN`.
+12. **Implementation References:**
+    - **Controller:** `com.company.GymVerse.tenantAdmin.controller.TenantAdminController`
+    - **Factory:** `com.company.GymVerse.tenantAdmin.factory.TenantAdminFactory`
+    - **Service:** `com.company.GymVerse.tenantAdmin.service.members.FetchMembersSummaryService`
+    - **Specification:** `com.company.GymVerse.tenantAdmin.specifications.members.MemberSpecification`
+    - **Mapper:** `com.company.GymVerse.tenantAdmin.mapper.TenantAdminMapperImpl`
+13. **Business Rules:**
+    - `liveCount` delegates to `AttendanceQueryPort.getLiveAttendanceSummary(...)` (currently stubbed to `0` until the Attendance module arrives).
+    - `trialCount` classifies both date-based trials (`members.trial_end_date >= today`) and flag-based trials (`is_trial = true` on active `member_memberships` or `membership_plans` with `end_date >= today`).
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "FETCH_MEMBERS_SUMMARY"
+     }'
+```
+
+---
+
+<a id="op-4-3"></a>
+<a id="fetch-members"></a>
+### 4.3 Fetch Members Directory (`FETCH_MEMBERS`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Members)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Retrieves a paginated, sorted, and dynamically filtered directory of gym members (`ALL`, `LIVE`, `EXPIRED`, `TRIAL`) with partial case-insensitive search across name, email, phone number, and `gymId`.
+5. **Authentication & Authorization:** Requires authenticated caller with `TENANT_ACCOUNT` token and `ROLE_TENANT_ADMIN` authority.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "FETCH_MEMBERS",
+     "fetchMembersRequest": {
+       "statusFilter": "ALL",
+       "search": "rivera",
+       "page": 0,
+       "size": 10,
+       "sortBy": "user.firstName",
+       "sortDirection": "asc"
+     }
+   }
+   ```
+   **Validation Rules:**
+   - `tenantAdminRequestType`: Required enum string (`FETCH_MEMBERS`).
+   - `fetchMembersRequest`: Optional; defaults to `statusFilter = ALL`, `page = 0`, `size = 10`, `sortBy = "id"`, `sortDirection = "asc"`.
+   - `statusFilter`: Optional enum (`ALL`, `LIVE`, `EXPIRED`, `TRIAL`).
+   - `page`: Integer `>= 0`.
+   - `size`: Integer `1..100`.
+   - `sortBy`: Whitelisted fields only (`id`, `joinDate`, `gymId`, `user.firstName`).
+   - `sortDirection`: `asc` or `desc`.
+10. **Success Response:**
+    - **HTTP Status:** `200 OK`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "Members retrieved successfully",
+        "status": 200,
+        "timestamp": "2026-11-25T16:10:00Z",
+        "membersPageResponse": {
+          "content": [
+            {
+              "memberId": 1,
+              "gymId": "MEM-A1B2C3D4",
+              "fullName": "Alex Rivera",
+              "email": "alex@gym.com",
+              "phoneNumber": "555-0101",
+              "planName": "Elite Monthly",
+              "tier": "ELITE",
+              "themeKey": "GOLDEN",
+              "membershipStatus": "ACTIVE",
+              "daysRemaining": 20,
+              "paidAmount": 60.00,
+              "finalPrice": 100.00,
+              "paymentStatus": "PARTIALLY_PAID",
+              "checkedInToday": false
+            }
+          ],
+          "page": 0,
+          "size": 10,
+          "totalElements": 1,
+          "totalPages": 1,
+          "last": true
+        }
+      }
+      ```
+11. **Error Responses:**
+    - `400 Bad Request`: Invalid `page`, `size`, `sortBy`, `sortDirection`, or `statusFilter`.
+    - `401 Unauthorized`: Missing or invalid Bearer token.
+    - `403 Forbidden`: Caller lacks `TENANT_ACCOUNT` or `ROLE_TENANT_ADMIN`.
+12. **Implementation References:**
+    - **Controller:** `com.company.GymVerse.tenantAdmin.controller.TenantAdminController`
+    - **Factory:** `com.company.GymVerse.tenantAdmin.factory.TenantAdminFactory`
+    - **Service:** `com.company.GymVerse.tenantAdmin.service.members.FetchMembersService`
+    - **Specification:** `com.company.GymVerse.tenantAdmin.specifications.members.MemberSpecification`
+    - **Request DTO:** `com.company.GymVerse.tenantAdmin.request.members.FetchMembersRequest`
+    - **Response DTO:** `com.company.GymVerse.tenantAdmin.response.members.MemberListItemResponse`
+13. **Business Rules:**
+    - `LIVE` delegates live member ID lookup to `AttendanceQueryPort.getLiveMemberIds()` (returns an empty page safely while stubbed).
+    - `checkedInToday` delegates to `AttendanceQueryPort.getMemberAttendanceSnapshot(memberId)`.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "FETCH_MEMBERS",
+       "fetchMembersRequest": {
+         "statusFilter": "ALL",
+         "page": 0,
+         "size": 10,
+         "sortBy": "joinDate",
+         "sortDirection": "desc"
+       }
+     }'
+```
+
+---
+
+<a id="op-4-4"></a>
+<a id="fetch-member-details"></a>
+### 4.4 Fetch Member Details (`FETCH_MEMBER_DETAILS`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Members)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Retrieves the full Member Details view structured across 4 UI cards: Attendance & Activity, Quick Stats, Membership Details, and Contact Details.
+5. **Authentication & Authorization:** Requires authenticated caller with `TENANT_ACCOUNT` token and `ROLE_TENANT_ADMIN` authority.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "FETCH_MEMBER_DETAILS",
+     "fetchMemberDetailsRequest": {
+       "memberId": 1
+     }
+   }
+   ```
+   **Validation Rules:**
+   - `tenantAdminRequestType`: Required enum string (`FETCH_MEMBER_DETAILS`).
+   - `fetchMemberDetailsRequest`: Required object.
+   - `memberId`: Required positive `Long` (`> 0`).
+10. **Success Response:**
+    - **HTTP Status:** `200 OK`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "Member details retrieved successfully",
+        "status": 200,
+        "timestamp": "2026-11-25T16:10:00Z",
+        "memberDetailsResponse": {
+          "attendanceActivity": {
+            "totalVisitCount": 0,
+            "currentStreak": 0,
+            "dailyAttendance": {
+              "checkedIn": false,
+              "checkInTime": null,
+              "elapsedMinutes": null
+            }
+          },
+          "quickStats": {
+            "totalAmountPaid": 140.00,
+            "daysLeftUntilExpiry": 20
+          },
+          "membershipDetails": {
+            "planName": "Elite Monthly",
+            "tier": "ELITE",
+            "themeKey": "GOLDEN",
+            "facilities": ["Cardio", "Weightlifting"],
+            "joinDate": "2026-11-15",
+            "startDate": "2026-11-15",
+            "expiryDate": "2026-12-15",
+            "remainingDays": 20,
+            "finalPrice": 100.00,
+            "paidAmount": 60.00,
+            "paymentStatus": "PARTIALLY_PAID",
+            "isTrial": false,
+            "membershipStatus": "ACTIVE"
+          },
+          "contactDetails": {
+            "memberId": 1,
+            "gymId": "MEM-A1B2C3D4",
+            "firstName": "Alex",
+            "lastName": "Rivera",
+            "email": "alex@gym.com",
+            "phoneNumber": "555-0101"
+          }
+        }
+      }
+      ```
+11. **Error Responses:**
+    - `400 Bad Request`: Missing payload or non-positive `memberId`.
+    - `401 Unauthorized`: Missing or invalid Bearer token.
+    - `403 Forbidden`: Caller lacks `TENANT_ACCOUNT` or `ROLE_TENANT_ADMIN`.
+    - `404 Not Found`: No member exists with the specified `memberId`.
+12. **Implementation References:**
+    - **Controller:** `com.company.GymVerse.tenantAdmin.controller.TenantAdminController`
+    - **Factory:** `com.company.GymVerse.tenantAdmin.factory.TenantAdminFactory`
+    - **Service:** `com.company.GymVerse.tenantAdmin.service.members.FetchMemberDetailsService`
+    - **Request DTO:** `com.company.GymVerse.tenantAdmin.request.members.FetchMemberDetailsRequest`
+    - **Response DTO:** `com.company.GymVerse.tenantAdmin.response.members.MemberDetailsResponse`
+13. **Business Rules:**
+    - `attendanceActivity` delegates to `AttendanceQueryPort.getMemberAttendanceSnapshot(memberId)`.
+    - `quickStats.totalAmountPaid` sums all `revenue.amount` entries tied to the member's memberships.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "FETCH_MEMBER_DETAILS",
+       "fetchMemberDetailsRequest": {
+         "memberId": 1
+       }
      }'
 ```
 

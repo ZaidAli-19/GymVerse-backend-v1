@@ -2,6 +2,9 @@ package com.company.GymVerse.tenantAdmin.response;
 
 import com.company.GymVerse.tenantAdmin.response.members.ApproveJoinRequestResponse;
 import com.company.GymVerse.tenantAdmin.response.members.JoinRequestItemResponse;
+import com.company.GymVerse.tenantAdmin.response.members.MemberDetailsResponse;
+import com.company.GymVerse.tenantAdmin.response.members.MemberListItemResponse;
+import com.company.GymVerse.tenantAdmin.response.members.MembersSummaryResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.PlanFilterOptionsResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.PlanItemResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.PlansSummaryResponse;
@@ -38,4 +41,7 @@ public class TenantAdminResponse {
     private PagedResponse<JoinRequestItemResponse> joinRequestsPageResponse;
     private JoinRequestItemResponse joinRequestItemResponse;
     private ApproveJoinRequestResponse approveJoinRequestResponse;
+    private MembersSummaryResponse membersSummaryResponse;
+    private PagedResponse<MemberListItemResponse> membersPageResponse;
+    private MemberDetailsResponse memberDetailsResponse;
 }

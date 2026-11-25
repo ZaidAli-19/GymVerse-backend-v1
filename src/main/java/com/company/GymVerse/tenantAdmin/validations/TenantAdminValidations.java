@@ -6,6 +6,8 @@ import com.company.GymVerse.models.tenant.enums.PaymentStatus;
 import com.company.GymVerse.tenantAdmin.request.TenantAdminRequest;
 import com.company.GymVerse.tenantAdmin.request.members.ApproveJoinRequest;
 import com.company.GymVerse.tenantAdmin.request.members.FetchJoinRequestsRequest;
+import com.company.GymVerse.tenantAdmin.request.members.FetchMemberDetailsRequest;
+import com.company.GymVerse.tenantAdmin.request.members.FetchMembersRequest;
 import com.company.GymVerse.tenantAdmin.request.members.RejectJoinRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.CreatePlanRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.FetchPlansRequest;
@@ -85,4 +87,14 @@ public interface TenantAdminValidations {
      * Validates RejectJoinRequest structural payload constraints.
      */
     void validateRejectJoinRequest(RejectJoinRequest request);
+
+    /**
+     * Validates pagination and whitelisted sorting fields for FETCH_MEMBERS queries.
+     */
+    Pageable validateFetchMembers(FetchMembersRequest request);
+
+    /**
+     * Validates FetchMemberDetailsRequest required positive memberId.
+     */
+    void validateFetchMemberDetails(FetchMemberDetailsRequest request);
 }

@@ -1,5 +1,6 @@
 package com.company.GymVerse.tenantAdmin.mapper;
 
+import com.company.GymVerse.attendance.dto.MemberAttendanceSnapshot;
 import com.company.GymVerse.models.central.GymSubscription;
 import com.company.GymVerse.models.tenant.JoinRequest;
 import com.company.GymVerse.models.tenant.Member;
@@ -11,6 +12,9 @@ import com.company.GymVerse.tenantAdmin.response.PagedResponse;
 import com.company.GymVerse.tenantAdmin.response.TenantAdminResponse;
 import com.company.GymVerse.tenantAdmin.response.members.ApproveJoinRequestResponse;
 import com.company.GymVerse.tenantAdmin.response.members.JoinRequestItemResponse;
+import com.company.GymVerse.tenantAdmin.response.members.MemberDetailsResponse;
+import com.company.GymVerse.tenantAdmin.response.members.MemberListItemResponse;
+import com.company.GymVerse.tenantAdmin.response.members.MembersSummaryResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.PlanFilterOptionsResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.PlanItemResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.PlanTierOptionResponse;
@@ -19,6 +23,8 @@ import com.company.GymVerse.tenantAdmin.response.plans.TierCountResponse;
 import com.company.GymVerse.tenantAdmin.response.subscription.TenantSubscriptionDetailsResponse;
 import org.springframework.data.domain.Page;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -56,6 +62,51 @@ public interface TenantAdminMapper {
     );
 
     TenantAdminResponse toApproveJoinRequestAdminResponse(String message, ApproveJoinRequestResponse payload);
+
+    TenantAdminResponse toMembersSummaryResponse(
+            String message,
+            long totalMembersCount,
+            long liveCount,
+            long expiredCount,
+            long trialCount
+    );
+
+    MemberListItemResponse toMemberListItem(
+            Member member,
+            MemberMembership membership,
+            boolean checkedInToday,
+            LocalDate today
+    );
+
+    TenantAdminResponse toPagedMembersResponse(
+            String message,
+            Page<Member> memberPage,
+            List<MemberListItemResponse> items
+    );
+
+    MemberDetailsResponse toMemberDetails(
+            Member member,
+            MemberMembership membership,
+            BigDecimal totalAmountPaid,
+            MemberAttendanceSnapshot attendanceSnapshot,
+            LocalDate today
+    );
+
+    TenantAdminResponse toMemberDetailsAdminResponse(String message, MemberDetailsResponse details);
+
+    default MembersSummaryResponse buildMembersSummary(
+            long totalMembersCount,
+            long liveCount,
+            long expiredCount,
+            long trialCount
+    ) {
+        return MembersSummaryResponse.builder()
+                .totalMembersCount(totalMembersCount)
+                .liveCount(liveCount)
+                .expiredCount(expiredCount)
+                .trialCount(trialCount)
+                .build();
+    }
 
     default <T> PagedResponse<T> toPagedResponse(Page<?> page, List<T> content) {
         return new PagedResponse<>(

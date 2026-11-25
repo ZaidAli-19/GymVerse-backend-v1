@@ -1,5 +1,6 @@
 package com.company.GymVerse.tenantAdmin.mapper;
 
+import com.company.GymVerse.attendance.dto.MemberAttendanceSnapshot;
 import com.company.GymVerse.models.central.GymSubscription;
 import com.company.GymVerse.models.central.GymTenant;
 import com.company.GymVerse.models.central.SaasSubscriptionPlan;
@@ -9,11 +10,17 @@ import com.company.GymVerse.models.tenant.Member;
 import com.company.GymVerse.models.tenant.MemberMembership;
 import com.company.GymVerse.models.tenant.MembershipPlan;
 import com.company.GymVerse.models.tenant.PlanTier;
+import com.company.GymVerse.models.tenant.TenantUser;
 import com.company.GymVerse.models.tenant.enums.PaymentMode;
+import com.company.GymVerse.tenantAdmin.helper.MembershipCalculationHelper;
 import com.company.GymVerse.tenantAdmin.response.PagedResponse;
 import com.company.GymVerse.tenantAdmin.response.TenantAdminResponse;
+import com.company.GymVerse.tenantAdmin.response.enums.MemberMembershipStatus;
 import com.company.GymVerse.tenantAdmin.response.members.ApproveJoinRequestResponse;
 import com.company.GymVerse.tenantAdmin.response.members.JoinRequestItemResponse;
+import com.company.GymVerse.tenantAdmin.response.members.MemberDetailsResponse;
+import com.company.GymVerse.tenantAdmin.response.members.MemberListItemResponse;
+import com.company.GymVerse.tenantAdmin.response.members.MembersSummaryResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.PlanFilterOptionsResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.PlanItemResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.PlanTierOptionResponse;
@@ -24,7 +31,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
@@ -288,5 +297,180 @@ public class TenantAdminMapperImpl implements TenantAdminMapper {
                 .timestamp(Instant.now())
                 .approveJoinRequestResponse(payload)
                 .build();
+    }
+
+    @Override
+    public TenantAdminResponse toMembersSummaryResponse(
+            final String message,
+            final long totalMembersCount,
+            final long liveCount,
+            final long expiredCount,
+            final long trialCount
+    ) {
+        MembersSummaryResponse summary = buildMembersSummary(totalMembersCount, liveCount, expiredCount, trialCount);
+        return TenantAdminResponse.builder()
+                .message(message)
+                .status(200)
+                .timestamp(Instant.now())
+                .membersSummaryResponse(summary)
+                .build();
+    }
+
+    @Override
+    public MemberListItemResponse toMemberListItem(
+            final Member member,
+            final MemberMembership membership,
+            final boolean checkedInToday,
+            final LocalDate today
+    ) {
+        if (member == null) {
+            return null;
+        }
+        TenantUser user = member.getUser();
+        MembershipPlan plan = membership != null ? membership.getPlan() : null;
+        PlanTier tier = plan != null ? plan.getPlanTier() : null;
+        MemberMembershipStatus membershipStatus = MembershipCalculationHelper.resolveMemberStatus(
+                member.getTrialEndDate(), membership, today
+        );
+        long daysRemaining = MembershipCalculationHelper.resolveMemberDaysRemaining(
+                member.getTrialEndDate(), membership, today
+        );
+
+        return MemberListItemResponse.builder()
+                .memberId(member.getId())
+                .gymId(member.getGymId())
+                .fullName(buildFullName(user))
+                .email(user != null ? user.getEmail() : null)
+                .phoneNumber(user != null ? user.getPhoneNumber() : null)
+                .planName(plan != null ? plan.getName() : null)
+                .tier(tier != null ? tier.getName() : null)
+                .themeKey(tier != null ? tier.getThemeKey() : null)
+                .membershipStatus(membershipStatus)
+                .daysRemaining(daysRemaining)
+                .paidAmount(membership != null ? membership.getPaidAmount() : null)
+                .finalPrice(membership != null ? membership.getFinalPrice() : null)
+                .paymentStatus(membership != null ? membership.getPaymentStatus() : null)
+                .checkedInToday(checkedInToday)
+                .build();
+    }
+
+    @Override
+    public TenantAdminResponse toPagedMembersResponse(
+            final String message,
+            final Page<Member> memberPage,
+            final List<MemberListItemResponse> items
+    ) {
+        PagedResponse<MemberListItemResponse> paged = toPagedResponse(memberPage, items);
+        return TenantAdminResponse.builder()
+                .message(message)
+                .status(200)
+                .timestamp(Instant.now())
+                .membersPageResponse(paged)
+                .build();
+    }
+
+    @Override
+    public MemberDetailsResponse toMemberDetails(
+            final Member member,
+            final MemberMembership membership,
+            final BigDecimal totalAmountPaid,
+            final MemberAttendanceSnapshot attendanceSnapshot,
+            final LocalDate today
+    ) {
+        if (member == null) {
+            return null;
+        }
+        TenantUser user = member.getUser();
+        MembershipPlan plan = membership != null ? membership.getPlan() : null;
+        PlanTier tier = plan != null ? plan.getPlanTier() : null;
+        List<String> facilities = (plan == null || plan.getFacilities() == null)
+                ? Collections.emptyList()
+                : plan.getFacilities().stream()
+                .map(GymFacility::getName)
+                .sorted(String::compareToIgnoreCase)
+                .toList();
+
+        MemberMembershipStatus membershipStatus = MembershipCalculationHelper.resolveMemberStatus(
+                member.getTrialEndDate(), membership, today
+        );
+        long remainingDays = MembershipCalculationHelper.resolveMemberDaysRemaining(
+                member.getTrialEndDate(), membership, today
+        );
+        boolean isTrialMember = (membership != null
+                && (membership.isTrial() || (plan != null && plan.isTrial())))
+                || member.getTrialEndDate() != null;
+
+        BigDecimal normalizedTotalPaid = (totalAmountPaid != null ? totalAmountPaid : BigDecimal.ZERO)
+                .setScale(2, RoundingMode.HALF_UP);
+
+        MemberDetailsResponse.AttendanceActivityCard attendanceCard = MemberDetailsResponse.AttendanceActivityCard.builder()
+                .totalVisitCount(attendanceSnapshot != null ? attendanceSnapshot.getTotalVisitCount() : 0L)
+                .currentStreak(attendanceSnapshot != null ? attendanceSnapshot.getCurrentStreak() : 0)
+                .dailyAttendance(MemberDetailsResponse.DailyAttendanceCard.builder()
+                        .checkedIn(attendanceSnapshot != null && attendanceSnapshot.isCheckedInToday())
+                        .checkInTime(attendanceSnapshot != null ? attendanceSnapshot.getCheckInTime() : null)
+                        .elapsedMinutes(attendanceSnapshot != null ? attendanceSnapshot.getElapsedMinutes() : null)
+                        .build())
+                .build();
+
+        MemberDetailsResponse.QuickStatsCard quickStatsCard = MemberDetailsResponse.QuickStatsCard.builder()
+                .totalAmountPaid(normalizedTotalPaid)
+                .daysLeftUntilExpiry(remainingDays)
+                .build();
+
+        MemberDetailsResponse.MembershipDetailsCard membershipCard = MemberDetailsResponse.MembershipDetailsCard.builder()
+                .planName(plan != null ? plan.getName() : null)
+                .tier(tier != null ? tier.getName() : null)
+                .themeKey(tier != null ? tier.getThemeKey() : null)
+                .facilities(facilities)
+                .joinDate(member.getJoinDate())
+                .startDate(membership != null ? membership.getStartDate() : null)
+                .expiryDate(membership != null ? membership.getEndDate() : member.getTrialEndDate())
+                .remainingDays(remainingDays)
+                .finalPrice(membership != null ? membership.getFinalPrice() : null)
+                .paidAmount(membership != null ? membership.getPaidAmount() : null)
+                .paymentStatus(membership != null ? membership.getPaymentStatus() : null)
+                .trial(isTrialMember)
+                .membershipStatus(membershipStatus)
+                .build();
+
+        MemberDetailsResponse.ContactDetailsCard contactCard = MemberDetailsResponse.ContactDetailsCard.builder()
+                .memberId(member.getId())
+                .gymId(member.getGymId())
+                .firstName(user != null ? user.getFirstName() : null)
+                .lastName(user != null ? user.getLastName() : null)
+                .email(user != null ? user.getEmail() : null)
+                .phoneNumber(user != null ? user.getPhoneNumber() : null)
+                .build();
+
+        return MemberDetailsResponse.builder()
+                .attendanceActivity(attendanceCard)
+                .quickStats(quickStatsCard)
+                .membershipDetails(membershipCard)
+                .contactDetails(contactCard)
+                .build();
+    }
+
+    @Override
+    public TenantAdminResponse toMemberDetailsAdminResponse(
+            final String message,
+            final MemberDetailsResponse details
+    ) {
+        return TenantAdminResponse.builder()
+                .message(message)
+                .status(200)
+                .timestamp(Instant.now())
+                .memberDetailsResponse(details)
+                .build();
+    }
+
+    private String buildFullName(final TenantUser user) {
+        if (user == null) {
+            return null;
+        }
+        String first = user.getFirstName() != null ? user.getFirstName().trim() : "";
+        String last = user.getLastName() != null ? user.getLastName().trim() : "";
+        String combined = (first + " " + last).trim();
+        return combined.isEmpty() ? null : combined;
     }
 }
