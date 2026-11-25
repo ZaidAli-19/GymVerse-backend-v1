@@ -10,6 +10,7 @@ import com.company.GymVerse.tenantAdmin.request.plans.CreatePlanRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.FetchPlansRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.UpdatePlanAvailabilityRequest;
 import com.company.GymVerse.tenantAdmin.request.subscription.FetchTenantSubscriptionRequest;
+import com.company.GymVerse.tenantAdmin.request.trainers.FetchTrainersRequest;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -54,4 +55,7 @@ public class TenantAdminRequest {
 
     @JsonAlias({"fetchMemberDetailsRequest", "fetchMemberDetails"})
     private FetchMemberDetailsRequest fetchMemberDetailsRequest;
+
+    @JsonAlias({"fetchTrainersRequest", "fetchTrainers"})
+    private FetchTrainersRequest fetchTrainersRequest;
 }

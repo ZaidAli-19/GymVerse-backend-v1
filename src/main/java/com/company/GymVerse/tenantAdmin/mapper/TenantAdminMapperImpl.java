@@ -11,6 +11,7 @@ import com.company.GymVerse.models.tenant.MemberMembership;
 import com.company.GymVerse.models.tenant.MembershipPlan;
 import com.company.GymVerse.models.tenant.PlanTier;
 import com.company.GymVerse.models.tenant.TenantUser;
+import com.company.GymVerse.models.tenant.Trainer;
 import com.company.GymVerse.models.tenant.enums.PaymentMode;
 import com.company.GymVerse.tenantAdmin.helper.MembershipCalculationHelper;
 import com.company.GymVerse.tenantAdmin.response.PagedResponse;
@@ -27,6 +28,8 @@ import com.company.GymVerse.tenantAdmin.response.plans.PlanTierOptionResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.PlansSummaryResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.TierCountResponse;
 import com.company.GymVerse.tenantAdmin.response.subscription.TenantSubscriptionDetailsResponse;
+import com.company.GymVerse.tenantAdmin.response.trainers.TrainerItemResponse;
+import com.company.GymVerse.tenantAdmin.response.trainers.TrainersSummaryResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
@@ -461,6 +464,65 @@ public class TenantAdminMapperImpl implements TenantAdminMapper {
                 .status(200)
                 .timestamp(Instant.now())
                 .memberDetailsResponse(details)
+                .build();
+    }
+
+    @Override
+    public TenantAdminResponse toTrainersSummaryResponse(
+            final String message,
+            final long totalTrainersCount,
+            final long activeTrainersCount,
+            final long activeLiveCount,
+            final double avgAttendanceRate
+    ) {
+        TrainersSummaryResponse summary = buildTrainersSummary(
+                totalTrainersCount,
+                activeTrainersCount,
+                activeLiveCount,
+                avgAttendanceRate
+        );
+        return TenantAdminResponse.builder()
+                .message(message)
+                .status(200)
+                .timestamp(Instant.now())
+                .trainersSummaryResponse(summary)
+                .build();
+    }
+
+    @Override
+    public TrainerItemResponse toTrainerItem(final Trainer trainer, final long assignedMembersCount) {
+        if (trainer == null) {
+            return null;
+        }
+        TenantUser user = trainer.getUser();
+        return TrainerItemResponse.builder()
+                .trainerId(trainer.getId())
+                .userId(user != null ? user.getId() : null)
+                .firstName(user != null ? user.getFirstName() : null)
+                .lastName(user != null ? user.getLastName() : null)
+                .email(user != null ? user.getEmail() : null)
+                .phoneNumber(user != null ? user.getPhoneNumber() : null)
+                .specialization(trainer.getSpecialization())
+                .experienceYears(trainer.getExperienceYears())
+                .bio(trainer.getBio())
+                .joinedDate(trainer.getJoinedDate())
+                .active(trainer.isActive())
+                .assignedMembersCount(assignedMembersCount)
+                .build();
+    }
+
+    @Override
+    public TenantAdminResponse toPagedTrainersResponse(
+            final String message,
+            final Page<Trainer> trainerPage,
+            final List<TrainerItemResponse> items
+    ) {
+        PagedResponse<TrainerItemResponse> paged = toPagedResponse(trainerPage, items);
+        return TenantAdminResponse.builder()
+                .message(message)
+                .status(200)
+                .timestamp(Instant.now())
+                .trainersPageResponse(paged)
                 .build();
     }
 

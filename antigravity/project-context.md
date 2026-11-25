@@ -12,10 +12,10 @@
 | **Repository Root** | `D:\projects\GymVerse-Backend-v2` |
 | **Current Git Branch** | `GymVerse/dev` |
 | **Current Project Phase** | **Phase 5: In-Gym Tenant Administration Module (7-Page Operational Suite)** |
-| **Current Phase Stage** | **Phase 5 Active Implementation (Story 5.4 Completed)** |
-| **Last Completed Story** | **Story 5.4: Members Directory, Mini-Dashboard & Member Details View** |
-| **Immediate Next Phase / Story** | **Story 5.5: Trainers & Staff Summary & Searchable Address Book** |
-| **Test Suite Health** | **Phase 5 `tenantAdmin` Unit & MySQL Integration Verification: 40/40 Passing (0 Failures, 0 Errors)** |
+| **Current Phase Stage** | **Phase 5 Active Implementation (Story 5.5 Completed)** |
+| **Last Completed Story** | **Story 5.5: Trainers & Staff Summary & Searchable Address Book** |
+| **Immediate Next Phase / Story** | **Story 5.6: Finance Analytics Suite & Expense Ledger** |
+| **Test Suite Health** | **Phase 5 `tenantAdmin` Unit & MySQL Integration Verification: 43/43 Passing (0 Failures, 0 Errors)** |
 | **Protected Code Status** | All 8 classes in `com.company.GymVerse.multitanancy` remain 100% byte-for-byte untouched |
 
 ---
@@ -150,23 +150,23 @@
 | **Story 5.2** | Plans Management Suite | `service/plans/`, `MembershipPlanSpecification`, `PlanHelper`, `CREATE_PLAN`, `FETCH_PLANS`, `FETCH_PLANS_SUMMARY`, `FETCH_PLAN_FILTER_OPTIONS`, `UPDATE_PLAN_AVAILABILITY` | ✅ Completed |
 | **Story 5.3** | Join Requests Review & Approval Workflow | `service/members/`, `JoinRequestSpecification`, `JoinRequestHelper`, `FETCH_JOIN_REQUESTS`, `APPROVE_JOIN_REQUEST`, `REJECT_JOIN_REQUEST` | ✅ Completed |
 | **Story 5.4** | Members Directory, Mini-Dashboard & Member Details View | `service/members/`, `MemberSpecification`, `FETCH_MEMBERS_SUMMARY`, `FETCH_MEMBERS`, `FETCH_MEMBER_DETAILS`, `docs/payloads.md` | ✅ Completed |
-| **Story 5.5** | Trainers & Staff Summary & Address Book | `service/trainers/`, `TrainerSpecification`, `FETCH_TRAINERS_SUMMARY`, `FETCH_TRAINERS` | ⏳ Next |
-| **Story 5.6** | Finance Analytics Suite & Expense Ledger | `service/finance/`, `ExpenseSpecification`, `FETCH_FINANCE_OVERVIEW`, `FETCH_EXPENSE_TRANSACTIONS`, `CREATE_EXPENSE` | ⏳ Planned |
+| **Story 5.5** | Trainers & Staff Summary & Address Book | `service/trainers/`, `TrainerSpecification`, `FETCH_TRAINERS_SUMMARY`, `FETCH_TRAINERS`, `docs/payloads.md` | ✅ Completed |
+| **Story 5.6** | Finance Analytics Suite & Expense Ledger | `service/finance/`, `ExpenseSpecification`, `FETCH_FINANCE_OVERVIEW`, `FETCH_EXPENSE_TRANSACTIONS`, `CREATE_EXPENSE` | ⏳ Next |
 | **Story 5.7** | Admin Dashboard, Live Roster Gateway & API Docs | `service/dashboard/`, `service/liveRoster/`, `FETCH_ADMIN_DASHBOARD`, `FETCH_LIVE_ROSTER`, `docs/payloads.md` | ⏳ Planned |
 
 ---
 
-## 5. Scope & Target Artifacts for Immediate Next Work: Story 5.5 (Trainers & Staff Summary & Searchable Address Book)
+## 5. Scope & Target Artifacts for Immediate Next Work: Story 5.6 (Finance Analytics Suite & Expense Ledger)
 
-- **Active Stage:** `Phase 5 Implementation — Story 5.5`
-- **Next Story:** [`story-5.5-trainers-summary-and-address-book.md`](file:///D:/projects/GymVerse-Backend-v2/_bmad-output/planning-artifacts/phase-5-tenant-admin/story-5.5-trainers-summary-and-address-book.md)
+- **Active Stage:** `Phase 5 Implementation — Story 5.6`
+- **Next Story:** [`story-5.6-finance-analytics-and-expense-ledger.md`](file:///D:/projects/GymVerse-Backend-v2/_bmad-output/planning-artifacts/phase-5-tenant-admin/story-5.6-finance-analytics-and-expense-ledger.md)
 - **Target Operations (`/api/tenant-admin`):**
-  1. `FETCH_TRAINERS_SUMMARY` (`totalTrainersCount` via `TrainerRepository`, `activeLiveCount` & `avgAttendanceRate` via `AttendanceQueryPort` with `// TODO [ATTENDANCE-MODULE]`).
-  2. `FETCH_TRAINERS` (`TrainerSpecification` + pagination + whitelisted sorting (`id`, `joinedDate`, `specialization`, `user.firstName`) + `active` / `specialization` / `search` filters).
+  1. `FETCH_FINANCE_OVERVIEW` (`WEEKLY` / `MONTHLY` / `YEARLY` toggle via `FinancePeriodHelper`, KPIs with `BigDecimal` divide-by-zero guard, expense category breakdown, cash vs online collections, revenue source breakdown `NEW_MEMBERSHIP` / `RENEWAL` / `OTHER`).
+  2. `FETCH_EXPENSE_TRANSACTIONS` (`ExpenseSpecification` + pagination + whitelisted sorting (`id`, `expenseDate`, `amount`, `category`, `title`)).
+  3. `CREATE_EXPENSE` (default categories + custom category/notes, returns `201 Created`).
 - **Invariants:**
-  - Add Trainer onboarding remains deferred to a future phase.
-  - Subfolder classification under `service/trainers/`, `request/trainers/`, `response/trainers/`, `specifications/trainers/`.
-  - Live attendance calls strictly via `AttendanceQueryPort` with `// TODO [ATTENDANCE-MODULE]` hooks.
+  - All currency/percentage math strictly uses `BigDecimal` (`RoundingMode.HALF_UP`, scale 2).
+  - Subfolder classification under `service/finance/`, `request/finance/`, `response/finance/`, `specifications/finance/`.
   - Multi-tenancy core untouched (8 protected classes); no autonomous git commit/push (`RULES.md` Rule 1).
 
 ---

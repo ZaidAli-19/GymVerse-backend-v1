@@ -20,6 +20,7 @@ import com.company.GymVerse.tenantAdmin.request.members.RejectJoinRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.CreatePlanRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.FetchPlansRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.UpdatePlanAvailabilityRequest;
+import com.company.GymVerse.tenantAdmin.request.trainers.FetchTrainersRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +49,9 @@ public class TenantAdminValidationsImpl implements TenantAdminValidations {
     );
     private static final Set<String> ALLOWED_MEMBER_SORT_FIELDS = Set.of(
             "id", "joinDate", "gymId", "user.firstName"
+    );
+    private static final Set<String> ALLOWED_TRAINER_SORT_FIELDS = Set.of(
+            "id", "joinedDate", "specialization", "user.firstName"
     );
     private static final BigDecimal ONE_HUNDRED = new BigDecimal("100");
 
@@ -289,6 +293,21 @@ public class TenantAdminValidationsImpl implements TenantAdminValidations {
         if (request.getMemberId() == null || request.getMemberId() <= 0) {
             throw new BadRequestException("memberId must be a positive identifier");
         }
+    }
+
+    @Override
+    public Pageable validateFetchTrainers(final FetchTrainersRequest request) {
+        if (request == null) {
+            return validateAndBuildPageable(null, null, "id", "asc", "id", ALLOWED_TRAINER_SORT_FIELDS);
+        }
+        return validateAndBuildPageable(
+                request.getPage(),
+                request.getSize(),
+                request.getSortBy(),
+                request.getSortDirection(),
+                "id",
+                ALLOWED_TRAINER_SORT_FIELDS
+        );
     }
 
     private void validatePlanName(final String name) {

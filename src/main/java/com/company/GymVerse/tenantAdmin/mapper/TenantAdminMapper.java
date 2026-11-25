@@ -7,6 +7,7 @@ import com.company.GymVerse.models.tenant.Member;
 import com.company.GymVerse.models.tenant.MemberMembership;
 import com.company.GymVerse.models.tenant.MembershipPlan;
 import com.company.GymVerse.models.tenant.PlanTier;
+import com.company.GymVerse.models.tenant.Trainer;
 import com.company.GymVerse.models.tenant.enums.PaymentMode;
 import com.company.GymVerse.tenantAdmin.response.PagedResponse;
 import com.company.GymVerse.tenantAdmin.response.TenantAdminResponse;
@@ -21,6 +22,8 @@ import com.company.GymVerse.tenantAdmin.response.plans.PlanTierOptionResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.PlansSummaryResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.TierCountResponse;
 import com.company.GymVerse.tenantAdmin.response.subscription.TenantSubscriptionDetailsResponse;
+import com.company.GymVerse.tenantAdmin.response.trainers.TrainerItemResponse;
+import com.company.GymVerse.tenantAdmin.response.trainers.TrainersSummaryResponse;
 import org.springframework.data.domain.Page;
 
 import java.math.BigDecimal;
@@ -93,6 +96,36 @@ public interface TenantAdminMapper {
     );
 
     TenantAdminResponse toMemberDetailsAdminResponse(String message, MemberDetailsResponse details);
+
+    TenantAdminResponse toTrainersSummaryResponse(
+            String message,
+            long totalTrainersCount,
+            long activeTrainersCount,
+            long activeLiveCount,
+            double avgAttendanceRate
+    );
+
+    TrainerItemResponse toTrainerItem(Trainer trainer, long assignedMembersCount);
+
+    TenantAdminResponse toPagedTrainersResponse(
+            String message,
+            Page<Trainer> trainerPage,
+            List<TrainerItemResponse> items
+    );
+
+    default TrainersSummaryResponse buildTrainersSummary(
+            long totalTrainersCount,
+            long activeTrainersCount,
+            long activeLiveCount,
+            double avgAttendanceRate
+    ) {
+        return TrainersSummaryResponse.builder()
+                .totalTrainersCount(totalTrainersCount)
+                .activeTrainersCount(activeTrainersCount)
+                .activeLiveCount(activeLiveCount)
+                .avgAttendanceRate(avgAttendanceRate)
+                .build();
+    }
 
     default MembersSummaryResponse buildMembersSummary(
             long totalMembersCount,

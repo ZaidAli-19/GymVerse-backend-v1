@@ -12,6 +12,7 @@ import com.company.GymVerse.tenantAdmin.request.members.RejectJoinRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.CreatePlanRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.FetchPlansRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.UpdatePlanAvailabilityRequest;
+import com.company.GymVerse.tenantAdmin.request.trainers.FetchTrainersRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
@@ -97,4 +98,9 @@ public interface TenantAdminValidations {
      * Validates FetchMemberDetailsRequest required positive memberId.
      */
     void validateFetchMemberDetails(FetchMemberDetailsRequest request);
+
+    /**
+     * Validates pagination and whitelisted sorting fields for FETCH_TRAINERS queries.
+     */
+    Pageable validateFetchTrainers(FetchTrainersRequest request);
 }

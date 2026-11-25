@@ -13,7 +13,7 @@ Click on any module or operation to jump directly to its API specification and c
 | **1** | [**Platform Administration**](#section-1) | `POST /api/platform-admin` | Platform Admin (`ROLE_PLATFORM_ADMIN`) | • [1.1 Create SaaS Plan](#op-1-1)<br>• [1.2 Catalog Query & Pagination](#op-1-2)<br>• [1.3 Fetch Plan by ID](#op-1-3)<br>• [1.4 Update Plan Availability](#op-1-4)<br>• [1.5 Gym Tenants Directory](#op-1-5) |
 | **2** | [**Authentication & Security**](#section-2) | `POST /api/auth` | Public & Master Account | • [2.1 Signup Initiate](#op-2-1)<br>• [2.2 Signup Verify OTP](#op-2-2)<br>• [2.3 Signup Complete](#op-2-3)<br>• [2.4 Password Login](#op-2-4)<br>• [2.5 Login OTP Initiate](#op-2-5)<br>• [2.6 Login OTP Verify](#op-2-6)<br>• [2.7 Token Refresh](#op-2-7)<br>• [2.8 Forgot Password Initiate](#op-2-8)<br>• [2.9 Forgot Password Verify OTP](#op-2-9)<br>• [2.10 Forgot Password Reset](#op-2-10)<br>• [2.11 Switch Tenant & Token Exchange](#op-2-11) |
 | **3** | [**Central User Gateway**](#section-3) | `POST /api/user` | Master User (`MASTER_ACCOUNT`) | • [3.1 Register Gym & Dynamic Provisioning](#op-3-1)<br>• [3.2 Fetch My Tenants Directory](#op-3-2)<br>• [3.3 Fetch Gym by Code (Discovery)](#op-3-3)<br>• [3.4 Submit Join Request](#op-3-4) |
-| **4** | [**Tenant Administration**](#section-4) | `POST /api/tenant-admin` | Tenant Admin (`TENANT_ACCOUNT` + `ROLE_TENANT_ADMIN`) | • [4.1 Fetch SaaS Subscription & Entitlements](#op-4-1)<br>• [4.2 Fetch Members Summary](#op-4-2)<br>• [4.3 Fetch Members Directory](#op-4-3)<br>• [4.4 Fetch Member Details](#op-4-4) |
+| **4** | [**Tenant Administration**](#section-4) | `POST /api/tenant-admin` | Tenant Admin (`TENANT_ACCOUNT` + `ROLE_TENANT_ADMIN`) | • [4.1 Fetch SaaS Subscription & Entitlements](#op-4-1)<br>• [4.2 Fetch Members Summary](#op-4-2)<br>• [4.3 Fetch Members Directory](#op-4-3)<br>• [4.4 Fetch Member Details](#op-4-4)<br>• [4.5 Fetch Trainers Summary](#op-4-5)<br>• [4.6 Fetch Trainers Address Book](#op-4-6) |
 
 ---
 
@@ -2239,6 +2239,175 @@ curl -X POST "http://localhost:8080/api/tenant-admin" \
        "tenantAdminRequestType": "FETCH_MEMBER_DETAILS",
        "fetchMemberDetailsRequest": {
          "memberId": 1
+       }
+     }'
+```
+
+---
+
+<a id="op-4-5"></a>
+<a id="fetch-trainers-summary"></a>
+### 4.5 Fetch Trainers Summary (`FETCH_TRAINERS_SUMMARY`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Trainers / Staff)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Retrieves the Trainers mini-dashboard summary: total trainers, active trainers, active live trainers count, and average trainer attendance rate (live/attendance metrics delegated to `AttendanceQueryPort`).
+5. **Authentication & Authorization:** Requires authenticated caller with `TENANT_ACCOUNT` token and `ROLE_TENANT_ADMIN` authority.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "FETCH_TRAINERS_SUMMARY"
+   }
+   ```
+   **Validation Rules:**
+   - `tenantAdminRequestType`: Required enum string (`FETCH_TRAINERS_SUMMARY`).
+10. **Success Response:**
+    - **HTTP Status:** `200 OK`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "Trainers summary retrieved successfully",
+        "status": 200,
+        "timestamp": "2026-11-25T16:28:00Z",
+        "trainersSummaryResponse": {
+          "totalTrainersCount": 8,
+          "activeTrainersCount": 7,
+          "activeLiveCount": 0,
+          "avgAttendanceRate": 0.0
+        }
+      }
+      ```
+11. **Error Responses:**
+    - `400 Bad Request`: Missing or null `tenantAdminRequestType`.
+    - `401 Unauthorized`: Missing or invalid Bearer token.
+    - `403 Forbidden`: Master account token used instead of tenant-scoped token, or caller lacks `ROLE_TENANT_ADMIN`.
+12. **Implementation References:**
+    - **Controller:** `com.company.GymVerse.tenantAdmin.controller.TenantAdminController`
+    - **Factory:** `com.company.GymVerse.tenantAdmin.factory.TenantAdminFactory`
+    - **Service:** `com.company.GymVerse.tenantAdmin.service.trainers.FetchTrainersSummaryService`
+    - **Response DTO:** `com.company.GymVerse.tenantAdmin.response.trainers.TrainersSummaryResponse`
+13. **Business Rules:**
+    - `activeLiveCount` and `avgAttendanceRate` delegate to `AttendanceQueryPort.getTrainerAttendanceSummary()` (stubbed to `0` / `0.0` until the Attendance module arrives).
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "FETCH_TRAINERS_SUMMARY"
+     }'
+```
+
+---
+
+<a id="op-4-6"></a>
+<a id="fetch-trainers"></a>
+### 4.6 Fetch Trainers Address Book (`FETCH_TRAINERS`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Trainers / Staff)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Retrieves a paginated, sorted, and JPA Specification-filtered address book of gym trainers, including assigned member counts.
+5. **Authentication & Authorization:** Requires authenticated caller with `TENANT_ACCOUNT` token and `ROLE_TENANT_ADMIN` authority.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "FETCH_TRAINERS",
+     "fetchTrainersRequest": {
+       "active": true,
+       "specialization": "Strength",
+       "search": "marcus",
+       "page": 0,
+       "size": 10,
+       "sortBy": "user.firstName",
+       "sortDirection": "asc"
+     }
+   }
+   ```
+   **Validation Rules:**
+   - `tenantAdminRequestType`: Required enum string (`FETCH_TRAINERS`).
+   - `fetchTrainersRequest`: Optional; defaults to `page = 0`, `size = 10`, `sortBy = "id"`, `sortDirection = "asc"`.
+   - `active`: Optional boolean filter.
+   - `specialization`: Optional partial case-insensitive match.
+   - `search`: Optional partial case-insensitive match across `firstName`, `lastName`, `email`, `phoneNumber`, and `specialization`.
+   - `sortBy`: Whitelisted fields only (`id`, `joinedDate`, `specialization`, `user.firstName`).
+   - `sortDirection`: `asc` or `desc`.
+10. **Success Response:**
+    - **HTTP Status:** `200 OK`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "Trainers retrieved successfully",
+        "status": 200,
+        "timestamp": "2026-11-25T16:28:00Z",
+        "trainersPageResponse": {
+          "content": [
+            {
+              "trainerId": 1,
+              "userId": 201,
+              "firstName": "Marcus",
+              "lastName": "Vance",
+              "email": "marcus@gym.com",
+              "phoneNumber": "555-8001",
+              "specialization": "Strength & Conditioning",
+              "experienceYears": 8,
+              "bio": "Certified CSCS powerlifting coach",
+              "joinedDate": "2026-05-25",
+              "active": true,
+              "assignedMembersCount": 12
+            }
+          ],
+          "page": 0,
+          "size": 10,
+          "totalElements": 1,
+          "totalPages": 1,
+          "last": true
+        }
+      }
+      ```
+11. **Error Responses:**
+    - `400 Bad Request`: Invalid `page`, `size`, `sortBy`, or `sortDirection`.
+    - `401 Unauthorized`: Missing or invalid Bearer token.
+    - `403 Forbidden`: Caller lacks `TENANT_ACCOUNT` or `ROLE_TENANT_ADMIN`.
+12. **Implementation References:**
+    - **Controller:** `com.company.GymVerse.tenantAdmin.controller.TenantAdminController`
+    - **Factory:** `com.company.GymVerse.tenantAdmin.factory.TenantAdminFactory`
+    - **Service:** `com.company.GymVerse.tenantAdmin.service.trainers.FetchTrainersService`
+    - **Specification:** `com.company.GymVerse.tenantAdmin.specifications.trainers.TrainerSpecification`
+    - **Request DTO:** `com.company.GymVerse.tenantAdmin.request.trainers.FetchTrainersRequest`
+    - **Response DTO:** `com.company.GymVerse.tenantAdmin.response.trainers.TrainerItemResponse`
+13. **Business Rules:**
+    - `assignedMembersCount` is computed via a single grouped query across `members.trainer_id` for all trainers on the current page.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "FETCH_TRAINERS",
+       "fetchTrainersRequest": {
+         "active": true,
+         "page": 0,
+         "size": 10,
+         "sortBy": "user.firstName",
+         "sortDirection": "asc"
        }
      }'
 ```

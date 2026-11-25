@@ -9,6 +9,8 @@ import com.company.GymVerse.tenantAdmin.response.plans.PlanFilterOptionsResponse
 import com.company.GymVerse.tenantAdmin.response.plans.PlanItemResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.PlansSummaryResponse;
 import com.company.GymVerse.tenantAdmin.response.subscription.TenantSubscriptionDetailsResponse;
+import com.company.GymVerse.tenantAdmin.response.trainers.TrainerItemResponse;
+import com.company.GymVerse.tenantAdmin.response.trainers.TrainersSummaryResponse;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,4 +46,6 @@ public class TenantAdminResponse {
     private MembersSummaryResponse membersSummaryResponse;
     private PagedResponse<MemberListItemResponse> membersPageResponse;
     private MemberDetailsResponse memberDetailsResponse;
+    private TrainersSummaryResponse trainersSummaryResponse;
+    private PagedResponse<TrainerItemResponse> trainersPageResponse;
 }
