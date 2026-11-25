@@ -3,12 +3,18 @@ package com.company.GymVerse.tenantAdmin.validations;
 import com.company.GymVerse.exceptions.common.BadRequestException;
 import com.company.GymVerse.exceptions.common.ConflictException;
 import com.company.GymVerse.exceptions.common.ForbiddenException;
+import com.company.GymVerse.models.tenant.MembershipPlan;
 import com.company.GymVerse.models.tenant.enums.DiscountType;
+import com.company.GymVerse.models.tenant.enums.JoinRequestStatus;
+import com.company.GymVerse.models.tenant.enums.PaymentStatus;
 import com.company.GymVerse.models.tenant.enums.PlanTheme;
 import com.company.GymVerse.multitanancy.TenantContext;
 import com.company.GymVerse.repositories.tenant.MembershipPlanRepository;
 import com.company.GymVerse.repositories.tenant.PlanTierRepository;
 import com.company.GymVerse.tenantAdmin.request.TenantAdminRequest;
+import com.company.GymVerse.tenantAdmin.request.members.ApproveJoinRequest;
+import com.company.GymVerse.tenantAdmin.request.members.FetchJoinRequestsRequest;
+import com.company.GymVerse.tenantAdmin.request.members.RejectJoinRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.CreatePlanRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.FetchPlansRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.UpdatePlanAvailabilityRequest;
@@ -34,6 +40,9 @@ public class TenantAdminValidationsImpl implements TenantAdminValidations {
 
     private static final Set<String> ALLOWED_PLAN_SORT_FIELDS = Set.of(
             "id", "name", "basePrice", "finalPrice", "durationDays", "active", "tier", "planTier.name"
+    );
+    private static final Set<String> ALLOWED_JOIN_REQUEST_SORT_FIELDS = Set.of(
+            "id", "createdAt", "reviewedAt", "status", "firstName", "lastName", "email"
     );
     private static final BigDecimal ONE_HUNDRED = new BigDecimal("100");
 
@@ -151,6 +160,104 @@ public class TenantAdminValidationsImpl implements TenantAdminValidations {
         }
         if (request.getActive() == null) {
             throw new BadRequestException("active status flag must not be null");
+        }
+    }
+
+    @Override
+    public Pageable validateFetchJoinRequests(final FetchJoinRequestsRequest request) {
+        if (request == null) {
+            return validateAndBuildPageable(null, null, "createdAt", "desc", "createdAt", ALLOWED_JOIN_REQUEST_SORT_FIELDS);
+        }
+        String sortDir = (request.getSortDirection() == null || request.getSortDirection().isBlank())
+                ? "desc"
+                : request.getSortDirection();
+        return validateAndBuildPageable(
+                request.getPage(),
+                request.getSize(),
+                request.getSortBy(),
+                sortDir,
+                "createdAt",
+                ALLOWED_JOIN_REQUEST_SORT_FIELDS
+        );
+    }
+
+    @Override
+    public JoinRequestStatus parseJoinRequestStatusFilter(final String status) {
+        if (status == null || status.trim().isBlank() || "ALL".equalsIgnoreCase(status.trim())) {
+            return null;
+        }
+        try {
+            return JoinRequestStatus.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException("Invalid join request status filter: '" + status
+                    + "'. Allowed values: ALL, PENDING, APPROVED, REJECTED");
+        }
+    }
+
+    @Override
+    public void validateApproveJoinRequest(final ApproveJoinRequest request) {
+        if (request == null) {
+            throw new BadRequestException("approveJoinRequest payload must not be null");
+        }
+        if (request.getJoinRequestId() == null || request.getJoinRequestId() <= 0) {
+            throw new BadRequestException("joinRequestId must be a positive identifier");
+        }
+        if (request.getPlanId() == null || request.getPlanId() <= 0) {
+            throw new BadRequestException("planId must be a positive identifier");
+        }
+        if (request.getPaymentStatus() == null) {
+            throw new BadRequestException("paymentStatus is required (PAID or PARTIALLY_PAID)");
+        }
+        if (request.getPaidAmount() == null || request.getPaidAmount().compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("paidAmount must be a non-negative decimal amount");
+        }
+        if (request.getPaidAmount().scale() > 2) {
+            throw new BadRequestException("paidAmount cannot have more than 2 decimal places");
+        }
+        if (request.getPaymentMode() == null) {
+            throw new BadRequestException("paymentMode is required (CASH or ONLINE)");
+        }
+        if (request.getTransactionReference() != null && request.getTransactionReference().length() > 100) {
+            throw new BadRequestException("transactionReference must not exceed 100 characters");
+        }
+        if (request.getAdminNotes() != null && request.getAdminNotes().length() > 1000) {
+            throw new BadRequestException("adminNotes must not exceed 1000 characters");
+        }
+    }
+
+    @Override
+    public void validateJoinRequestPayment(
+            final PaymentStatus paymentStatus,
+            final BigDecimal paidAmount,
+            final MembershipPlan plan
+    ) {
+        BigDecimal finalPrice = plan.getFinalPrice();
+        if (paidAmount.compareTo(finalPrice) > 0) {
+            throw new BadRequestException("paidAmount (" + paidAmount + ") cannot exceed plan finalPrice (" + finalPrice + ")");
+        }
+        if (paymentStatus == PaymentStatus.PAID && paidAmount.compareTo(finalPrice) != 0) {
+            throw new BadRequestException("When paymentStatus is PAID, paidAmount must equal plan finalPrice (" + finalPrice + ")");
+        }
+        if (paymentStatus == PaymentStatus.PARTIALLY_PAID) {
+            if (finalPrice.compareTo(BigDecimal.ZERO) == 0) {
+                throw new BadRequestException("Free or zero-price plans cannot use PARTIALLY_PAID status");
+            }
+            if (paidAmount.compareTo(BigDecimal.ZERO) <= 0 || paidAmount.compareTo(finalPrice) >= 0) {
+                throw new BadRequestException("When paymentStatus is PARTIALLY_PAID, paidAmount must be greater than 0 and less than plan finalPrice (" + finalPrice + ")");
+            }
+        }
+    }
+
+    @Override
+    public void validateRejectJoinRequest(final RejectJoinRequest request) {
+        if (request == null) {
+            throw new BadRequestException("rejectJoinRequest payload must not be null");
+        }
+        if (request.getJoinRequestId() == null || request.getJoinRequestId() <= 0) {
+            throw new BadRequestException("joinRequestId must be a positive identifier");
+        }
+        if (request.getAdminNotes() != null && request.getAdminNotes().length() > 1000) {
+            throw new BadRequestException("adminNotes must not exceed 1000 characters");
         }
     }
 

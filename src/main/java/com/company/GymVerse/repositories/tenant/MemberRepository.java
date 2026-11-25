@@ -19,4 +19,6 @@ public interface MemberRepository extends JpaRepository<Member, Long>, JpaSpecif
     List<Member> findByTrainerId(Long trainerId);
 
     Optional<Member> findByGymId(String gymId);
+
+    boolean existsByGymId(String gymId);
 }

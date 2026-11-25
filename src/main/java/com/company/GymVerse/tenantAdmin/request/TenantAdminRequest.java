@@ -1,6 +1,9 @@
 package com.company.GymVerse.tenantAdmin.request;
 
 import com.company.GymVerse.tenantAdmin.request.enums.TenantAdminRequestType;
+import com.company.GymVerse.tenantAdmin.request.members.ApproveJoinRequest;
+import com.company.GymVerse.tenantAdmin.request.members.FetchJoinRequestsRequest;
+import com.company.GymVerse.tenantAdmin.request.members.RejectJoinRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.CreatePlanRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.FetchPlansRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.UpdatePlanAvailabilityRequest;
@@ -34,4 +37,13 @@ public class TenantAdminRequest {
 
     @JsonAlias({"updatePlanAvailabilityRequest", "updatePlanAvailability"})
     private UpdatePlanAvailabilityRequest updatePlanAvailabilityRequest;
+
+    @JsonAlias({"fetchJoinRequestsRequest", "fetchJoinRequests"})
+    private FetchJoinRequestsRequest fetchJoinRequestsRequest;
+
+    @JsonAlias({"approveJoinRequest", "approveJoin"})
+    private ApproveJoinRequest approveJoinRequest;
+
+    @JsonAlias({"rejectJoinRequest", "rejectJoin"})
+    private RejectJoinRequest rejectJoinRequest;
 }

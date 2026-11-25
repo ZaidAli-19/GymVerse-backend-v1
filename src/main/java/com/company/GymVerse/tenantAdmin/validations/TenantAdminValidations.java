@@ -1,10 +1,18 @@
 package com.company.GymVerse.tenantAdmin.validations;
 
+import com.company.GymVerse.models.tenant.MembershipPlan;
+import com.company.GymVerse.models.tenant.enums.JoinRequestStatus;
+import com.company.GymVerse.models.tenant.enums.PaymentStatus;
 import com.company.GymVerse.tenantAdmin.request.TenantAdminRequest;
+import com.company.GymVerse.tenantAdmin.request.members.ApproveJoinRequest;
+import com.company.GymVerse.tenantAdmin.request.members.FetchJoinRequestsRequest;
+import com.company.GymVerse.tenantAdmin.request.members.RejectJoinRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.CreatePlanRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.FetchPlansRequest;
 import com.company.GymVerse.tenantAdmin.request.plans.UpdatePlanAvailabilityRequest;
 import org.springframework.data.domain.Pageable;
+
+import java.math.BigDecimal;
 
 import java.util.Set;
 
@@ -52,4 +60,29 @@ public interface TenantAdminValidations {
      * Validates UpdatePlanAvailabilityRequest required fields.
      */
     void validateUpdatePlanAvailability(UpdatePlanAvailabilityRequest request);
+
+    /**
+     * Validates pagination and sorting fields for FETCH_JOIN_REQUESTS queries.
+     */
+    Pageable validateFetchJoinRequests(FetchJoinRequestsRequest request);
+
+    /**
+     * Parses optional join request status filter ("ALL" or enum value).
+     */
+    JoinRequestStatus parseJoinRequestStatusFilter(String status);
+
+    /**
+     * Validates ApproveJoinRequest structural payload constraints.
+     */
+    void validateApproveJoinRequest(ApproveJoinRequest request);
+
+    /**
+     * Validates payment amount invariants against plan pricing and PAID / PARTIALLY_PAID status.
+     */
+    void validateJoinRequestPayment(PaymentStatus paymentStatus, BigDecimal paidAmount, MembershipPlan plan);
+
+    /**
+     * Validates RejectJoinRequest structural payload constraints.
+     */
+    void validateRejectJoinRequest(RejectJoinRequest request);
 }

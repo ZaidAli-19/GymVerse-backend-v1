@@ -4,10 +4,16 @@ import com.company.GymVerse.models.central.GymSubscription;
 import com.company.GymVerse.models.central.GymTenant;
 import com.company.GymVerse.models.central.SaasSubscriptionPlan;
 import com.company.GymVerse.models.tenant.GymFacility;
+import com.company.GymVerse.models.tenant.JoinRequest;
+import com.company.GymVerse.models.tenant.Member;
+import com.company.GymVerse.models.tenant.MemberMembership;
 import com.company.GymVerse.models.tenant.MembershipPlan;
 import com.company.GymVerse.models.tenant.PlanTier;
+import com.company.GymVerse.models.tenant.enums.PaymentMode;
 import com.company.GymVerse.tenantAdmin.response.PagedResponse;
 import com.company.GymVerse.tenantAdmin.response.TenantAdminResponse;
+import com.company.GymVerse.tenantAdmin.response.members.ApproveJoinRequestResponse;
+import com.company.GymVerse.tenantAdmin.response.members.JoinRequestItemResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.PlanFilterOptionsResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.PlanItemResponse;
 import com.company.GymVerse.tenantAdmin.response.plans.PlanTierOptionResponse;
@@ -189,6 +195,98 @@ public class TenantAdminMapperImpl implements TenantAdminMapper {
                 .status(httpStatus)
                 .timestamp(Instant.now())
                 .planItemResponse(item)
+                .build();
+    }
+
+    @Override
+    public JoinRequestItemResponse toJoinRequestItem(final JoinRequest joinRequest) {
+        if (joinRequest == null) {
+            return null;
+        }
+        return JoinRequestItemResponse.builder()
+                .id(joinRequest.getId())
+                .centralUserId(joinRequest.getCentralUserId())
+                .email(joinRequest.getEmail())
+                .firstName(joinRequest.getFirstName())
+                .lastName(joinRequest.getLastName())
+                .phoneNumber(joinRequest.getPhoneNumber())
+                .status(joinRequest.getStatus())
+                .requestNotes(joinRequest.getRequestNotes())
+                .adminNotes(joinRequest.getAdminNotes())
+                .createdAt(joinRequest.getCreatedAt())
+                .reviewedAt(joinRequest.getReviewedAt())
+                .reviewedByAdminId(joinRequest.getReviewedByAdmin() != null ? joinRequest.getReviewedByAdmin().getId() : null)
+                .build();
+    }
+
+    @Override
+    public TenantAdminResponse toPagedJoinRequestsResponse(
+            final String message,
+            final Page<JoinRequest> joinRequestPage
+    ) {
+        List<JoinRequestItemResponse> items = joinRequestPage.getContent().stream()
+                .map(this::toJoinRequestItem)
+                .toList();
+        PagedResponse<JoinRequestItemResponse> paged = toPagedResponse(joinRequestPage, items);
+
+        return TenantAdminResponse.builder()
+                .message(message)
+                .status(200)
+                .timestamp(Instant.now())
+                .joinRequestsPageResponse(paged)
+                .build();
+    }
+
+    @Override
+    public TenantAdminResponse toJoinRequestItemResponse(
+            final String message,
+            final JoinRequestItemResponse item
+    ) {
+        return TenantAdminResponse.builder()
+                .message(message)
+                .status(200)
+                .timestamp(Instant.now())
+                .joinRequestItemResponse(item)
+                .build();
+    }
+
+    @Override
+    public ApproveJoinRequestResponse toApproveJoinRequestResponse(
+            final JoinRequest joinRequest,
+            final Member member,
+            final MemberMembership membership,
+            final PaymentMode paymentMode
+    ) {
+        BigDecimal finalPrice = membership.getFinalPrice();
+        BigDecimal paidAmount = membership.getPaidAmount();
+        BigDecimal remainingDue = finalPrice.subtract(paidAmount).max(BigDecimal.ZERO);
+
+        return ApproveJoinRequestResponse.builder()
+                .joinRequestId(joinRequest.getId())
+                .memberId(member.getId())
+                .membershipId(membership.getId())
+                .gymId(member.getGymId())
+                .status(joinRequest.getStatus())
+                .paymentStatus(membership.getPaymentStatus())
+                .paymentMode(paymentMode)
+                .paidAmount(paidAmount)
+                .finalPrice(finalPrice)
+                .remainingDue(remainingDue)
+                .startDate(membership.getStartDate())
+                .endDate(membership.getEndDate())
+                .build();
+    }
+
+    @Override
+    public TenantAdminResponse toApproveJoinRequestAdminResponse(
+            final String message,
+            final ApproveJoinRequestResponse payload
+    ) {
+        return TenantAdminResponse.builder()
+                .message(message)
+                .status(200)
+                .timestamp(Instant.now())
+                .approveJoinRequestResponse(payload)
                 .build();
     }
 }
