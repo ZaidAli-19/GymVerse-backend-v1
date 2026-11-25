@@ -1,6 +1,9 @@
 package com.company.GymVerse.tenantAdmin.validations;
 
 import com.company.GymVerse.tenantAdmin.request.TenantAdminRequest;
+import com.company.GymVerse.tenantAdmin.request.plans.CreatePlanRequest;
+import com.company.GymVerse.tenantAdmin.request.plans.FetchPlansRequest;
+import com.company.GymVerse.tenantAdmin.request.plans.UpdatePlanAvailabilityRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Set;
@@ -34,4 +37,19 @@ public interface TenantAdminValidations {
             String defaultSortBy,
             Set<String> allowedSortFields
     );
+
+    /**
+     * Validates pagination and sorting fields for FETCH_PLANS queries.
+     */
+    Pageable validateFetchPlans(FetchPlansRequest request);
+
+    /**
+     * Validates CreatePlanRequest fields, tier/theme constraints, facilities, pricing, and uniqueness.
+     */
+    void validateCreatePlan(CreatePlanRequest request);
+
+    /**
+     * Validates UpdatePlanAvailabilityRequest required fields.
+     */
+    void validateUpdatePlanAvailability(UpdatePlanAvailabilityRequest request);
 }

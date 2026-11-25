@@ -1,30 +1,69 @@
 package com.company.GymVerse.tenantAdmin.mapper;
 
 import com.company.GymVerse.models.central.GymSubscription;
+import com.company.GymVerse.models.tenant.MembershipPlan;
+import com.company.GymVerse.models.tenant.PlanTier;
+import com.company.GymVerse.tenantAdmin.response.PagedResponse;
 import com.company.GymVerse.tenantAdmin.response.TenantAdminResponse;
+import com.company.GymVerse.tenantAdmin.response.plans.PlanFilterOptionsResponse;
+import com.company.GymVerse.tenantAdmin.response.plans.PlanItemResponse;
+import com.company.GymVerse.tenantAdmin.response.plans.PlanTierOptionResponse;
+import com.company.GymVerse.tenantAdmin.response.plans.PlansSummaryResponse;
+import com.company.GymVerse.tenantAdmin.response.plans.TierCountResponse;
 import com.company.GymVerse.tenantAdmin.response.subscription.TenantSubscriptionDetailsResponse;
+import org.springframework.data.domain.Page;
+
+import java.util.List;
 
 /**
  * Handwritten mapper contract for tenant administration domain and response models.
  */
 public interface TenantAdminMapper {
 
-    /**
-     * Converts a {@link GymSubscription} and calculated trial metrics into a {@link TenantSubscriptionDetailsResponse}.
-     *
-     * @param subscription   the gym subscription entity
-     * @param daysRemaining  remaining days in subscription/trial period
-     * @param isTrial        flag indicating active trial status
-     * @return populated {@link TenantSubscriptionDetailsResponse}
-     */
     TenantSubscriptionDetailsResponse toSubscriptionDetails(GymSubscription subscription, Long daysRemaining, boolean isTrial);
 
-    /**
-     * Wraps a {@link TenantSubscriptionDetailsResponse} and status message into a unified {@link TenantAdminResponse}.
-     *
-     * @param message  confirmation message
-     * @param details  subscription details payload
-     * @return populated {@link TenantAdminResponse}
-     */
     TenantAdminResponse toResponse(String message, TenantSubscriptionDetailsResponse details);
+
+    PlanTierOptionResponse toPlanTierOption(PlanTier tier);
+
+    PlanItemResponse toPlanItem(MembershipPlan plan);
+
+    TenantAdminResponse toPlansSummaryResponse(String message, long totalActivePlans, long totalPlans, List<TierCountResponse> tierBreakdown);
+
+    TenantAdminResponse toPlanFilterOptionsResponse(String message, List<PlanTierOptionResponse> tiers, List<String> facilities, List<String> customThemes);
+
+    TenantAdminResponse toPagedPlansResponse(String message, Page<MembershipPlan> planPage);
+
+    TenantAdminResponse toPlanItemResponse(String message, int httpStatus, PlanItemResponse item);
+
+    default <T> PagedResponse<T> toPagedResponse(Page<?> page, List<T> content) {
+        return new PagedResponse<>(
+                content,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isLast()
+        );
+    }
+
+    default PlansSummaryResponse buildPlansSummary(long totalActivePlans, long totalPlans, List<TierCountResponse> tierBreakdown) {
+        return PlansSummaryResponse.builder()
+                .totalActivePlans(totalActivePlans)
+                .totalPlans(totalPlans)
+                .tierBreakdown(tierBreakdown)
+                .build();
+    }
+
+    default PlanFilterOptionsResponse buildPlanFilterOptions(
+            List<PlanTierOptionResponse> tiers,
+            List<String> facilities,
+            List<String> customThemes
+    ) {
+        return PlanFilterOptionsResponse.builder()
+                .tiers(tiers)
+                .facilities(facilities)
+                .customThemes(customThemes)
+                .build();
+    }
 }

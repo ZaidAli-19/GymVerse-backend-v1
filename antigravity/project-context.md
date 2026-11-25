@@ -12,10 +12,10 @@
 | **Repository Root** | `D:\projects\GymVerse-Backend-v2` |
 | **Current Git Branch** | `GymVerse/dev` |
 | **Current Project Phase** | **Phase 5: In-Gym Tenant Administration Module (7-Page Operational Suite)** |
-| **Current Phase Stage** | **Phase 5 Active Implementation (Story 5.1 Completed)** |
-| **Last Completed Story** | **Story 5.1: Phase 5 Schema Extensions (V2), Reusable Attendance Port & Subfolder Core Infrastructure** |
-| **Immediate Next Phase / Story** | **Story 5.2: Plans Management Suite (Mini-Dashboard, Filter Options, Catalog, Custom Tiers, Facilities & Themes)** |
-| **Test Suite Health** | **Story 5.1 + Enum Standardization Verification: 42/42 Passing (0 Failures, 0 Errors)** |
+| **Current Phase Stage** | **Phase 5 Active Implementation (Story 5.2 Completed)** |
+| **Last Completed Story** | **Story 5.2: Plans Management Suite (Summary, Filter Options, Catalog, Custom Tiers, Facilities & Themes)** |
+| **Immediate Next Phase / Story** | **Story 5.3: Join Requests Review & Approval Workflow** |
+| **Test Suite Health** | **Story 5.2 Unit & MySQL Integration Verification: 20/20 Passing (0 Failures, 0 Errors)** |
 | **Protected Code Status** | All 8 classes in `com.company.GymVerse.multitanancy` remain 100% byte-for-byte untouched |
 
 ---
@@ -147,8 +147,8 @@
 | Story ID | Description | Core Artifacts | Status |
 | :--- | :--- | :--- | :--- |
 | **Story 5.1** | Phase 5 Schema (`V2`), Reusable Attendance Port & Subfolder Core Infrastructure | `V2__phase5_tenant_admin_extensions.sql`, `PlanTier`, `GymFacility`, `Trainer`, `AttendanceQueryPort`, `PlanTheme`, `helper/`, `subscription/` subfolder refactor | ✅ Completed |
-| **Story 5.2** | Plans Management Suite | `service/plans/`, `MembershipPlanSpecification`, `CREATE_PLAN`, `FETCH_PLANS`, `FETCH_PLANS_SUMMARY`, `FETCH_PLAN_FILTER_OPTIONS`, `UPDATE_PLAN_AVAILABILITY` | ⏳ Next |
-| **Story 5.3** | Join Requests Review & Approval Workflow | `service/members/`, `JoinRequestSpecification`, `FETCH_JOIN_REQUESTS`, `APPROVE_JOIN_REQUEST`, `REJECT_JOIN_REQUEST` | ⏳ Planned |
+| **Story 5.2** | Plans Management Suite | `service/plans/`, `MembershipPlanSpecification`, `PlanHelper`, `CREATE_PLAN`, `FETCH_PLANS`, `FETCH_PLANS_SUMMARY`, `FETCH_PLAN_FILTER_OPTIONS`, `UPDATE_PLAN_AVAILABILITY` | ✅ Completed |
+| **Story 5.3** | Join Requests Review & Approval Workflow | `service/members/`, `JoinRequestSpecification`, `FETCH_JOIN_REQUESTS`, `APPROVE_JOIN_REQUEST`, `REJECT_JOIN_REQUEST` | ⏳ Next |
 | **Story 5.4** | Members Directory, Mini-Dashboard & Member Details View | `service/members/`, `MemberSpecification`, `FETCH_MEMBERS_SUMMARY`, `FETCH_MEMBERS`, `FETCH_MEMBER_DETAILS` | ⏳ Planned |
 | **Story 5.5** | Trainers & Staff Summary & Address Book | `service/trainers/`, `TrainerSpecification`, `FETCH_TRAINERS_SUMMARY`, `FETCH_TRAINERS` | ⏳ Planned |
 | **Story 5.6** | Finance Analytics Suite & Expense Ledger | `service/finance/`, `ExpenseSpecification`, `FETCH_FINANCE_OVERVIEW`, `FETCH_EXPENSE_TRANSACTIONS`, `CREATE_EXPENSE` | ⏳ Planned |
@@ -156,21 +156,18 @@
 
 ---
 
-## 5. Scope & Target Artifacts for Immediate Next Work: Story 5.2 (Plans Management Suite)
+## 5. Scope & Target Artifacts for Immediate Next Work: Story 5.3 (Join Requests Review & Approval Workflow)
 
-- **Active Stage:** `Phase 5 Implementation — Story 5.2`
-- **Next Story:** [`story-5.2-plans-management-suite.md`](file:///D:/projects/GymVerse-Backend-v2/_bmad-output/planning-artifacts/phase-5-tenant-admin/story-5.2-plans-management-suite.md)
+- **Active Stage:** `Phase 5 Implementation — Story 5.3`
+- **Next Story:** [`story-5.3-join-requests-review-and-approval.md`](file:///D:/projects/GymVerse-Backend-v2/_bmad-output/planning-artifacts/phase-5-tenant-admin/story-5.3-join-requests-review-and-approval.md)
 - **Target Operations (`/api/tenant-admin`):**
-  1. `FETCH_PLANS_SUMMARY` (`PlansSummaryResponse`: total active plans + tier-based breakdown).
-  2. `FETCH_PLAN_FILTER_OPTIONS` (`PlanFilterOptionsResponse`: persisted tiers with themes, persisted facilities, 20 custom `PlanTheme` keys).
-  3. `FETCH_PLANS` (JPA `MembershipPlanSpecification` + pagination + sorting; filters for `tier`, `hasOffer`, `active`, `isTrial`, `search`).
-  4. `CREATE_PLAN` (`ELITE`/`LEGENDARY` or custom tier + custom theme + multi-facility linking via `membership_plan_facilities` + discount calculation).
-  5. `UPDATE_PLAN_AVAILABILITY` (toggle plan active/inactive).
+  1. `FETCH_JOIN_REQUESTS` (`JoinRequestSpecification` + pagination + sorting + `status` & `search` filters).
+  2. `APPROVE_JOIN_REQUEST` (validates `max_members` SaaS quota, `PAID`/`PARTIALLY_PAID` + `paidAmount`, updates `JoinRequest`, creates `TenantUser`, `Member`, `MemberMembership`, `Revenue`, and Central `UserTenantRole(MEMBER, ACTIVE)`).
+  3. `REJECT_JOIN_REQUEST` (transitions `PENDING` -> `REJECTED` with admin notes).
 - **Invariants:**
-  - Subfolder classification under `service/plans/`, `request/plans/`, `response/plans/`, `specifications/plans/`.
-  - Multi-tenancy core untouched (8 protected classes).
-  - Single `@PostMapping` controller gateway per module.
-  - No autonomous git commit/push (`RULES.md` Rule 1).
+  - Subfolder classification under `service/members/`, `request/members/`, `response/members/`, `specifications/members/`.
+  - All status/type fields use `@Enumerated(EnumType.STRING)` enums in `models.tenant.enums`.
+  - Multi-tenancy core untouched (8 protected classes); no autonomous git commit/push (`RULES.md` Rule 1).
 
 ---
 

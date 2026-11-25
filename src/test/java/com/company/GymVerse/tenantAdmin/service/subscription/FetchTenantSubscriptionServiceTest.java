@@ -10,6 +10,8 @@ import com.company.GymVerse.models.central.enums.GymSubscriptionStatus;
 import com.company.GymVerse.models.central.enums.TenantRole;
 import com.company.GymVerse.multitanancy.TenantContext;
 import com.company.GymVerse.repositories.central.GymSubscriptionRepository;
+import com.company.GymVerse.repositories.tenant.MembershipPlanRepository;
+import com.company.GymVerse.repositories.tenant.PlanTierRepository;
 import com.company.GymVerse.security.jwt.JwtUtil;
 import com.company.GymVerse.security.jwt.TenantTokenClaims;
 import com.company.GymVerse.tenantAdmin.helper.TenantAdminContextHelper;
@@ -85,10 +87,21 @@ class FetchTenantSubscriptionServiceTest {
                 }
         );
 
+        MembershipPlanRepository planRepoProxy = (MembershipPlanRepository) Proxy.newProxyInstance(
+                MembershipPlanRepository.class.getClassLoader(),
+                new Class<?>[]{MembershipPlanRepository.class},
+                (proxy, method, args) -> null
+        );
+        PlanTierRepository tierRepoProxy = (PlanTierRepository) Proxy.newProxyInstance(
+                PlanTierRepository.class.getClassLoader(),
+                new Class<?>[]{PlanTierRepository.class},
+                (proxy, method, args) -> null
+        );
+
         TenantAdminContextHelper contextHelper = new TenantAdminContextHelper(jwtUtil, request, null);
         service = new FetchTenantSubscriptionService(
                 repoProxy,
-                new TenantAdminValidationsImpl(),
+                new TenantAdminValidationsImpl(planRepoProxy, tierRepoProxy),
                 new TenantAdminMapperImpl(),
                 contextHelper
         );

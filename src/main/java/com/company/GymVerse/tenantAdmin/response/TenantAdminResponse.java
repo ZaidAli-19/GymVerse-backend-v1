@@ -1,5 +1,8 @@
 package com.company.GymVerse.tenantAdmin.response;
 
+import com.company.GymVerse.tenantAdmin.response.plans.PlanFilterOptionsResponse;
+import com.company.GymVerse.tenantAdmin.response.plans.PlanItemResponse;
+import com.company.GymVerse.tenantAdmin.response.plans.PlansSummaryResponse;
 import com.company.GymVerse.tenantAdmin.response.subscription.TenantSubscriptionDetailsResponse;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -26,4 +29,8 @@ public class TenantAdminResponse {
     private Instant timestamp = Instant.now();
 
     private TenantSubscriptionDetailsResponse tenantSubscriptionDetailsResponse;
+    private PlansSummaryResponse plansSummaryResponse;
+    private PlanFilterOptionsResponse planFilterOptionsResponse;
+    private PagedResponse<PlanItemResponse> plansPageResponse;
+    private PlanItemResponse planItemResponse;
 }
