@@ -1,7 +1,10 @@
 package com.company.GymVerse.models.tenant;
 
+import com.company.GymVerse.models.tenant.enums.MembershipRequestStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -44,8 +47,9 @@ public class MembershipRequest {
     private MembershipPlan plan;
 
     @Builder.Default
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private String status = "PENDING";
+    private MembershipRequestStatus status = MembershipRequestStatus.PENDING;
 
     @Column(name = "request_date", nullable = false)
     private Instant requestDate;
@@ -69,7 +73,7 @@ public class MembershipRequest {
             this.requestDate = Instant.now();
         }
         if (this.status == null) {
-            this.status = "PENDING";
+            this.status = MembershipRequestStatus.PENDING;
         }
     }
 

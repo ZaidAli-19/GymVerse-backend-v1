@@ -1,6 +1,7 @@
 package com.company.GymVerse.tenantAdmin.helper;
 
 import com.company.GymVerse.exceptions.common.BadRequestException;
+import com.company.GymVerse.models.tenant.enums.DiscountType;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -22,32 +23,31 @@ public final class MembershipCalculationHelper {
      */
     public static BigDecimal computeFinalPrice(
             final BigDecimal basePrice,
-            final String discountType,
+            final DiscountType discountType,
             final BigDecimal discountValue
     ) {
         if (basePrice == null) {
             throw new BadRequestException("basePrice must not be null");
         }
-        if (discountType == null || discountType.isBlank() || discountValue == null) {
+        if (discountType == null || discountValue == null) {
             return basePrice.setScale(2, RoundingMode.HALF_UP);
         }
 
-        String normalizedType = discountType.trim().toUpperCase();
         BigDecimal discounted;
-        if ("PERCENTAGE".equals(normalizedType)) {
+        if (discountType == DiscountType.PERCENTAGE) {
             if (discountValue.compareTo(BigDecimal.ZERO) < 0 || discountValue.compareTo(ONE_HUNDRED) > 0) {
                 throw new BadRequestException("Percentage discount must be between 0 and 100");
             }
             BigDecimal discountAmount = basePrice.multiply(discountValue)
                     .divide(ONE_HUNDRED, 2, RoundingMode.HALF_UP);
             discounted = basePrice.subtract(discountAmount);
-        } else if ("FLAT".equals(normalizedType)) {
+        } else if (discountType == DiscountType.FLAT) {
             if (discountValue.compareTo(BigDecimal.ZERO) < 0 || discountValue.compareTo(basePrice) > 0) {
                 throw new BadRequestException("Flat discount must be between 0 and basePrice");
             }
             discounted = basePrice.subtract(discountValue);
         } else {
-            throw new BadRequestException("Unsupported discountType: " + discountType + ". Supported values: PERCENTAGE, FLAT");
+            throw new BadRequestException("Unsupported discountType: " + discountType);
         }
 
         return discounted.max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);

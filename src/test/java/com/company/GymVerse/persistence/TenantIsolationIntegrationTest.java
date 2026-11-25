@@ -3,6 +3,7 @@ package com.company.GymVerse.persistence;
 import com.company.GymVerse.models.central.enums.TenantRole;
 import com.company.GymVerse.models.tenant.Member;
 import com.company.GymVerse.models.tenant.TenantUser;
+import com.company.GymVerse.models.tenant.enums.MemberType;
 import com.company.GymVerse.multitanancy.TenantContext;
 import com.company.GymVerse.multitanancy.TenantDataSourceCache;
 import com.company.GymVerse.multitanancy.TenantDatabaseService;
@@ -94,7 +95,7 @@ class TenantIsolationIntegrationTest {
                     .gymId("GYM1-MEMBER")
                     .joinDate(LocalDate.now())
                     .independent(true)
-                    .type("FULL")
+                    .type(MemberType.FULL)
                     .build());
         });
 
@@ -125,7 +126,7 @@ class TenantIsolationIntegrationTest {
                     .gymId("GYM2-MEMBER")
                     .joinDate(LocalDate.now())
                     .independent(true)
-                    .type("FULL")
+                    .type(MemberType.FULL)
                     .build());
         });
 

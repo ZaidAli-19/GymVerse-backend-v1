@@ -1,10 +1,10 @@
-package com.company.GymVerse.tenantAdmin.request.enums;
+package com.company.GymVerse.models.tenant.enums;
 
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * Standard expense categories presented at the top of the Add Expense workflow.
+ * Standard expense categories presented in the Finance Add Expense workflow.
  */
 public enum ExpenseCategory {
     ELECTRICITY,

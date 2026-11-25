@@ -25,7 +25,8 @@
 3. **Reusable Attendance Boundary (`com.company.GymVerse.attendance`)**:
    - Created `AttendanceQueryPort` + `AttendanceQueryStubImpl` returning safe zero/empty values with `// TODO [ATTENDANCE-MODULE]` markers, plus DTOs `LiveAttendanceSummary`, `MemberAttendanceSnapshot`, `TrainerAttendanceSummary`, `LiveRosterEntry`.
 4. **Domain Enums, Theme Catalog & Helpers**:
-   - Added `PlanTheme` (`GOLDEN`, `PURPLE` defaults + 20 custom UI-aligned themes), `PaymentStatus`, `PaymentMode`, `RevenueType`, `ExpenseCategory`, `FinancePeriodType`, `MemberFilterStatus`.
+   - Standardized ALL tenant status, type, category, theme, discount, and payment fields to `@Enumerated(EnumType.STRING)` enums in `com.company.GymVerse.models.tenant.enums`: `PlanTheme`, `DiscountType`, `PaymentStatus`, `PaymentMode`, `RevenueType`, `ExpenseCategory`, `JoinRequestStatus`, `MemberType`, `MembershipRequestStatus`, `InvitationStatus`, and `AttendanceStatus` (keeping all free-form names as `String`).
+   - Kept query/filter-only UI enums (`TenantAdminRequestType`, `FinancePeriodType`, `MemberFilterStatus`) in `tenantAdmin/request/enums/`.
    - Added `TenantOperationsProperties` (`gymverse.tenant.membership.expiring-soon-days: 7`).
    - Added `TenantAdminContextHelper`, `MembershipCalculationHelper`, and `FinancePeriodHelper`.
    - Added `PagedResponse<T>` and `TenantAdminValidations.validateAndBuildPageable(...)`.
@@ -33,6 +34,6 @@
    - Moved Story 4.6 subscription classes into `service/subscription/`, `request/subscription/`, and `response/subscription/`.
 
 ## 3. Verification & Compliance
-- **Test Execution (`BUILD SUCCESS`):** 27 tests passed (0 failures, 0 errors) across `AttendanceQueryStubAndThemeTest` (2), `FinancePeriodHelperTest` (1), `MembershipCalculationHelperTest` (4), `TenantAdminContextHelperTest` (4), `FetchTenantSubscriptionServiceTest` (2), `TenantAdminValidationsImplTest` (2), `TenantSubscriptionIntegrationTest` (10), `TenantPersistenceIntegrationTest` (1), and `TenantIsolationIntegrationTest` (1) against MySQL 9.1 (`V1` + `V2` Flyway verified).
+- **Test Execution (`BUILD SUCCESS`):** 42 tests passed (0 failures, 0 errors) across `AttendanceQueryStubAndThemeTest` (2), `FinancePeriodHelperTest` (1), `MembershipCalculationHelperTest` (4), `TenantAdminContextHelperTest` (4), `FetchTenantSubscriptionServiceTest` (2), `TenantAdminValidationsImplTest` (2), `TenantSubscriptionIntegrationTest` (10), `TenantPersistenceIntegrationTest` (1), `TenantIsolationIntegrationTest` (1), `SubmitJoinRequestServiceTest` (5), and `UserValidationsTest` (10) against MySQL 9.1 (`V1` + `V2` Flyway verified).
 - **Protected Core Invariant:** `git status -s src/main/java/com/company/GymVerse/multitanancy` returned empty (100% untouched).
 - **Git Safety:** Zero commits or pushes executed.

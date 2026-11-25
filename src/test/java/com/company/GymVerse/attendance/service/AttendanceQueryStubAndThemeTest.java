@@ -1,6 +1,6 @@
 package com.company.GymVerse.attendance.service;
 
-import com.company.GymVerse.tenantAdmin.request.enums.PlanTheme;
+import com.company.GymVerse.models.tenant.enums.PlanTheme;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageRequest;

@@ -1,7 +1,10 @@
 package com.company.GymVerse.models.tenant;
 
+import com.company.GymVerse.models.tenant.enums.DiscountType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -60,8 +63,9 @@ public class MembershipPlan {
     @Column(name = "base_price", precision = 10, scale = 2, nullable = false)
     private BigDecimal basePrice;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "discount_type", length = 30)
-    private String discountType;
+    private DiscountType discountType;
 
     @Column(name = "discount_value", precision = 10, scale = 2)
     private BigDecimal discountValue;

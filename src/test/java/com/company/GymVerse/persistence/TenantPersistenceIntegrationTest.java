@@ -9,7 +9,10 @@ import com.company.GymVerse.models.tenant.GymInvitation;
 import com.company.GymVerse.models.tenant.Member;
 import com.company.GymVerse.models.tenant.MembershipPlan;
 import com.company.GymVerse.models.tenant.TenantUser;
+import com.company.GymVerse.models.tenant.enums.AttendanceStatus;
 import com.company.GymVerse.models.tenant.enums.FriendRequestStatus;
+import com.company.GymVerse.models.tenant.enums.InvitationStatus;
+import com.company.GymVerse.models.tenant.enums.MemberType;
 import com.company.GymVerse.multitanancy.TenantContext;
 import com.company.GymVerse.multitanancy.TenantDataSourceCache;
 import com.company.GymVerse.multitanancy.TenantDatabaseService;
@@ -140,7 +143,7 @@ class TenantPersistenceIntegrationTest {
                     .gymId("GYM-M-001")
                     .joinDate(LocalDate.now())
                     .independent(true)
-                    .type("GENERAL")
+                    .type(MemberType.GENERAL)
                     .build();
 
             Member savedMember = memberRepository.saveAndFlush(member);
@@ -166,13 +169,13 @@ class TenantPersistenceIntegrationTest {
                     .member(savedMember)
                     .date(LocalDate.now())
                     .checkInTime(Instant.now())
-                    .status("PRESENT")
+                    .status(AttendanceStatus.PRESENT)
                     .autoCheckedOut(false)
                     .build();
 
             Attendance savedAttendance = attendanceRepository.saveAndFlush(attendance);
             assertThat(savedAttendance.getId()).isNotNull();
-            assertThat(savedAttendance.getStatus()).isEqualTo("PRESENT");
+            assertThat(savedAttendance.getStatus()).isEqualTo(AttendanceStatus.PRESENT);
 
             // 6. GymInvitation: SHA-256 hashed token lookup (64 hex characters)
             String sha256TokenHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
@@ -180,7 +183,7 @@ class TenantPersistenceIntegrationTest {
                     .email("trainer.invite@testgym.com")
                     .role(TenantRole.TRAINER)
                     .invitationTokenHash(sha256TokenHash)
-                    .status("PENDING")
+                    .status(InvitationStatus.PENDING)
                     .expiresAt(Instant.now().plusSeconds(86400))
                     .build();
 
@@ -206,7 +209,7 @@ class TenantPersistenceIntegrationTest {
                     .gymId("GYM-M-002")
                     .joinDate(LocalDate.now())
                     .independent(true)
-                    .type("GENERAL")
+                    .type(MemberType.GENERAL)
                     .build());
 
             FriendRequest friendRequest = friendRequestRepository.saveAndFlush(FriendRequest.builder()

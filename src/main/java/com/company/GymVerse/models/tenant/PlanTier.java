@@ -1,7 +1,10 @@
 package com.company.GymVerse.models.tenant;
 
+import com.company.GymVerse.models.tenant.enums.PlanTheme;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,8 +39,9 @@ public class PlanTier {
     @Column(nullable = false, unique = true, length = 50)
     private String name;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "theme_key", nullable = false, length = 50)
-    private String themeKey;
+    private PlanTheme themeKey;
 
     @Builder.Default
     @Column(name = "is_default", nullable = false)

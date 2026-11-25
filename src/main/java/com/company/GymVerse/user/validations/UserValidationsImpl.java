@@ -6,6 +6,7 @@ import com.company.GymVerse.models.central.UserTenantRole;
 import com.company.GymVerse.models.central.enums.GymStatus;
 import com.company.GymVerse.models.central.enums.GymSubscriptionStatus;
 import com.company.GymVerse.models.central.enums.TenantMembershipStatus;
+import com.company.GymVerse.models.tenant.enums.JoinRequestStatus;
 import com.company.GymVerse.multitanancy.TenantContext;
 import com.company.GymVerse.repositories.central.GymTenantRepository;
 import com.company.GymVerse.repositories.central.UserTenantRoleRepository;
@@ -167,7 +168,7 @@ public class UserValidationsImpl implements UserValidations {
         if (userAccountId == null || joinRequestRepository == null) {
             throw new BadRequestException("User account ID and join request repository must not be null");
         }
-        if (joinRequestRepository.existsByCentralUserIdAndStatus(userAccountId, "PENDING")) {
+        if (joinRequestRepository.existsByCentralUserIdAndStatus(userAccountId, JoinRequestStatus.PENDING)) {
             throw new BadRequestException("A pending join request already exists for this user in this gym");
         }
     }

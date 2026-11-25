@@ -1,7 +1,10 @@
 package com.company.GymVerse.models.tenant;
 
+import com.company.GymVerse.models.tenant.enums.MemberType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -61,8 +64,9 @@ public class Member {
     @Column(name = "gym_id", unique = true, length = 50)
     private String gymId;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 50)
-    private String type;
+    private MemberType type;
 
     @Column(name = "trial_end_date")
     private LocalDate trialEndDate;

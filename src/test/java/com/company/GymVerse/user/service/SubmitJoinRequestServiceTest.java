@@ -11,6 +11,7 @@ import com.company.GymVerse.models.central.enums.GymSubscriptionStatus;
 import com.company.GymVerse.models.central.enums.TenantMembershipStatus;
 import com.company.GymVerse.models.central.enums.TenantRole;
 import com.company.GymVerse.models.tenant.JoinRequest;
+import com.company.GymVerse.models.tenant.enums.JoinRequestStatus;
 import com.company.GymVerse.multitanancy.TenantRoutingBridge;
 import com.company.GymVerse.repositories.central.GymSubscriptionRepository;
 import com.company.GymVerse.repositories.central.GymTenantRepository;
@@ -125,9 +126,9 @@ class SubmitJoinRequestServiceTest {
                 (proxy, method, args) -> {
                     if ("existsByCentralUserIdAndStatus".equals(method.getName())) {
                         Long uid = (Long) args[0];
-                        String st = (String) args[1];
+                        JoinRequestStatus st = (JoinRequestStatus) args[1];
                         return savedJoinRequests.stream()
-                                .anyMatch(r -> r.getCentralUserId().equals(uid) && r.getStatus().equalsIgnoreCase(st));
+                                .anyMatch(r -> r.getCentralUserId().equals(uid) && r.getStatus() == st);
                     }
                     if ("save".equals(method.getName())) {
                         JoinRequest req = (JoinRequest) args[0];
@@ -210,7 +211,7 @@ class SubmitJoinRequestServiceTest {
         assertThat(response.getStatus()).isEqualTo(201);
         assertThat(response.getSubmitJoinRequestResponse()).isNotNull();
         assertThat(response.getSubmitJoinRequestResponse().getGymCode()).isEqualTo("GOLD-10");
-        assertThat(response.getSubmitJoinRequestResponse().getStatus()).isEqualTo("PENDING");
+        assertThat(response.getSubmitJoinRequestResponse().getStatus()).isEqualTo(JoinRequestStatus.PENDING);
         assertThat(response.getSubmitJoinRequestResponse().getRequestNotes()).isEqualTo("Want to join weightlifting classes");
         assertThat(savedJoinRequests).hasSize(1);
         assertThat(savedJoinRequests.get(0).getCentralUserId()).isEqualTo(1L);
@@ -241,7 +242,7 @@ class SubmitJoinRequestServiceTest {
         savedJoinRequests.add(JoinRequest.builder()
                 .id(99L)
                 .centralUserId(1L)
-                .status("PENDING")
+                .status(JoinRequestStatus.PENDING)
                 .build());
 
         UserRequest request = UserRequest.builder()

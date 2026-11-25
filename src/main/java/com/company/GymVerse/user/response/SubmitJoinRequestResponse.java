@@ -1,5 +1,6 @@
 package com.company.GymVerse.user.response;
 
+import com.company.GymVerse.models.tenant.enums.JoinRequestStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,7 +23,7 @@ public class SubmitJoinRequestResponse {
     private Long gymTenantId;
     private String gymCode;
     private String gymName;
-    private String status;
+    private JoinRequestStatus status;
     private String requestNotes;
     private Instant createdAt;
 }

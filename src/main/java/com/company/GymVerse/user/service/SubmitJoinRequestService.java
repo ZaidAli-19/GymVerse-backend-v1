@@ -5,6 +5,7 @@ import com.company.GymVerse.models.central.GymTenant;
 import com.company.GymVerse.models.central.UserAccount;
 import com.company.GymVerse.models.central.enums.GymSubscriptionStatus;
 import com.company.GymVerse.models.tenant.JoinRequest;
+import com.company.GymVerse.models.tenant.enums.JoinRequestStatus;
 import com.company.GymVerse.multitanancy.TenantRoutingBridge;
 import com.company.GymVerse.repositories.central.GymTenantRepository;
 import com.company.GymVerse.repositories.tenant.JoinRequestRepository;
@@ -72,7 +73,7 @@ public class SubmitJoinRequestService implements UserOperation {
                     .firstName(callerAccount.getFirstName())
                     .lastName(callerAccount.getLastName())
                     .phoneNumber(callerAccount.getPhoneNumber())
-                    .status("PENDING")
+                    .status(JoinRequestStatus.PENDING)
                     .requestNotes(request.getSubmitJoinRequest().getRequestNotes())
                     .createdAt(Instant.now())
                     .build();

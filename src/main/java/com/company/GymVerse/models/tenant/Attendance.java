@@ -1,7 +1,10 @@
 package com.company.GymVerse.models.tenant;
 
+import com.company.GymVerse.models.tenant.enums.AttendanceStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -52,8 +55,9 @@ public class Attendance {
     @Column(name = "auto_checked_out", nullable = false)
     private boolean autoCheckedOut = false;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private String status;
+    private AttendanceStatus status;
 
     @Override
     public boolean equals(Object o) {

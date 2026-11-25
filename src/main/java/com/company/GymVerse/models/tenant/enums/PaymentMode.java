@@ -1,4 +1,4 @@
-package com.company.GymVerse.tenantAdmin.request.enums;
+package com.company.GymVerse.models.tenant.enums;
 
 /**
  * Supported payment collection channels for gym revenue.

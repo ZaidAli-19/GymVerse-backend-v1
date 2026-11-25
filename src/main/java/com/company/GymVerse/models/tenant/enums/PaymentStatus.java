@@ -1,4 +1,4 @@
-package com.company.GymVerse.tenantAdmin.request.enums;
+package com.company.GymVerse.models.tenant.enums;
 
 /**
  * Payment settlement status for tenant member memberships.

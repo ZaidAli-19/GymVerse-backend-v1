@@ -1,6 +1,7 @@
 package com.company.GymVerse.tenantAdmin.helper;
 
 import com.company.GymVerse.exceptions.common.BadRequestException;
+import com.company.GymVerse.models.tenant.enums.DiscountType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -18,26 +19,22 @@ class MembershipCalculationHelperTest {
         assertThat(MembershipCalculationHelper.computeFinalPrice(new BigDecimal("100.00"), null, null))
                 .isEqualByComparingTo("100.00");
 
-        assertThat(MembershipCalculationHelper.computeFinalPrice(new BigDecimal("200.00"), "PERCENTAGE", new BigDecimal("25")))
+        assertThat(MembershipCalculationHelper.computeFinalPrice(new BigDecimal("200.00"), DiscountType.PERCENTAGE, new BigDecimal("25")))
                 .isEqualByComparingTo("150.00");
 
-        assertThat(MembershipCalculationHelper.computeFinalPrice(new BigDecimal("200.00"), "FLAT", new BigDecimal("40.00")))
+        assertThat(MembershipCalculationHelper.computeFinalPrice(new BigDecimal("200.00"), DiscountType.FLAT, new BigDecimal("40.00")))
                 .isEqualByComparingTo("160.00");
     }
 
     @Test
-    @DisplayName("Rejects invalid discount bounds or unknown discount type")
+    @DisplayName("Rejects invalid discount bounds")
     void computeFinalPrice_InvalidInputs() {
         assertThatThrownBy(() -> MembershipCalculationHelper.computeFinalPrice(
-                new BigDecimal("100.00"), "PERCENTAGE", new BigDecimal("110")))
+                new BigDecimal("100.00"), DiscountType.PERCENTAGE, new BigDecimal("110")))
                 .isInstanceOf(BadRequestException.class);
 
         assertThatThrownBy(() -> MembershipCalculationHelper.computeFinalPrice(
-                new BigDecimal("100.00"), "FLAT", new BigDecimal("150")))
-                .isInstanceOf(BadRequestException.class);
-
-        assertThatThrownBy(() -> MembershipCalculationHelper.computeFinalPrice(
-                new BigDecimal("100.00"), "BOGO", new BigDecimal("10")))
+                new BigDecimal("100.00"), DiscountType.FLAT, new BigDecimal("150")))
                 .isInstanceOf(BadRequestException.class);
     }
 

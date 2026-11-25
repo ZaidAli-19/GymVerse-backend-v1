@@ -7,6 +7,7 @@ import com.company.GymVerse.models.central.enums.GymStatus;
 import com.company.GymVerse.models.central.enums.GymSubscriptionStatus;
 import com.company.GymVerse.models.central.enums.TenantMembershipStatus;
 import com.company.GymVerse.models.central.enums.TenantRole;
+import com.company.GymVerse.models.tenant.enums.JoinRequestStatus;
 import com.company.GymVerse.repositories.central.GymTenantRepository;
 import com.company.GymVerse.repositories.central.UserTenantRoleRepository;
 import com.company.GymVerse.repositories.tenant.JoinRequestRepository;
@@ -80,8 +81,8 @@ class UserValidationsTest {
                 (proxy, method, args) -> {
                     if ("existsByCentralUserIdAndStatus".equals(method.getName())) {
                         Long uid = (Long) args[0];
-                        String st = (String) args[1];
-                        return uid != null && uid == 999L && "PENDING".equals(st);
+                        JoinRequestStatus st = (JoinRequestStatus) args[1];
+                        return uid != null && uid == 999L && st == JoinRequestStatus.PENDING;
                     }
                     return null;
                 }
