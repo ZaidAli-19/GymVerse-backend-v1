@@ -90,6 +90,9 @@ gymverse:
   datasource:
     host: ${TENANT_DB_HOST:localhost}
     port: ${TENANT_DB_PORT:3306}
+  tenant:
+    membership:
+      expiring-soon-days: ${GYMVERSE_MEMBERSHIP_EXPIRING_SOON_DAYS:7}
   kafka:
     topics:
       otp-email: ${OTP_EMAIL_TOPIC:otp-email-topic}

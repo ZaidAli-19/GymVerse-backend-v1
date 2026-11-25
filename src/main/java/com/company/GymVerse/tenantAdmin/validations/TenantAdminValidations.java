@@ -1,6 +1,9 @@
 package com.company.GymVerse.tenantAdmin.validations;
 
 import com.company.GymVerse.tenantAdmin.request.TenantAdminRequest;
+import org.springframework.data.domain.Pageable;
+
+import java.util.Set;
 
 /**
  * Validation interface defining security context and constraint rules for tenant administration flows.
@@ -19,4 +22,16 @@ public interface TenantAdminValidations {
      * @param request the tenant admin request envelope
      */
     void validateRequest(TenantAdminRequest request);
+
+    /**
+     * Validates pagination parameters and whitelist-guarded sorting, returning a constructed Pageable.
+     */
+    Pageable validateAndBuildPageable(
+            Integer page,
+            Integer size,
+            String sortBy,
+            String sortDirection,
+            String defaultSortBy,
+            Set<String> allowedSortFields
+    );
 }

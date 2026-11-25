@@ -4,7 +4,7 @@ import com.company.GymVerse.models.central.GymSubscription;
 import com.company.GymVerse.models.central.GymTenant;
 import com.company.GymVerse.models.central.SaasSubscriptionPlan;
 import com.company.GymVerse.tenantAdmin.response.TenantAdminResponse;
-import com.company.GymVerse.tenantAdmin.response.TenantSubscriptionDetailsResponse;
+import com.company.GymVerse.tenantAdmin.response.subscription.TenantSubscriptionDetailsResponse;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;

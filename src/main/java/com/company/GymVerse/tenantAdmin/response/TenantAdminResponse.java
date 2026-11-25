@@ -1,5 +1,6 @@
 package com.company.GymVerse.tenantAdmin.response;
 
+import com.company.GymVerse.tenantAdmin.response.subscription.TenantSubscriptionDetailsResponse;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

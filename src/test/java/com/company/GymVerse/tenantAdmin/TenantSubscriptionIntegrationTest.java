@@ -11,7 +11,7 @@ import com.company.GymVerse.models.central.enums.TenantRole;
 import com.company.GymVerse.repositories.central.GymSubscriptionRepository;
 import com.company.GymVerse.security.jwt.JwtUtil;
 import com.company.GymVerse.security.jwt.TenantTokenClaims;
-import com.company.GymVerse.tenantAdmin.request.FetchTenantSubscriptionRequest;
+import com.company.GymVerse.tenantAdmin.request.subscription.FetchTenantSubscriptionRequest;
 import com.company.GymVerse.tenantAdmin.request.TenantAdminRequest;
 import com.company.GymVerse.tenantAdmin.request.enums.TenantAdminRequestType;
 import com.fasterxml.jackson.databind.ObjectMapper;

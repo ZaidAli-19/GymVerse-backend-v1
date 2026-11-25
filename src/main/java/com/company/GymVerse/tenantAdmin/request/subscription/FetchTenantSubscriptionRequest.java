@@ -1,4 +1,4 @@
-package com.company.GymVerse.tenantAdmin.request;
+package com.company.GymVerse.tenantAdmin.request.subscription;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;

@@ -8,7 +8,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -37,8 +36,8 @@ public class Revenue {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "member_membership_id", unique = true, nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_membership_id")
     private MemberMembership memberMembership;
 
     @Column(precision = 10, scale = 2, nullable = false)
@@ -47,8 +46,15 @@ public class Revenue {
     @Column(name = "payment_mode", nullable = false, length = 50)
     private String paymentMode;
 
+    @Builder.Default
+    @Column(name = "revenue_type", nullable = false, length = 30)
+    private String revenueType = "NEW_MEMBERSHIP";
+
     @Column(name = "transaction_reference", length = 100)
     private String transactionReference;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
 
     @Column(name = "received_at", nullable = false)
     private Instant receivedAt;

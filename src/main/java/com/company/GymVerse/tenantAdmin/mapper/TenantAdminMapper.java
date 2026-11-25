@@ -2,7 +2,7 @@ package com.company.GymVerse.tenantAdmin.mapper;
 
 import com.company.GymVerse.models.central.GymSubscription;
 import com.company.GymVerse.tenantAdmin.response.TenantAdminResponse;
-import com.company.GymVerse.tenantAdmin.response.TenantSubscriptionDetailsResponse;
+import com.company.GymVerse.tenantAdmin.response.subscription.TenantSubscriptionDetailsResponse;
 
 /**
  * Handwritten mapper contract for tenant administration domain and response models.

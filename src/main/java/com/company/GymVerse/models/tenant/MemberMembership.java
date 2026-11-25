@@ -55,6 +55,14 @@ public class MemberMembership {
     @Column(name = "final_price", precision = 10, scale = 2, nullable = false)
     private BigDecimal finalPrice;
 
+    @Builder.Default
+    @Column(name = "paid_amount", precision = 10, scale = 2, nullable = false)
+    private BigDecimal paidAmount = BigDecimal.ZERO;
+
+    @Builder.Default
+    @Column(name = "payment_status", nullable = false, length = 30)
+    private String paymentStatus = "PAID";
+
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
@@ -64,6 +72,14 @@ public class MemberMembership {
     @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
+
+    @Builder.Default
+    @Column(name = "is_renewal", nullable = false)
+    private boolean renewal = false;
+
+    @Builder.Default
+    @Column(name = "is_trial", nullable = false)
+    private boolean trial = false;
 
     @Override
     public boolean equals(Object o) {

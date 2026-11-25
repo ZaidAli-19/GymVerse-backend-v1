@@ -1,4 +1,4 @@
-package com.company.GymVerse.tenantAdmin.response;
+package com.company.GymVerse.tenantAdmin.response.subscription;
 
 import com.company.GymVerse.models.central.enums.BillingCycle;
 import com.company.GymVerse.models.central.enums.GymSubscriptionStatus;

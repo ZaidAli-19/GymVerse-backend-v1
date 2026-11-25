@@ -1,22 +1,20 @@
-package com.company.GymVerse.tenantAdmin.service;
+package com.company.GymVerse.tenantAdmin.service.subscription;
 
 import com.company.GymVerse.exceptions.common.ResourceNotFoundException;
 import com.company.GymVerse.models.central.GymSubscription;
 import com.company.GymVerse.models.central.enums.GymSubscriptionStatus;
 import com.company.GymVerse.repositories.central.GymSubscriptionRepository;
-import com.company.GymVerse.security.jwt.JwtUtil;
 import com.company.GymVerse.tenantAdmin.factory.TenantAdminOperation;
+import com.company.GymVerse.tenantAdmin.helper.TenantAdminContextHelper;
 import com.company.GymVerse.tenantAdmin.mapper.TenantAdminMapper;
 import com.company.GymVerse.tenantAdmin.request.TenantAdminRequest;
 import com.company.GymVerse.tenantAdmin.request.enums.TenantAdminRequestType;
 import com.company.GymVerse.tenantAdmin.response.TenantAdminResponse;
-import com.company.GymVerse.tenantAdmin.response.TenantSubscriptionDetailsResponse;
+import com.company.GymVerse.tenantAdmin.response.subscription.TenantSubscriptionDetailsResponse;
 import com.company.GymVerse.tenantAdmin.validations.TenantAdminValidations;
 import com.company.GymVerse.user.util.SubscriptionDateUtil;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,8 +33,7 @@ public class FetchTenantSubscriptionService implements TenantAdminOperation {
     private final GymSubscriptionRepository gymSubscriptionRepository;
     private final TenantAdminValidations tenantAdminValidations;
     private final TenantAdminMapper tenantAdminMapper;
-    private final JwtUtil jwtUtil;
-    private final HttpServletRequest httpServletRequest;
+    private final TenantAdminContextHelper contextHelper;
 
     @Override
     public TenantAdminRequestType getRequestType() {
@@ -51,16 +48,7 @@ public class FetchTenantSubscriptionService implements TenantAdminOperation {
         tenantAdminValidations.validateTenantAdminContext();
         tenantAdminValidations.validateRequest(request);
 
-        String authHeader = httpServletRequest.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new BadCredentialsException("Bearer token is required");
-        }
-
-        String token = authHeader.substring(7).trim();
-        Long tenantId = jwtUtil.extractTenantId(token);
-        if (tenantId == null) {
-            throw new BadCredentialsException("Tenant token missing tenantId claim");
-        }
+        Long tenantId = contextHelper.extractTenantId();
 
         GymSubscription subscription = gymSubscriptionRepository.findFirstByGymTenantIdOrderBySubscribedAtDesc(tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("No subscription found for tenant ID: " + tenantId));

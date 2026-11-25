@@ -2,6 +2,7 @@ package com.company.GymVerse.repositories.tenant;
 
 import com.company.GymVerse.models.tenant.MembershipPlan;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -10,7 +11,11 @@ import java.util.List;
  * Spring Data JPA repository for MembershipPlan entities.
  */
 @Repository
-public interface MembershipPlanRepository extends JpaRepository<MembershipPlan, Long> {
+public interface MembershipPlanRepository extends JpaRepository<MembershipPlan, Long>, JpaSpecificationExecutor<MembershipPlan> {
 
     List<MembershipPlan> findByActiveTrue();
+
+    boolean existsByNameIgnoreCase(String name);
+
+    long countByActiveTrue();
 }

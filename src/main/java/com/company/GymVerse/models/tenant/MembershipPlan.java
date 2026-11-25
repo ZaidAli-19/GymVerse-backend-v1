@@ -2,9 +2,14 @@ package com.company.GymVerse.models.tenant;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +18,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Membership tier package offered by this gym.
@@ -37,11 +44,18 @@ public class MembershipPlan {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(length = 50)
-    private String tier;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "plan_tier_id")
+    private PlanTier planTier;
 
-    @Column(length = 100)
-    private String facility;
+    @Builder.Default
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "membership_plan_facilities",
+            joinColumns = @JoinColumn(name = "plan_id"),
+            inverseJoinColumns = @JoinColumn(name = "facility_id")
+    )
+    private Set<GymFacility> facilities = new LinkedHashSet<>();
 
     @Column(name = "base_price", precision = 10, scale = 2, nullable = false)
     private BigDecimal basePrice;
@@ -57,6 +71,10 @@ public class MembershipPlan {
 
     @Column(name = "duration_days", nullable = false)
     private Integer durationDays;
+
+    @Builder.Default
+    @Column(name = "is_trial", nullable = false)
+    private boolean trial = false;
 
     @Builder.Default
     @Column(nullable = false)
