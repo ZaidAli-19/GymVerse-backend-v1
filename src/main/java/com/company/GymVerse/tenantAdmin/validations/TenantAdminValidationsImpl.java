@@ -5,6 +5,7 @@ import com.company.GymVerse.exceptions.common.ConflictException;
 import com.company.GymVerse.exceptions.common.ForbiddenException;
 import com.company.GymVerse.models.tenant.MembershipPlan;
 import com.company.GymVerse.models.tenant.enums.DiscountType;
+import com.company.GymVerse.models.tenant.enums.ExpenseCategory;
 import com.company.GymVerse.models.tenant.enums.JoinRequestStatus;
 import com.company.GymVerse.models.tenant.enums.PaymentStatus;
 import com.company.GymVerse.models.tenant.enums.PlanTheme;
@@ -12,6 +13,8 @@ import com.company.GymVerse.multitanancy.TenantContext;
 import com.company.GymVerse.repositories.tenant.MembershipPlanRepository;
 import com.company.GymVerse.repositories.tenant.PlanTierRepository;
 import com.company.GymVerse.tenantAdmin.request.TenantAdminRequest;
+import com.company.GymVerse.tenantAdmin.request.finance.CreateExpenseRequest;
+import com.company.GymVerse.tenantAdmin.request.finance.FetchExpenseTransactionsRequest;
 import com.company.GymVerse.tenantAdmin.request.members.ApproveJoinRequest;
 import com.company.GymVerse.tenantAdmin.request.members.FetchJoinRequestsRequest;
 import com.company.GymVerse.tenantAdmin.request.members.FetchMemberDetailsRequest;
@@ -52,6 +55,9 @@ public class TenantAdminValidationsImpl implements TenantAdminValidations {
     );
     private static final Set<String> ALLOWED_TRAINER_SORT_FIELDS = Set.of(
             "id", "joinedDate", "specialization", "user.firstName"
+    );
+    private static final Set<String> ALLOWED_EXPENSE_SORT_FIELDS = Set.of(
+            "id", "expenseDate", "amount", "category", "title"
     );
     private static final BigDecimal ONE_HUNDRED = new BigDecimal("100");
 
@@ -308,6 +314,78 @@ public class TenantAdminValidationsImpl implements TenantAdminValidations {
                 "id",
                 ALLOWED_TRAINER_SORT_FIELDS
         );
+    }
+
+    @Override
+    public Pageable validateFetchExpenseTransactions(final FetchExpenseTransactionsRequest request) {
+        if (request == null) {
+            return validateAndBuildPageable(null, null, "expenseDate", "desc", "expenseDate", ALLOWED_EXPENSE_SORT_FIELDS);
+        }
+        if (request.getStartDate() != null && request.getEndDate() != null
+                && request.getStartDate().isAfter(request.getEndDate())) {
+            throw new BadRequestException("startDate must not be after endDate");
+        }
+        String sortDir = (request.getSortDirection() == null || request.getSortDirection().isBlank())
+                ? "desc"
+                : request.getSortDirection();
+        return validateAndBuildPageable(
+                request.getPage(),
+                request.getSize(),
+                request.getSortBy(),
+                sortDir,
+                "expenseDate",
+                ALLOWED_EXPENSE_SORT_FIELDS
+        );
+    }
+
+    @Override
+    public ExpenseCategory parseExpenseCategoryFilter(final String category) {
+        if (category == null || category.trim().isBlank() || "ALL".equalsIgnoreCase(category.trim())) {
+            return null;
+        }
+        String normalized = category.trim().toUpperCase().replace(' ', '_').replace('-', '_');
+        try {
+            return ExpenseCategory.valueOf(normalized);
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException("Invalid expense category filter: '" + category
+                    + "'. Allowed values: ALL, " + ExpenseCategory.getDefaultCategories());
+        }
+    }
+
+    @Override
+    public ExpenseCategory validateAndResolveCreateExpense(final CreateExpenseRequest request) {
+        if (request == null) {
+            throw new BadRequestException("createExpenseRequest payload must not be null");
+        }
+        if (request.getTitle() == null || request.getTitle().trim().isBlank()) {
+            throw new BadRequestException("Expense title must not be blank");
+        }
+        if (request.getTitle().trim().length() > 200) {
+            throw new BadRequestException("Expense title must not exceed 200 characters");
+        }
+        if (request.getCategory() == null || request.getCategory().trim().isBlank()) {
+            throw new BadRequestException("Expense category must not be blank");
+        }
+        if (request.getCustomCategory() != null && request.getCustomCategory().trim().length() > 100) {
+            throw new BadRequestException("customCategory must not exceed 100 characters");
+        }
+        if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("Expense amount must be greater than 0");
+        }
+        if (request.getAmount().scale() > 2) {
+            throw new BadRequestException("Expense amount cannot have more than 2 decimal places");
+        }
+        if (request.getDescription() != null && request.getDescription().length() > 2000) {
+            throw new BadRequestException("Expense description must not exceed 2000 characters");
+        }
+
+        String normalized = request.getCategory().trim().toUpperCase().replace(' ', '_').replace('-', '_');
+        for (ExpenseCategory value : ExpenseCategory.values()) {
+            if (value.name().equals(normalized)) {
+                return value;
+            }
+        }
+        return ExpenseCategory.OTHER;
     }
 
     private void validatePlanName(final String name) {

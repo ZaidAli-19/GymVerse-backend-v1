@@ -25,4 +25,20 @@ public interface RevenueRepository extends JpaRepository<Revenue, Long> {
             WHERE mm.member.id = :memberId
             """)
     BigDecimal sumTotalPaidByMemberId(@Param("memberId") Long memberId);
+
+    @Query("""
+            SELECT r.paymentMode, COALESCE(SUM(r.amount), 0)
+            FROM Revenue r
+            WHERE r.receivedAt BETWEEN :start AND :end
+            GROUP BY r.paymentMode
+            """)
+    List<Object[]> sumAmountGroupedByPaymentModeBetween(@Param("start") Instant start, @Param("end") Instant end);
+
+    @Query("""
+            SELECT r.revenueType, COALESCE(SUM(r.amount), 0)
+            FROM Revenue r
+            WHERE r.receivedAt BETWEEN :start AND :end
+            GROUP BY r.revenueType
+            """)
+    List<Object[]> sumAmountGroupedByRevenueTypeBetween(@Param("start") Instant start, @Param("end") Instant end);
 }

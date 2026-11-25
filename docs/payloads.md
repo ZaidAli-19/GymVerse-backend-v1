@@ -13,7 +13,7 @@ Click on any module or operation to jump directly to its API specification and c
 | **1** | [**Platform Administration**](#section-1) | `POST /api/platform-admin` | Platform Admin (`ROLE_PLATFORM_ADMIN`) | • [1.1 Create SaaS Plan](#op-1-1)<br>• [1.2 Catalog Query & Pagination](#op-1-2)<br>• [1.3 Fetch Plan by ID](#op-1-3)<br>• [1.4 Update Plan Availability](#op-1-4)<br>• [1.5 Gym Tenants Directory](#op-1-5) |
 | **2** | [**Authentication & Security**](#section-2) | `POST /api/auth` | Public & Master Account | • [2.1 Signup Initiate](#op-2-1)<br>• [2.2 Signup Verify OTP](#op-2-2)<br>• [2.3 Signup Complete](#op-2-3)<br>• [2.4 Password Login](#op-2-4)<br>• [2.5 Login OTP Initiate](#op-2-5)<br>• [2.6 Login OTP Verify](#op-2-6)<br>• [2.7 Token Refresh](#op-2-7)<br>• [2.8 Forgot Password Initiate](#op-2-8)<br>• [2.9 Forgot Password Verify OTP](#op-2-9)<br>• [2.10 Forgot Password Reset](#op-2-10)<br>• [2.11 Switch Tenant & Token Exchange](#op-2-11) |
 | **3** | [**Central User Gateway**](#section-3) | `POST /api/user` | Master User (`MASTER_ACCOUNT`) | • [3.1 Register Gym & Dynamic Provisioning](#op-3-1)<br>• [3.2 Fetch My Tenants Directory](#op-3-2)<br>• [3.3 Fetch Gym by Code (Discovery)](#op-3-3)<br>• [3.4 Submit Join Request](#op-3-4) |
-| **4** | [**Tenant Administration**](#section-4) | `POST /api/tenant-admin` | Tenant Admin (`TENANT_ACCOUNT` + `ROLE_TENANT_ADMIN`) | • [4.1 Fetch SaaS Subscription & Entitlements](#op-4-1)<br>• [4.2 Fetch Members Summary](#op-4-2)<br>• [4.3 Fetch Members Directory](#op-4-3)<br>• [4.4 Fetch Member Details](#op-4-4)<br>• [4.5 Fetch Trainers Summary](#op-4-5)<br>• [4.6 Fetch Trainers Address Book](#op-4-6) |
+| **4** | [**Tenant Administration**](#section-4) | `POST /api/tenant-admin` | Tenant Admin (`TENANT_ACCOUNT` + `ROLE_TENANT_ADMIN`) | • [4.1 Fetch SaaS Subscription & Entitlements](#op-4-1)<br>• [4.2 Fetch Members Summary](#op-4-2)<br>• [4.3 Fetch Members Directory](#op-4-3)<br>• [4.4 Fetch Member Details](#op-4-4)<br>• [4.5 Fetch Trainers Summary](#op-4-5)<br>• [4.6 Fetch Trainers Address Book](#op-4-6)<br>• [4.7 Fetch Finance Overview](#op-4-7)<br>• [4.8 Fetch Expense Transactions](#op-4-8)<br>• [4.9 Create Expense](#op-4-9) |
 
 ---
 
@@ -2408,6 +2408,294 @@ curl -X POST "http://localhost:8080/api/tenant-admin" \
          "size": 10,
          "sortBy": "user.firstName",
          "sortDirection": "asc"
+       }
+     }'
+```
+
+---
+
+<a id="op-4-7"></a>
+<a id="fetch-finance-overview"></a>
+### 4.7 Fetch Finance Overview (`FETCH_FINANCE_OVERVIEW`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Finance)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Retrieves `WEEKLY`, `MONTHLY`, or `YEARLY` financial analytics including total revenue, total expense, net profit, budget-used percentage, expense category breakdown, cash vs online collections, and revenue source breakdown (`NEW_MEMBERSHIP`, `RENEWAL`, `OTHER`).
+5. **Authentication & Authorization:** Requires authenticated caller with `TENANT_ACCOUNT` token and `ROLE_TENANT_ADMIN` authority.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "FETCH_FINANCE_OVERVIEW",
+     "fetchFinanceOverviewRequest": {
+       "periodType": "MONTHLY",
+       "referenceDate": "2026-11-25"
+     }
+   }
+   ```
+   **Validation Rules:**
+   - `tenantAdminRequestType`: Required enum string (`FETCH_FINANCE_OVERVIEW`).
+   - `fetchFinanceOverviewRequest`: Optional; defaults to `periodType = MONTHLY` and `referenceDate = today (UTC)`.
+   - `periodType`: Optional enum (`WEEKLY`, `MONTHLY`, `YEARLY`).
+10. **Success Response:**
+    - **HTTP Status:** `200 OK`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "Finance overview retrieved successfully",
+        "status": 200,
+        "timestamp": "2026-11-25T16:35:00Z",
+        "financeOverviewResponse": {
+          "periodType": "MONTHLY",
+          "startDate": "2026-11-01",
+          "endDate": "2026-11-30",
+          "totalRevenue": 1000.00,
+          "totalExpense": 400.00,
+          "netProfit": 600.00,
+          "budgetUsedPercentage": 40.00,
+          "expenseBreakdown": [
+            {
+              "category": "RENT",
+              "amount": 300.00,
+              "percentageOfExpense": 75.00
+            },
+            {
+              "category": "ELECTRICITY",
+              "amount": 100.00,
+              "percentageOfExpense": 25.00
+            }
+          ],
+          "collectionBreakdown": {
+            "cashCollected": 400.00,
+            "onlineCollected": 600.00,
+            "totalCollected": 1000.00
+          },
+          "revenueBreakdown": {
+            "newMembershipRevenue": 0.00,
+            "renewalRevenue": 600.00,
+            "otherRevenue": 400.00,
+            "totalRevenue": 1000.00
+          }
+        }
+      }
+      ```
+11. **Error Responses:**
+    - `400 Bad Request`: Missing/invalid `tenantAdminRequestType` or invalid `periodType`.
+    - `401 Unauthorized`: Missing or invalid Bearer token.
+    - `403 Forbidden`: Caller lacks `TENANT_ACCOUNT` or `ROLE_TENANT_ADMIN`.
+12. **Implementation References:**
+    - **Controller:** `com.company.GymVerse.tenantAdmin.controller.TenantAdminController`
+    - **Factory:** `com.company.GymVerse.tenantAdmin.factory.TenantAdminFactory`
+    - **Service:** `com.company.GymVerse.tenantAdmin.service.finance.FetchFinanceOverviewService`
+    - **Helper:** `com.company.GymVerse.tenantAdmin.helper.FinancePeriodHelper`
+    - **Response DTO:** `com.company.GymVerse.tenantAdmin.response.finance.FinanceOverviewResponse`
+13. **Business Rules:**
+    - All monetary amounts and percentages use `BigDecimal` (`RoundingMode.HALF_UP`, scale 2).
+    - `budgetUsedPercentage` safely returns `0.00` when `totalRevenue == 0`.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "FETCH_FINANCE_OVERVIEW",
+       "fetchFinanceOverviewRequest": {
+         "periodType": "MONTHLY"
+       }
+     }'
+```
+
+---
+
+<a id="op-4-8"></a>
+<a id="fetch-expense-transactions"></a>
+### 4.8 Fetch Expense Transactions (`FETCH_EXPENSE_TRANSACTIONS`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Finance)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Retrieves a paginated, sorted, and JPA Specification-filtered ledger of gym operational expenses.
+5. **Authentication & Authorization:** Requires authenticated caller with `TENANT_ACCOUNT` token and `ROLE_TENANT_ADMIN` authority.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "FETCH_EXPENSE_TRANSACTIONS",
+     "fetchExpenseTransactionsRequest": {
+       "periodType": "MONTHLY",
+       "category": "ALL",
+       "search": "electric",
+       "page": 0,
+       "size": 10,
+       "sortBy": "expenseDate",
+       "sortDirection": "desc"
+     }
+   }
+   ```
+   **Validation Rules:**
+   - `tenantAdminRequestType`: Required enum string (`FETCH_EXPENSE_TRANSACTIONS`).
+   - `startDate` / `endDate`: Optional inclusive `LocalDate` bounds (`startDate <= endDate`). When omitted and `periodType` is provided, `FinancePeriodHelper` resolves the date window.
+   - `category`: Optional (`ALL` or `ExpenseCategory`: `ELECTRICITY`, `STAFF_SALARY`, `RENT`, `MACHINE_REPAIR`, `WATER_BILL`, `MAINTENANCE`, `OTHER`).
+   - `sortBy`: Whitelisted fields only (`id`, `expenseDate`, `amount`, `category`, `title`).
+   - `sortDirection`: `asc` or `desc` (defaults to `desc` on `expenseDate`).
+10. **Success Response:**
+    - **HTTP Status:** `200 OK`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "Expense transactions retrieved successfully",
+        "status": 200,
+        "timestamp": "2026-11-25T16:35:00Z",
+        "expenseTransactionsPageResponse": {
+          "content": [
+            {
+              "id": 2,
+              "title": "Electric Meter",
+              "description": "Peak AC usage",
+              "amount": 100.00,
+              "category": "ELECTRICITY",
+              "expenseDate": "2026-11-24",
+              "recordedByAdminId": 1,
+              "recordedByAdminName": "Admin Owner"
+            }
+          ],
+          "page": 0,
+          "size": 10,
+          "totalElements": 1,
+          "totalPages": 1,
+          "last": true
+        }
+      }
+      ```
+11. **Error Responses:**
+    - `400 Bad Request`: Invalid `category`, `startDate > endDate`, `page`, `size`, `sortBy`, or `sortDirection`.
+    - `401 Unauthorized`: Missing or invalid Bearer token.
+    - `403 Forbidden`: Caller lacks `TENANT_ACCOUNT` or `ROLE_TENANT_ADMIN`.
+12. **Implementation References:**
+    - **Controller:** `com.company.GymVerse.tenantAdmin.controller.TenantAdminController`
+    - **Factory:** `com.company.GymVerse.tenantAdmin.factory.TenantAdminFactory`
+    - **Service:** `com.company.GymVerse.tenantAdmin.service.finance.FetchExpenseTransactionsService`
+    - **Specification:** `com.company.GymVerse.tenantAdmin.specifications.finance.ExpenseSpecification`
+13. **Business Rules:**
+    - Explicit `startDate`/`endDate` takes precedence over `periodType`.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "FETCH_EXPENSE_TRANSACTIONS",
+       "fetchExpenseTransactionsRequest": {
+         "periodType": "MONTHLY",
+         "page": 0,
+         "size": 10,
+         "sortBy": "expenseDate",
+         "sortDirection": "desc"
+       }
+     }'
+```
+
+---
+
+<a id="op-4-9"></a>
+<a id="create-expense"></a>
+### 4.9 Create Expense (`CREATE_EXPENSE`)
+
+1. **Feature / Module:** Tenant Administration (`tenantAdmin` — Finance)
+2. **HTTP Method:** `POST`
+3. **Endpoint URL:** `http://localhost:8080/api/tenant-admin`
+4. **Purpose:** Records a new operational gym expense linked to the authenticated tenant administrator and returns `201 Created`.
+5. **Authentication & Authorization:** Requires authenticated caller with `TENANT_ACCOUNT` token and `ROLE_TENANT_ADMIN` authority.
+6. **Request Headers:**
+   - `Content-Type: application/json`
+   - `Accept: application/json`
+   - `Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>`
+7. **Path Parameters:** None
+8. **Query Parameters:** None
+9. **Request Payload (`application/json`):**
+   ```json
+   {
+     "tenantAdminRequestType": "CREATE_EXPENSE",
+     "createExpenseRequest": {
+       "title": "Cleaning Supplies",
+       "category": "OTHER",
+       "customCategory": "Sanitation",
+       "amount": 45.00,
+       "description": "Disinfectant wipes and sanitizer",
+       "expenseDate": "2026-11-25"
+     }
+   }
+   ```
+   **Validation Rules:**
+   - `tenantAdminRequestType`: Required enum string (`CREATE_EXPENSE`).
+   - `createExpenseRequest`: Required object.
+   - `title`: Required, non-blank, max 200 characters.
+   - `category`: Required, non-blank; maps standard `ExpenseCategory` values (`ELECTRICITY`, `STAFF_SALARY`, `RENT`, `MACHINE_REPAIR`, `WATER_BILL`, `MAINTENANCE`, `OTHER`) or falls back to `OTHER` for custom free-text labels.
+   - `customCategory`: Optional, max 100 characters.
+   - `amount`: Required, `BigDecimal > 0`, max 2 decimal places.
+   - `description`: Optional, max 2000 characters.
+   - `expenseDate`: Optional `LocalDate` (defaults to today).
+10. **Success Response:**
+    - **HTTP Status:** `201 Created`
+    - **Response Body (`application/json`):**
+      ```json
+      {
+        "message": "Expense recorded successfully",
+        "status": 201,
+        "timestamp": "2026-11-25T16:35:00Z",
+        "expenseTransactionResponse": {
+          "id": 3,
+          "title": "Cleaning Supplies",
+          "description": "[Sanitation] Disinfectant wipes and sanitizer",
+          "amount": 45.00,
+          "category": "OTHER",
+          "expenseDate": "2026-11-25",
+          "recordedByAdminId": 1,
+          "recordedByAdminName": "Admin Owner"
+        }
+      }
+      ```
+11. **Error Responses:**
+    - `400 Bad Request`: Blank `title` or `category`, `amount <= 0`, or field length violations.
+    - `401 Unauthorized`: Missing or invalid Bearer token.
+    - `403 Forbidden`: Caller lacks `TENANT_ACCOUNT` or `ROLE_TENANT_ADMIN`.
+12. **Implementation References:**
+    - **Controller:** `com.company.GymVerse.tenantAdmin.controller.TenantAdminController`
+    - **Factory:** `com.company.GymVerse.tenantAdmin.factory.TenantAdminFactory`
+    - **Service:** `com.company.GymVerse.tenantAdmin.service.finance.CreateExpenseService`
+    - **Validator:** `com.company.GymVerse.tenantAdmin.validations.TenantAdminValidationsImpl`
+    - **Mapper:** `com.company.GymVerse.tenantAdmin.mapper.TenantAdminMapperImpl`
+13. **Business Rules:**
+    - Custom category labels supplied via `customCategory` (or custom `category` text) are preserved cleanly in `description` alongside `ExpenseCategory.OTHER`.
+
+#### Copy-Pasteable cURL Command
+```bash
+curl -X POST "http://localhost:8080/api/tenant-admin" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -H "Authorization: Bearer <TENANT_SCOPED_ACCESS_TOKEN>" \
+     -d '{
+       "tenantAdminRequestType": "CREATE_EXPENSE",
+       "createExpenseRequest": {
+         "title": "Monthly Rent",
+         "category": "RENT",
+         "amount": 1200.00,
+         "description": "Gym facility lease"
        }
      }'
 ```

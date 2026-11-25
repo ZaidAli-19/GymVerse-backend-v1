@@ -12,10 +12,10 @@
 | **Repository Root** | `D:\projects\GymVerse-Backend-v2` |
 | **Current Git Branch** | `GymVerse/dev` |
 | **Current Project Phase** | **Phase 5: In-Gym Tenant Administration Module (7-Page Operational Suite)** |
-| **Current Phase Stage** | **Phase 5 Active Implementation (Story 5.5 Completed)** |
-| **Last Completed Story** | **Story 5.5: Trainers & Staff Summary & Searchable Address Book** |
-| **Immediate Next Phase / Story** | **Story 5.6: Finance Analytics Suite & Expense Ledger** |
-| **Test Suite Health** | **Phase 5 `tenantAdmin` Unit & MySQL Integration Verification: 43/43 Passing (0 Failures, 0 Errors)** |
+| **Current Phase Stage** | **Phase 5 Active Implementation (Story 5.6 Completed)** |
+| **Last Completed Story** | **Story 5.6: Finance Analytics Suite & Expense Ledger** |
+| **Immediate Next Phase / Story** | **Story 5.7: Admin Dashboard, Live Roster Gateway & API Payloads Documentation** |
+| **Test Suite Health** | **Phase 5 `tenantAdmin` Unit & MySQL Integration Verification: 47/47 Passing (0 Failures, 0 Errors)** |
 | **Protected Code Status** | All 8 classes in `com.company.GymVerse.multitanancy` remain 100% byte-for-byte untouched |
 
 ---
@@ -151,22 +151,22 @@
 | **Story 5.3** | Join Requests Review & Approval Workflow | `service/members/`, `JoinRequestSpecification`, `JoinRequestHelper`, `FETCH_JOIN_REQUESTS`, `APPROVE_JOIN_REQUEST`, `REJECT_JOIN_REQUEST` | ✅ Completed |
 | **Story 5.4** | Members Directory, Mini-Dashboard & Member Details View | `service/members/`, `MemberSpecification`, `FETCH_MEMBERS_SUMMARY`, `FETCH_MEMBERS`, `FETCH_MEMBER_DETAILS`, `docs/payloads.md` | ✅ Completed |
 | **Story 5.5** | Trainers & Staff Summary & Address Book | `service/trainers/`, `TrainerSpecification`, `FETCH_TRAINERS_SUMMARY`, `FETCH_TRAINERS`, `docs/payloads.md` | ✅ Completed |
-| **Story 5.6** | Finance Analytics Suite & Expense Ledger | `service/finance/`, `ExpenseSpecification`, `FETCH_FINANCE_OVERVIEW`, `FETCH_EXPENSE_TRANSACTIONS`, `CREATE_EXPENSE` | ⏳ Next |
-| **Story 5.7** | Admin Dashboard, Live Roster Gateway & API Docs | `service/dashboard/`, `service/liveRoster/`, `FETCH_ADMIN_DASHBOARD`, `FETCH_LIVE_ROSTER`, `docs/payloads.md` | ⏳ Planned |
+| **Story 5.6** | Finance Analytics Suite & Expense Ledger | `service/finance/`, `ExpenseSpecification`, `FETCH_FINANCE_OVERVIEW`, `FETCH_EXPENSE_TRANSACTIONS`, `CREATE_EXPENSE`, `docs/payloads.md` | ✅ Completed |
+| **Story 5.7** | Admin Dashboard, Live Roster Gateway & API Docs | `service/dashboard/`, `service/liveRoster/`, `FETCH_ADMIN_DASHBOARD`, `FETCH_LIVE_ROSTER`, `docs/payloads.md` | ⏳ Next |
 
 ---
 
-## 5. Scope & Target Artifacts for Immediate Next Work: Story 5.6 (Finance Analytics Suite & Expense Ledger)
+## 5. Scope & Target Artifacts for Immediate Next Work: Story 5.7 (Admin Dashboard, Live Roster Gateway & API Payloads Documentation)
 
-- **Active Stage:** `Phase 5 Implementation — Story 5.6`
-- **Next Story:** [`story-5.6-finance-analytics-and-expense-ledger.md`](file:///D:/projects/GymVerse-Backend-v2/_bmad-output/planning-artifacts/phase-5-tenant-admin/story-5.6-finance-analytics-and-expense-ledger.md)
+- **Active Stage:** `Phase 5 Implementation — Story 5.7 (Final Story of Phase 5)`
+- **Next Story:** [`story-5.7-admin-dashboard-and-live-roster.md`](file:///D:/projects/GymVerse-Backend-v2/_bmad-output/planning-artifacts/phase-5-tenant-admin/story-5.7-admin-dashboard-and-live-roster.md)
 - **Target Operations (`/api/tenant-admin`):**
-  1. `FETCH_FINANCE_OVERVIEW` (`WEEKLY` / `MONTHLY` / `YEARLY` toggle via `FinancePeriodHelper`, KPIs with `BigDecimal` divide-by-zero guard, expense category breakdown, cash vs online collections, revenue source breakdown `NEW_MEMBERSHIP` / `RENEWAL` / `OTHER`).
-  2. `FETCH_EXPENSE_TRANSACTIONS` (`ExpenseSpecification` + pagination + whitelisted sorting (`id`, `expenseDate`, `amount`, `category`, `title`)).
-  3. `CREATE_EXPENSE` (default categories + custom category/notes, returns `201 Created`).
+  1. `FETCH_ADMIN_DASHBOARD` (top KPIs: `totalMembers`, `liveMembers` via `AttendanceQueryPort`, `totalRevenue`, `activeRate`; `activeByTier`, `membershipCard`, `revenueCard`, `membershipExpiryCard` using `TenantOperationsProperties.getExpiringSoonDays()`).
+  2. `FETCH_LIVE_ROSTER` (paginated/filtered live roster via `AttendanceQueryPort`, whitelisted sorts: `checkInTime`, `memberName`, `elapsedMinutes`, returning `0` / empty page safely while stubbed).
 - **Invariants:**
-  - All currency/percentage math strictly uses `BigDecimal` (`RoundingMode.HALF_UP`, scale 2).
-  - Subfolder classification under `service/finance/`, `request/finance/`, `response/finance/`, `specifications/finance/`.
+  - Subfolder classification under `dashboard/` and `liveRoster/` in `service/`, `request/`, and `response/`.
+  - Live attendance calls strictly via `AttendanceQueryPort` with `// TODO [ATTENDANCE-MODULE]` hooks.
+  - Document `FETCH_ADMIN_DASHBOARD` and `FETCH_LIVE_ROSTER` (plus verify any remaining Phase 5 operations) in `docs/payloads.md`.
   - Multi-tenancy core untouched (8 protected classes); no autonomous git commit/push (`RULES.md` Rule 1).
 
 ---

@@ -1,6 +1,9 @@
 package com.company.GymVerse.tenantAdmin.request;
 
 import com.company.GymVerse.tenantAdmin.request.enums.TenantAdminRequestType;
+import com.company.GymVerse.tenantAdmin.request.finance.CreateExpenseRequest;
+import com.company.GymVerse.tenantAdmin.request.finance.FetchExpenseTransactionsRequest;
+import com.company.GymVerse.tenantAdmin.request.finance.FetchFinanceOverviewRequest;
 import com.company.GymVerse.tenantAdmin.request.members.ApproveJoinRequest;
 import com.company.GymVerse.tenantAdmin.request.members.FetchJoinRequestsRequest;
 import com.company.GymVerse.tenantAdmin.request.members.FetchMemberDetailsRequest;
@@ -58,4 +61,13 @@ public class TenantAdminRequest {
 
     @JsonAlias({"fetchTrainersRequest", "fetchTrainers"})
     private FetchTrainersRequest fetchTrainersRequest;
+
+    @JsonAlias({"fetchFinanceOverviewRequest", "fetchFinanceOverview"})
+    private FetchFinanceOverviewRequest fetchFinanceOverviewRequest;
+
+    @JsonAlias({"fetchExpenseTransactionsRequest", "fetchExpenseTransactions"})
+    private FetchExpenseTransactionsRequest fetchExpenseTransactionsRequest;
+
+    @JsonAlias({"createExpenseRequest", "createExpense"})
+    private CreateExpenseRequest createExpenseRequest;
 }

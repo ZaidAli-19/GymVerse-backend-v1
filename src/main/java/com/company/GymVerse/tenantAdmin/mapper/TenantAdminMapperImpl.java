@@ -4,6 +4,7 @@ import com.company.GymVerse.attendance.dto.MemberAttendanceSnapshot;
 import com.company.GymVerse.models.central.GymSubscription;
 import com.company.GymVerse.models.central.GymTenant;
 import com.company.GymVerse.models.central.SaasSubscriptionPlan;
+import com.company.GymVerse.models.tenant.Expense;
 import com.company.GymVerse.models.tenant.GymFacility;
 import com.company.GymVerse.models.tenant.JoinRequest;
 import com.company.GymVerse.models.tenant.Member;
@@ -17,6 +18,8 @@ import com.company.GymVerse.tenantAdmin.helper.MembershipCalculationHelper;
 import com.company.GymVerse.tenantAdmin.response.PagedResponse;
 import com.company.GymVerse.tenantAdmin.response.TenantAdminResponse;
 import com.company.GymVerse.tenantAdmin.response.enums.MemberMembershipStatus;
+import com.company.GymVerse.tenantAdmin.response.finance.ExpenseTransactionResponse;
+import com.company.GymVerse.tenantAdmin.response.finance.FinanceOverviewResponse;
 import com.company.GymVerse.tenantAdmin.response.members.ApproveJoinRequestResponse;
 import com.company.GymVerse.tenantAdmin.response.members.JoinRequestItemResponse;
 import com.company.GymVerse.tenantAdmin.response.members.MemberDetailsResponse;
@@ -523,6 +526,68 @@ public class TenantAdminMapperImpl implements TenantAdminMapper {
                 .status(200)
                 .timestamp(Instant.now())
                 .trainersPageResponse(paged)
+                .build();
+    }
+
+    @Override
+    public TenantAdminResponse toFinanceOverviewAdminResponse(
+            final String message,
+            final FinanceOverviewResponse overview
+    ) {
+        return TenantAdminResponse.builder()
+                .message(message)
+                .status(200)
+                .timestamp(Instant.now())
+                .financeOverviewResponse(overview)
+                .build();
+    }
+
+    @Override
+    public ExpenseTransactionResponse toExpenseTransaction(final Expense expense) {
+        if (expense == null) {
+            return null;
+        }
+        TenantUser admin = expense.getRecordedByAdmin();
+        return ExpenseTransactionResponse.builder()
+                .id(expense.getId())
+                .title(expense.getTitle())
+                .description(expense.getDescription())
+                .amount(expense.getAmount() != null ? expense.getAmount().setScale(2, RoundingMode.HALF_UP) : null)
+                .category(expense.getCategory())
+                .expenseDate(expense.getExpenseDate())
+                .recordedByAdminId(admin != null ? admin.getId() : null)
+                .recordedByAdminName(buildFullName(admin))
+                .build();
+    }
+
+    @Override
+    public TenantAdminResponse toPagedExpensesResponse(
+            final String message,
+            final Page<Expense> expensePage
+    ) {
+        List<ExpenseTransactionResponse> items = expensePage.getContent().stream()
+                .map(this::toExpenseTransaction)
+                .toList();
+        PagedResponse<ExpenseTransactionResponse> paged = toPagedResponse(expensePage, items);
+        return TenantAdminResponse.builder()
+                .message(message)
+                .status(200)
+                .timestamp(Instant.now())
+                .expenseTransactionsPageResponse(paged)
+                .build();
+    }
+
+    @Override
+    public TenantAdminResponse toExpenseTransactionAdminResponse(
+            final String message,
+            final int httpStatus,
+            final ExpenseTransactionResponse item
+    ) {
+        return TenantAdminResponse.builder()
+                .message(message)
+                .status(httpStatus)
+                .timestamp(Instant.now())
+                .expenseTransactionResponse(item)
                 .build();
     }
 

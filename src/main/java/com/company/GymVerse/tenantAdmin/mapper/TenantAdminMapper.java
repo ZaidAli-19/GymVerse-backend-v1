@@ -2,6 +2,7 @@ package com.company.GymVerse.tenantAdmin.mapper;
 
 import com.company.GymVerse.attendance.dto.MemberAttendanceSnapshot;
 import com.company.GymVerse.models.central.GymSubscription;
+import com.company.GymVerse.models.tenant.Expense;
 import com.company.GymVerse.models.tenant.JoinRequest;
 import com.company.GymVerse.models.tenant.Member;
 import com.company.GymVerse.models.tenant.MemberMembership;
@@ -11,6 +12,8 @@ import com.company.GymVerse.models.tenant.Trainer;
 import com.company.GymVerse.models.tenant.enums.PaymentMode;
 import com.company.GymVerse.tenantAdmin.response.PagedResponse;
 import com.company.GymVerse.tenantAdmin.response.TenantAdminResponse;
+import com.company.GymVerse.tenantAdmin.response.finance.ExpenseTransactionResponse;
+import com.company.GymVerse.tenantAdmin.response.finance.FinanceOverviewResponse;
 import com.company.GymVerse.tenantAdmin.response.members.ApproveJoinRequestResponse;
 import com.company.GymVerse.tenantAdmin.response.members.JoinRequestItemResponse;
 import com.company.GymVerse.tenantAdmin.response.members.MemberDetailsResponse;
@@ -111,6 +114,18 @@ public interface TenantAdminMapper {
             String message,
             Page<Trainer> trainerPage,
             List<TrainerItemResponse> items
+    );
+
+    TenantAdminResponse toFinanceOverviewAdminResponse(String message, FinanceOverviewResponse overview);
+
+    ExpenseTransactionResponse toExpenseTransaction(Expense expense);
+
+    TenantAdminResponse toPagedExpensesResponse(String message, Page<Expense> expensePage);
+
+    TenantAdminResponse toExpenseTransactionAdminResponse(
+            String message,
+            int httpStatus,
+            ExpenseTransactionResponse item
     );
 
     default TrainersSummaryResponse buildTrainersSummary(

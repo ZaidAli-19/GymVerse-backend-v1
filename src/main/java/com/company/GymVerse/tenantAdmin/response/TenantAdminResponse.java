@@ -1,5 +1,7 @@
 package com.company.GymVerse.tenantAdmin.response;
 
+import com.company.GymVerse.tenantAdmin.response.finance.ExpenseTransactionResponse;
+import com.company.GymVerse.tenantAdmin.response.finance.FinanceOverviewResponse;
 import com.company.GymVerse.tenantAdmin.response.members.ApproveJoinRequestResponse;
 import com.company.GymVerse.tenantAdmin.response.members.JoinRequestItemResponse;
 import com.company.GymVerse.tenantAdmin.response.members.MemberDetailsResponse;
@@ -48,4 +50,7 @@ public class TenantAdminResponse {
     private MemberDetailsResponse memberDetailsResponse;
     private TrainersSummaryResponse trainersSummaryResponse;
     private PagedResponse<TrainerItemResponse> trainersPageResponse;
+    private FinanceOverviewResponse financeOverviewResponse;
+    private PagedResponse<ExpenseTransactionResponse> expenseTransactionsPageResponse;
+    private ExpenseTransactionResponse expenseTransactionResponse;
 }

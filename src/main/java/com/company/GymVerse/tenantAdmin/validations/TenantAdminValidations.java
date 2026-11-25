@@ -1,9 +1,12 @@
 package com.company.GymVerse.tenantAdmin.validations;
 
 import com.company.GymVerse.models.tenant.MembershipPlan;
+import com.company.GymVerse.models.tenant.enums.ExpenseCategory;
 import com.company.GymVerse.models.tenant.enums.JoinRequestStatus;
 import com.company.GymVerse.models.tenant.enums.PaymentStatus;
 import com.company.GymVerse.tenantAdmin.request.TenantAdminRequest;
+import com.company.GymVerse.tenantAdmin.request.finance.CreateExpenseRequest;
+import com.company.GymVerse.tenantAdmin.request.finance.FetchExpenseTransactionsRequest;
 import com.company.GymVerse.tenantAdmin.request.members.ApproveJoinRequest;
 import com.company.GymVerse.tenantAdmin.request.members.FetchJoinRequestsRequest;
 import com.company.GymVerse.tenantAdmin.request.members.FetchMemberDetailsRequest;
@@ -103,4 +106,19 @@ public interface TenantAdminValidations {
      * Validates pagination and whitelisted sorting fields for FETCH_TRAINERS queries.
      */
     Pageable validateFetchTrainers(FetchTrainersRequest request);
+
+    /**
+     * Validates date range, pagination, and whitelisted sorting fields for FETCH_EXPENSE_TRANSACTIONS queries.
+     */
+    Pageable validateFetchExpenseTransactions(FetchExpenseTransactionsRequest request);
+
+    /**
+     * Parses optional expense category filter ("ALL" or ExpenseCategory value).
+     */
+    ExpenseCategory parseExpenseCategoryFilter(String category);
+
+    /**
+     * Validates CreateExpenseRequest fields and resolves standard or custom OTHER ExpenseCategory.
+     */
+    ExpenseCategory validateAndResolveCreateExpense(CreateExpenseRequest request);
 }
